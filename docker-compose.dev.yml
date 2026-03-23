@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: frandy_postgres_dev
+    environment:
+      POSTGRES_USER: frandy
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: portfolio
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - frandy_dev_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frandy -d portfolio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  fastapi:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: frandy_fastapi_dev
+    environment:
+      DATABASE_URL: postgresql+asyncpg://frandy:devpassword@postgres:5432/portfolio
+      SECRET_KEY: dev-secret-key-change-in-production
+      RESEND_API_KEY: re_placeholder
+      CONTACT_EMAIL: frandyslueue@gmail.com
+      GITHUB_TOKEN: placeholder
+      GITHUB_USERNAME: frandy-slueue
+      UMAMI_API_URL: http://umami:3001/api
+      UMAMI_API_KEY: placeholder
+      UMAMI_WEBSITE_ID: placeholder
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    networks:
+      - frandy_dev_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: frandy_umami_dev
+    environment:
+      DATABASE_URL: postgresql://frandy:devpassword@postgres:5432/umami
+      APP_SECRET: dev-umami-secret
+    ports:
+      - "3001:3001"
+    networks:
+      - frandy_dev_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  frandy_dev_network:
+    driver: bridge
