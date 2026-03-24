@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
 
 
@@ -11,6 +13,7 @@ class Settings(BaseSettings):
     umami_api_url: str
     umami_api_key: str
     umami_website_id: str
+    upload_dir: str = "./uploads"
 
     class Config:
         env_file = ".env"

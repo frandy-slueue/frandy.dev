@@ -33,6 +33,7 @@ services:
       UMAMI_API_URL: http://umami:3001/api
       UMAMI_API_KEY: placeholder
       UMAMI_WEBSITE_ID: placeholder
+      UPLOAD_DIR: /app/uploads
     volumes:
       - ./backend:/app
     ports:
@@ -61,7 +62,9 @@ services:
 
 volumes:
   postgres_dev_data:
+  uploads_dev:
 
 networks:
   frandy_dev_network:
     driver: bridge
+

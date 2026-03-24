@@ -79,6 +79,7 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
 
 networks:
   frandy_network:
