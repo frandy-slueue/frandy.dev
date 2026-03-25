@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from core.config import settings
-from routers import auth, contact, github, projects
+from routers import analytics, auth, contact, github, projects, settings as settings_router
 from services.scheduler import start_scheduler, stop_scheduler
 
 UPLOAD_DIR = Path(settings.upload_dir)
@@ -15,10 +15,8 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     start_scheduler()
     yield
-    # Shutdown
     stop_scheduler()
 
 
@@ -45,6 +43,8 @@ app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(contact.router)
 app.include_router(github.router)
+app.include_router(analytics.router)
+app.include_router(settings_router.router)
 
 
 @app.get("/api/health")
