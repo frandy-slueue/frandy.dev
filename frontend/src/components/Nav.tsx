@@ -1,0 +1,107 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+
+const NAV_LINKS = [
+  { label: "About", href: "#about" },
+  { label: "Skills", href: "#skills" },
+  { label: "Projects", href: "#projects" },
+  { label: "Timeline", href: "#timeline" },
+  { label: "Contact", href: "#contact" },
+];
+
+export default function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 768) setMenuOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  return (
+    <header
+      className={`fixed top-0 left-0 right-0 h-[52px] z-50 border-b backdrop-blur-md transition-colors duration-300
+      ${scrolled ? "bg-[rgba(8,8,8,0.95)]" : "bg-[rgba(8,8,8,0.80)]"}
+      border-[var(--border)]`}
+    >
+      <div className="site-container flex h-full items-center justify-between">
+        
+        {/* Logo */}
+        <Link
+          href="/"
+          className="text-[22px] tracking-[2px] text-[var(--accent)]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          FS
+        </Link>
+
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-8">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-[13px] font-semibold tracking-[2px] uppercase text-[var(--accent-muted)] transition-colors duration-200 hover:text-[var(--accent)]"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Mobile Button */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle menu"
+          className="flex flex-col gap-[5px] p-2 md:hidden"
+        >
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className={`block w-[22px] h-[1px] bg-[var(--accent)] transition-all duration-300
+                ${
+                  menuOpen && i === 0
+                    ? "translate-y-[6px] rotate-45"
+                    : menuOpen && i === 2
+                    ? "-translate-y-[6px] -rotate-45"
+                    : ""
+                }
+                ${menuOpen && i === 1 ? "opacity-0" : "opacity-100"}
+              `}
+            />
+          ))}
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      <div
+        className={`fixed top-[52px] left-0 right-0 border-b backdrop-blur-md overflow-hidden transition-all duration-300
+        bg-[rgba(8,8,8,0.98)] border-[var(--border)]
+        ${menuOpen ? "max-h-[300px] py-6 px-8" : "max-h-0 px-8 py-0"}`}
+      >
+        {NAV_LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            onClick={() => setMenuOpen(false)}
+            className="block py-3 text-[14px] font-semibold tracking-[2px] uppercase text-[var(--accent-muted)] border-b border-[var(--border-subtle)] transition-colors duration-200 hover:text-[var(--accent)]"
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
+    </header>
+  );
+}
