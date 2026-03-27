@@ -1,12 +1,34 @@
 import type { Metadata } from "next";
+import { Bebas_Neue, Rajdhani, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import ThemeProvider from "@/components/ThemeProvider";
 
+const bebasNeue = Bebas_Neue({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const rajdhani = Rajdhani({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  weight: ["400", "500"],
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Frandy Slueue — Full Stack Software Engineer",
   description:
-    "Portfolio of Frandy Slueue — Full Stack Software Engineer trained at Atlas School of Tulsa. React, Next.js, FastAPI, PostgreSQL, Docker.",
+    "Portfolio of Frandy Slueue — Full Stack Software Engineer trained at Atlas School of Tulsa.",
   keywords: [
     "Frandy Slueue",
     "Full Stack Engineer",
@@ -35,7 +57,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="silver">
+    <html
+      lang="en"
+      data-theme="silver"
+      className={`${bebasNeue.variable} ${rajdhani.variable} ${jetbrainsMono.variable}`}
+    >
       <body>
         <ThemeProvider>
           <Nav />
