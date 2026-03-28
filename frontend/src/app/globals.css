@@ -171,3 +171,11 @@ code, pre, kbd { font-family: var(--font-mono); }
   border-color: var(--accent-muted);
   color: var(--text-secondary);
 }
+
+/* ── About section responsive ───────────────────────────────────── */
+@media (max-width: 768px) {
+  .about-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+}

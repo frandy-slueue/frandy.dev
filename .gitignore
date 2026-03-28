@@ -34,3 +34,5 @@ nginx/ssl/
 # IDE
 .vscode/
 .idea/
+
+SOCIAL_POST_v3.md

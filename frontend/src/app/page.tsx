@@ -1,9 +1,11 @@
 import Hero from "@/components/sections/Hero";
+import About from "@/components/sections/About";
 
 export default function Home() {
   return (
     <>
       <Hero />
+      <About/>
 
       {/* Placeholder sections — will be built one by one */}
       <section id="about"    style={{ minHeight: "100vh", background: "var(--bg-secondary)" }} />
