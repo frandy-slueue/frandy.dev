@@ -2,106 +2,347 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { ArrowUp } from "lucide-react";
 
 const NAV_LINKS = [
-  { label: "About", href: "#about" },
-  { label: "Skills", href: "#skills" },
+  { label: "About",    href: "#about" },
+  { label: "Skills",   href: "#skills" },
   { label: "Projects", href: "#projects" },
   { label: "Timeline", href: "#timeline" },
-  { label: "Contact", href: "#contact" },
+  { label: "Contact",  href: "#contact" },
+];
+
+const BOTTOM_NAV = [
+  { label: "About",    href: "#about",    icon: "man-outline" },
+  { label: "Skills",   href: "#skills",   icon: "archive-outline" },
+  { label: "Projects", href: "#projects", icon: "library-outline" },
+  { label: "Timeline", href: "#timeline", icon: "pulse-outline" },
+  { label: "Contact",  href: "#contact",  icon: "person-circle-outline" },
 ];
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeBottom, setActiveBottom] = useState(0);
+  const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setShowTop(window.scrollY > 400);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    const onResize = () => {
-      if (window.innerWidth >= 768) setMenuOpen(false);
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 h-13 z-50 border-b backdrop-blur-md transition-colors duration-300
-      ${scrolled ? "bg-[rgba(8,8,8,0.95)]" : "bg-[rgba(8,8,8,0.80)]"}
-      border-(--border)`}
-    >
-      <div className="site-container flex h-full items-center justify-between">
-        
-        {/* Logo */}
-        <Link
-          href="/"
-          className="text-[22px] tracking-[2px] text-(--accent)"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          FS
-        </Link>
-
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-[13px] font-semibold tracking-[2px] uppercase text-(--accent-muted) transition-colors duration-200 hover:text-(--accent)"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Mobile Button */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-          className="flex flex-col gap-1.25 p-2 md:hidden"
-        >
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className={`block w-5.5 h-px bg-(--accent) transition-all duration-300
-                ${
-                  menuOpen && i === 0
-                    ? "translate-y-1.5 rotate-45"
-                    : menuOpen && i === 2
-                    ? "-translate-y-1.5 -rotate-45"
-                    : ""
-                }
-                ${menuOpen && i === 1 ? "opacity-0" : "opacity-100"}
-              `}
-            />
-          ))}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      <div
-        className={`fixed top-13 left-0 right-0 border-b backdrop-blur-md overflow-hidden transition-all duration-300
-        bg-[rgba(8,8,8,0.98)] border-(--border)
-        ${menuOpen ? "max-h-75 py-6 px-8" : "max-h-0 px-8 py-0"}`}
+    <>
+      {/* ── Top nav ───────────────────────────────────────────── */}
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "52px",
+          zIndex: 50,
+          backgroundColor: scrolled
+            ? "rgba(8,8,8,0.95)"
+            : "rgba(8,8,8,0.80)",
+          borderBottom: "1px solid var(--border)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          transition: "background-color 300ms ease",
+        }}
       >
-        {NAV_LINKS.map((link) => (
+        <div
+          className="site-container"
+          style={{
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* FS monogram — original simple design */}
           <Link
-            key={link.href}
-            href={link.href}
-            onClick={() => setMenuOpen(false)}
-            className="block py-3 text-[14px] font-semibold tracking-[2px] uppercase text-(--accent-muted) border-b border-(--border-subtle) transition-colors duration-200 hover:text-(--accent)"
-            style={{ fontFamily: "var(--font-body)" }}
+            href="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              textDecoration: "none",
+            }}
           >
-            {link.label}
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                transform: "rotate(45deg)",
+                border: "1.5px solid var(--accent)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                position: "relative",
+              }}
+            >
+              {/* Inner faded border */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: "3px",
+                  border: "0.5px solid rgba(192,192,192,0.2)",
+                  pointerEvents: "none",
+                }}
+              />
+              <span
+                style={{
+                  transform: "rotate(-45deg)",
+                  fontFamily: "var(--font-display)",
+                  fontSize: "11px",
+                  color: "var(--accent)",
+                  letterSpacing: "1px",
+                  lineHeight: 1,
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                FS
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "18px",
+                  color: "var(--text-primary)",
+                  letterSpacing: "3px",
+                  lineHeight: 1,
+                }}
+              >
+                FRANDY
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "9px",
+                  letterSpacing: "3px",
+                  color: "var(--accent-muted)",
+                  textTransform: "uppercase",
+                  lineHeight: 1,
+                }}
+              >
+                · dev
+              </span>
+            </div>
           </Link>
-        ))}
-      </div>
-    </header>
+
+          {/* Desktop nav links */}
+          <nav
+            className="hidden md:flex"
+            style={{ gap: "32px", alignItems: "center" }}
+          >
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color: "var(--accent-muted)",
+                  textDecoration: "none",
+                  transition: "color 200ms ease",
+                }}
+                onMouseEnter={(e) =>
+                  ((e.target as HTMLElement).style.color = "var(--accent)")
+                }
+                onMouseLeave={(e) =>
+                  ((e.target as HTMLElement).style.color = "var(--accent-muted)")
+                }
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      {/* ── Bottom nav — strictly mobile only ─────────────────── */}
+      <nav
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "70px",
+          backgroundColor: "var(--bg-secondary)",
+          borderTop: "1px solid var(--border)",
+          zIndex: 50,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        className="bottom-nav-mobile"
+      >
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            maxWidth: "420px",
+          }}
+        >
+          <ul
+            style={{
+              display: "flex",
+              flex: 1,
+              padding: 0,
+              margin: 0,
+              listStyle: "none",
+              position: "relative",
+            }}
+          >
+            {BOTTOM_NAV.map((item, i) => (
+              <li
+                key={item.href}
+                style={{
+                  position: "relative",
+                  width: "70px",
+                  height: "70px",
+                  zIndex: 1,
+                  cursor: "pointer",
+                }}
+                onClick={() => setActiveBottom(i)}
+              >
+                <a
+                  href={item.href}
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    flexDirection: "column",
+                    width: "100%",
+                    textDecoration: "none",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "block",
+                      lineHeight: "75px",
+                      fontSize: "1.4em",
+                      textAlign: "center",
+                      transition:
+                        "transform 500ms cubic-bezier(0.22,1,0.36,1), color 300ms ease",
+                      color:
+                        activeBottom === i
+                          ? "var(--bg-primary)"
+                          : "var(--border)",
+                      transform:
+                        activeBottom === i
+                          ? "translateY(-32px)"
+                          : "translateY(0)",
+                    }}
+                  >
+                    {/* @ts-ignore */}
+                    <ion-icon name={item.icon} />
+                  </span>
+                  <span
+                    style={{
+                      position: "absolute",
+                      bottom: "16px",
+                      fontFamily: "var(--font-body)",
+                      fontWeight: 600,
+                      fontSize: "10px",
+                      letterSpacing: "1px",
+                      textTransform: "uppercase",
+                      color: "var(--accent-muted)",
+                      opacity: activeBottom === i ? 1 : 0,
+                      transform:
+                        activeBottom === i
+                          ? "translateY(0)"
+                          : "translateY(10px)",
+                      transition:
+                        "opacity 400ms 100ms ease, transform 400ms 100ms ease",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                </a>
+              </li>
+            ))}
+
+           {/* Floating indicator — flush with top border */}
+            <div
+              style={{
+                position: "absolute",
+                top: "-35px",
+                width: "70px",
+                height: "70px",
+                backgroundColor: "var(--accent)",
+                borderRadius: "50%",
+                border: "8px solid var(--bg-primary)",
+                transition: "transform 500ms cubic-bezier(0.22,1,0.36,1)",
+                transform: `translateX(${activeBottom * 70}px)`,
+                pointerEvents: "none",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "-24px",
+                  width: "20px",
+                  height: "20px",
+                  borderTopRightRadius: "20px",
+                  boxShadow: "1px -8px 0 0 var(--bg-primary)",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "-24px",
+                  width: "20px",
+                  height: "20px",
+                  borderTopLeftRadius: "20px",
+                  boxShadow: "-1px -8px 0 0 var(--bg-primary)",
+                }}
+              />
+            </div>
+          </ul>
+
+          
+        </div>
+      </nav>
+
+      {/* Ionicons */}
+      <script
+        type="module"
+        src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"
+        async
+      />
+
+      <style>{`
+        /* Bottom nav — mobile only, strict */
+        .bottom-nav-mobile {
+          display: none;
+        }
+        @media (max-width: 767px) {
+          .bottom-nav-mobile {
+            display: flex;
+          }
+          main {
+            padding-bottom: 70px !important;
+          }
+        }
+      `}</style>
+    </>
   );
 }

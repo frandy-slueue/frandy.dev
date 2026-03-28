@@ -20,6 +20,7 @@ export default function BackToTop() {
     <button
       onClick={scrollToTop}
       aria-label="Back to top"
+      className="hidden md:flex"
       style={{
         position: "fixed",
         bottom: "32px",
@@ -30,7 +31,6 @@ export default function BackToTop() {
         border: "1px solid var(--accent)",
         backgroundColor: "var(--bg-elevated)",
         color: "var(--accent)",
-        display: "flex",
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer",
