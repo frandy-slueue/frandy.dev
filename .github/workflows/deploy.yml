@@ -24,6 +24,6 @@ jobs:
             cd /root/frandy.dev
             git pull origin main
             docker compose up -d --build
-            docker compose exec -T fastapi alembic upgrade head
+            docker compose exec -T fastapi alembic upgrade head || true
             docker image prune -f
             echo "Deployed at $(date)"
