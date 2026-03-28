@@ -2,63 +2,30 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaCode, FaPalette, FaServer, FaDatabase, FaTools } from "react-icons/fa";
 
 const CATEGORIES = [
-  "Languages",
-  "Frontend",
-  "Backend",
-  "Databases",
-  "DevOps & Tools",
+  { label: "Languages",     icon: <FaCode size={14} /> },
+  { label: "Frontend",      icon: <FaPalette size={14} /> },
+  { label: "Backend",       icon: <FaServer size={14} /> },
+  { label: "Databases",     icon: <FaDatabase size={14} /> },
+  { label: "DevOps & Tools",icon: <FaTools size={14} /> },
 ];
 
-const SKILLS: Record<string, { name: string; note?: string }[]> = {
-  Languages: [
-    { name: "Python" },
-    { name: "JavaScript" },
-    { name: "C" },
-  ],
-  Frontend: [
-    { name: "React" },
-    { name: "Next.js" },
-    { name: "HTML" },
-    { name: "CSS" },
-    { name: "Tailwind CSS" },
-  ],
-  Backend: [
-    { name: "Django" },
-    { name: "FastAPI" },
-    { name: "GraphQL" },
-    { name: "RESTful APIs" },
-  ],
-  Databases: [
-    { name: "PostgreSQL" },
-    { name: "MongoDB" },
-    { name: "Redis" },
-    { name: "SQLAlchemy" },
-  ],
-  "DevOps & Tools": [
-    { name: "Docker" },
-    { name: "Git" },
-  ],
+const SKILLS: Record<string, { name: string }[]> = {
+  Languages:       [{ name: "Python" }, { name: "JavaScript" }, { name: "C" }],
+  Frontend:        [{ name: "React" }, { name: "Next.js" }, { name: "HTML" }, { name: "CSS" }, { name: "Tailwind CSS" }],
+  Backend:         [{ name: "Django" }, { name: "FastAPI" }, { name: "GraphQL" }, { name: "RESTful APIs" }],
+  Databases:       [{ name: "PostgreSQL" }, { name: "MongoDB" }, { name: "Redis" }, { name: "SQLAlchemy" }],
+  "DevOps & Tools":[{ name: "Docker" }, { name: "Git" }],
 };
 
-// Placeholder project associations — will be replaced with real CMS data
 const SKILL_PROJECTS: Record<string, { title: string; description: string }[]> = {
-  Python: [
-    { title: "frandy.dev API", description: "FastAPI backend powering this portfolio" },
-  ],
-  FastAPI: [
-    { title: "frandy.dev API", description: "Async REST API with PostgreSQL and Docker" },
-  ],
-  "Next.js": [
-    { title: "frandy.dev", description: "This portfolio — Next.js 16+ with App Router" },
-  ],
-  PostgreSQL: [
-    { title: "frandy.dev API", description: "Primary database for projects, contacts, cache" },
-  ],
-  Docker: [
-    { title: "frandy.dev", description: "Five-service Docker Compose orchestration" },
-  ],
+  Python:      [{ title: "frandy.dev API", description: "FastAPI backend powering this portfolio" }],
+  FastAPI:     [{ title: "frandy.dev API", description: "Async REST API with PostgreSQL and Docker" }],
+  "Next.js":   [{ title: "frandy.dev", description: "This portfolio — Next.js 16+ with App Router" }],
+  PostgreSQL:  [{ title: "frandy.dev API", description: "Primary database for projects, contacts, cache" }],
+  Docker:      [{ title: "frandy.dev", description: "Five-service Docker Compose orchestration" }],
 };
 
 function SkillCard({
@@ -81,16 +48,13 @@ function SkillCard({
         gap: "10px",
         width: "90px",
         height: "90px",
-        border: active
-          ? "1px solid var(--accent)"
-          : "1px solid var(--border)",
-        backgroundColor: active
-          ? "var(--bg-elevated)"
-          : "var(--bg-secondary)",
+        border: active ? "1px solid var(--accent)" : "1px solid var(--border)",
+        backgroundColor: active ? "var(--bg-elevated)" : "var(--bg-secondary)",
         cursor: "pointer",
         transition: "border-color 250ms ease, background-color 250ms ease, box-shadow 250ms ease",
         boxShadow: active ? "0 0 16px var(--accent-glow)" : "none",
         padding: "8px",
+        borderRadius: "0",
       }}
       onMouseEnter={(e) => {
         if (!active) {
@@ -113,6 +77,8 @@ function SkillCard({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          color: active ? "var(--accent)" : "var(--text-muted)",
+          transition: "color 250ms ease",
         }}
       >
         <span
@@ -120,7 +86,6 @@ function SkillCard({
             fontFamily: "var(--font-mono)",
             fontSize: "10px",
             color: active ? "var(--accent)" : "var(--text-muted)",
-            transition: "color 250ms ease",
           }}
         >
           {skill.slice(0, 2).toUpperCase()}
@@ -153,7 +118,7 @@ export default function Skills() {
   const tabBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const idx = CATEGORIES.indexOf(activeCategory);
+    const idx = CATEGORIES.findIndex(c => c.label === activeCategory);
     const el = tabRefs.current[idx];
     const bar = tabBarRef.current;
     if (!el || !bar) return;
@@ -173,7 +138,6 @@ export default function Skills() {
     >
       <div className="site-container">
 
-        {/* Section label */}
         <motion.p
           initial={{ opacity: 0, x: -16 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -191,7 +155,7 @@ export default function Skills() {
           02 — Skills
         </motion.p>
 
-        {/* Tab bar */}
+        {/* Boxy tab bar — consistent with nav style */}
         <div
           style={{
             position: "relative",
@@ -205,13 +169,13 @@ export default function Skills() {
             style={{
               position: "relative",
               display: "inline-flex",
-              gap: "0",
               border: "1px solid var(--border)",
               padding: "4px",
               whiteSpace: "nowrap",
+              borderRadius: "0",
             }}
           >
-            {/* Sliding pill */}
+            {/* Sliding indicator — boxy, no border radius */}
             <div
               style={{
                 position: "absolute",
@@ -221,6 +185,7 @@ export default function Skills() {
                 width: pillStyle.width,
                 backgroundColor: "var(--bg-elevated)",
                 border: "1px solid var(--accent-muted)",
+                borderRadius: "0",
                 transition:
                   "left 500ms cubic-bezier(0.22,1,0.36,1), width 500ms cubic-bezier(0.22,1,0.36,1)",
                 pointerEvents: "none",
@@ -229,10 +194,10 @@ export default function Skills() {
 
             {CATEGORIES.map((cat, i) => (
               <button
-                key={cat}
+                key={cat.label}
                 ref={(el) => { tabRefs.current[i] = el; }}
                 onClick={() => {
-                  setActiveCategory(cat);
+                  setActiveCategory(cat.label);
                   setActiveSkill(null);
                 }}
                 style={{
@@ -247,15 +212,24 @@ export default function Skills() {
                   fontWeight: 600,
                   letterSpacing: "2px",
                   textTransform: "uppercase",
-                  color:
-                    activeCategory === cat
-                      ? "var(--accent)"
-                      : "var(--text-muted)",
+                  color: activeCategory === cat.label ? "var(--accent)" : "var(--text-muted)",
                   transition: "color 300ms ease",
                   whiteSpace: "nowrap",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  borderRadius: "0",
                 }}
               >
-                {cat}
+                <span style={{
+                  color: activeCategory === cat.label ? "var(--accent)" : "var(--text-muted)",
+                  transition: "color 300ms ease",
+                  display: "flex",
+                  alignItems: "center",
+                }}>
+                  {cat.icon}
+                </span>
+                {cat.label}
               </button>
             ))}
           </div>
@@ -267,7 +241,6 @@ export default function Skills() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="skills-grid"
           style={{
             display: "flex",
             flexWrap: "wrap",
@@ -281,9 +254,7 @@ export default function Skills() {
               skill={skill.name}
               active={activeSkill === skill.name}
               onClick={() =>
-                setActiveSkill(
-                  activeSkill === skill.name ? null : skill.name
-                )
+                setActiveSkill(activeSkill === skill.name ? null : skill.name)
               }
             />
           ))}
@@ -305,7 +276,6 @@ export default function Skills() {
                   border: "1px solid var(--border)",
                   backgroundColor: "var(--bg-elevated)",
                   padding: "24px",
-                  marginBottom: "8px",
                 }}
               >
                 <p
@@ -322,13 +292,7 @@ export default function Skills() {
                 </p>
 
                 {activeProjects.length > 0 ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "12px",
-                    }}
-                  >
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
                     {activeProjects.map((project) => (
                       <div
                         key={project.title}
@@ -362,20 +326,11 @@ export default function Skills() {
                         >
                           {project.description}
                         </p>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "8px",
-                          }}
-                        >
-                          <button className="btn-ghost"
-                            style={{ padding: "6px 14px", fontSize: "11px" }}
-                          >
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button className="btn-ghost" style={{ padding: "6px 14px", fontSize: "11px" }}>
                             Demo
                           </button>
-                          <button className="btn-ghost"
-                            style={{ padding: "6px 14px", fontSize: "11px" }}
-                          >
+                          <button className="btn-ghost" style={{ padding: "6px 14px", fontSize: "11px" }}>
                             GitHub
                           </button>
                         </div>
@@ -383,14 +338,7 @@ export default function Skills() {
                     ))}
                   </div>
                 ) : (
-                  <p
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontSize: "13px",
-                      color: "var(--text-muted)",
-                      fontStyle: "italic",
-                    }}
-                  >
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic" }}>
                     Used as a supporting tool in infrastructure work.
                   </p>
                 )}

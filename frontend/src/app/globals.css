@@ -179,3 +179,12 @@ code, pre, kbd { font-family: var(--font-mono); }
     gap: 40px !important;
   }
 }
+
+/* ── Section snap ───────────────────────────────────────────────── */
+html {
+  scroll-snap-type: y proximity;
+}
+
+section {
+  scroll-snap-align: start;
+}
