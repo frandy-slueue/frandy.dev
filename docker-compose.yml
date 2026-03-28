@@ -4,9 +4,9 @@ services:
     container_name: frandy_postgres
     env_file: .env
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_USER:     ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB:       ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -24,8 +24,10 @@ services:
       dockerfile: Dockerfile
     container_name: frandy_fastapi
     env_file: .env
+    environment:
+      UPLOAD_DIR: /app/uploads
     volumes:
-      - ./backend:/app
+      - uploads_data:/app/uploads
     networks:
       - frandy_network
     depends_on:
@@ -51,7 +53,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/umami
-      APP_SECRET: ${UMAMI_APP_SECRET}
+      APP_SECRET:   ${UMAMI_APP_SECRET}
     networks:
       - frandy_network
     depends_on:
@@ -69,6 +71,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/ssl:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
     networks:
       - frandy_network
     depends_on:
@@ -80,6 +83,7 @@ services:
 volumes:
   postgres_data:
   uploads_data:
+  certbot_www:
 
 networks:
   frandy_network:
