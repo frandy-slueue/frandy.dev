@@ -36,3 +36,18 @@ nginx/ssl/
 .idea/
 
 SOCIAL_POST_v3.md
+
+# Server dotfiles
+.bash_history
+.bashrc
+.cache/
+.cloud-locale-test.skip
+.docker/
+.lesshst
+.profile
+.ssh/
+.wget-hsts
+.env
+.env.local
+.env*.local
+

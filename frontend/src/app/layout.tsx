@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Bebas_Neue, Rajdhani, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
@@ -63,6 +64,12 @@ export default function RootLayout({
       data-theme="silver"
       className={`${bebasNeue.variable} ${rajdhani.variable} ${jetbrainsMono.variable}`}
     >
+
+	<Script
+        async
+        src="/analytics/script.js"
+        data-website-id="cd42587e-f235-499b-b8fc-1583470bf54d"
+      />
       <body>
         <ThemeProvider>
           <Nav />
