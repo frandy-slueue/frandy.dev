@@ -16,7 +16,7 @@ export default function DiamondAnimated({
   const mouseRef = useRef<{ x: number | null; y: number | null; inside: boolean }>({
     x: null, y: null, inside: false,
   });
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
