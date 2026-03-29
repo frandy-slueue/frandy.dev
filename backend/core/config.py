@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     github_token: str
     github_username: str
     umami_api_url: str
-    umami_api_key: str
+    umami_api_key: Optional[str] = None
     umami_website_id: str
     upload_dir: str = "./uploads"
 
