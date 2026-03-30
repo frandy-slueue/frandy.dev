@@ -145,7 +145,7 @@ export default function AdminProjects() {
           <p>{projects.length} total</p>
         </div>
         <button className="admin-btn-primary" onClick={openCreate}>
-          + Add Project
+          <span>+ Add Project</span>
         </button>
       </div>
 

@@ -209,7 +209,7 @@ export default function AdminSettings() {
             id="settings-resume-upload"
           />
           <label htmlFor="settings-resume-upload" className="admin-btn-primary">
-            {uploading ? "Uploading..." : resumeUrl ? "Replace Resume" : "+ Upload Resume"}
+            <span>{uploading ? "Uploading..." : resumeUrl ? "Replace Resume" : "+ Upload Resume"}</span>
           </label>
         </div>
       </section>
