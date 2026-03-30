@@ -439,7 +439,7 @@ export default function Projects() {
   const filterBarRef = useRef<HTMLDivElement>(null);
   const morphTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
 
   useEffect(() => {
     projectsApi
