@@ -163,7 +163,7 @@ export default function AdminSettings() {
           disabled={saving}
           style={{ marginTop: "1rem" }}
         >
-          {saving ? "Saving..." : "Save Theme"}
+          <span>{saving ? "Saving..." : "Save Theme"}</span>
         </button>
       </section>
 

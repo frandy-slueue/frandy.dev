@@ -14,7 +14,7 @@ export default function AdminAnalytics() {
           rel="noopener noreferrer"
           className="admin-btn-primary"
         >
-          Open Umami Dashboard ↗
+          <span>Open Umami Dashboard ↗</span>
         </a>
       </div>
 

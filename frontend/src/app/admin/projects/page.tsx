@@ -313,7 +313,7 @@ export default function AdminProjects() {
                 onClick={handleSave}
                 disabled={saving}
               >
-                {saving ? "Saving..." : editingId ? "Update" : "Create"}
+                <span>{saving ? "Saving..." : editingId ? "Update" : "Create"}</span>
               </button>
             </div>
           </div>
@@ -327,7 +327,7 @@ export default function AdminProjects() {
         <div className="empty">
           <p>No projects yet.</p>
           <button className="admin-btn-primary" onClick={openCreate}>
-            Add your first project
+            <span>Add your first project</span>
           </button>
         </div>
       ) : (

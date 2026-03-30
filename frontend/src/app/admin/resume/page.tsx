@@ -117,7 +117,7 @@ export default function AdminResume() {
             id="resume-upload"
           />
           <label htmlFor="resume-upload" className="admin-btn-primary">
-            {uploading ? "Uploading..." : "+ Upload PDF"}
+            <span>{uploading ? "Uploading..." : "+ Upload PDF"}</span>
           </label>
         </div>
       </div>
@@ -131,7 +131,7 @@ export default function AdminResume() {
         <div className="empty">
           <p>No resumes uploaded yet.</p>
           <label htmlFor="resume-upload" className="admin-btn-primary">
-            Upload your first resume
+            <span>Upload your first resume</span>
           </label>
         </div>
       ) : (
