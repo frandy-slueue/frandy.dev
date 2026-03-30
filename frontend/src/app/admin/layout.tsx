@@ -84,6 +84,22 @@ export default function AdminLayout({
         <div className="admin__content">{children}</div>
       </main>
 
+          {/* Mobile bottom nav */}
+      <nav className="admin__bottom-nav">
+        {navItems.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className={`admin__bottom-nav-item ${
+              pathname === item.href ? "active" : ""
+            }`}
+          >
+            <span className="admin__bottom-nav-icon">{item.icon}</span>
+            <span>{item.label}</span>
+          </a>
+        ))}
+      </nav>
+  
       <style jsx>{`
         .admin {
           display: flex;

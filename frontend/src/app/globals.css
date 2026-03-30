@@ -309,3 +309,145 @@ select option {
   background: rgba(255, 80, 80, 0.1);
   border-color: #ff5050;
 }
+
+
+/* ── Mobile typography & spacing ────────────────────────────────── */
+@media (max-width: 768px) {
+  body {
+    font-size: 17px;
+  }
+
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.5rem; }
+
+  .section-pad {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
+
+  .site-container {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .btn-primary,
+  .btn-ghost {
+    font-size: 14px;
+    padding: 12px 20px;
+    letter-spacing: 1px;
+  }
+
+  .admin-btn-primary,
+  .admin-btn-secondary,
+  .admin-btn-ghost,
+  .admin-btn-danger {
+    font-size: 14px;
+    padding: 10px 16px;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* ── Admin mobile layout ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Hide sidebar on mobile */
+  .admin__sidebar {
+    display: none !important;
+  }
+
+  /* Full width main content */
+  .admin__main {
+    margin-left: 0 !important;
+  }
+
+  .admin__content {
+    padding: 1rem;
+  }
+
+  /* Stack form grids */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .field--full {
+    grid-column: 1 !important;
+  }
+
+  /* Contact layout stack */
+  .contact__layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Projects table scroll */
+  .projects__table-wrap {
+    overflow-x: auto;
+  }
+
+  .projects__table {
+    min-width: 600px;
+  }
+
+  /* Dashboard grid */
+  .dashboard__grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Analytics grid */
+  .analytics__grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ── Admin bottom nav (mobile) ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .admin__bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 0.5rem;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .admin__bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0.5rem;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-family: var(--font-mono);
+    transition: color 0.15s;
+    flex: 1;
+    text-align: center;
+  }
+
+  .admin__bottom-nav-item:hover,
+  .admin__bottom-nav-item.active {
+    color: var(--accent);
+  }
+
+  .admin__bottom-nav-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  /* Add padding to admin content so bottom nav doesn't cover it */
+  .admin__content {
+    padding-bottom: 80px;
+  }
+}
+
+/* Hide bottom nav on desktop */
+.admin__bottom-nav {
+  display: none;
+}
