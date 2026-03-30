@@ -2,50 +2,48 @@
 
 import { useEffect, useState } from "react";
 
-interface SiteSettings {
-  site_title: string;
-  site_description: string;
-  hero_tagline: string;
-  hero_subtext: string;
-  show_hero: boolean;
-  show_about: boolean;
-  show_skills: boolean;
-  show_projects: boolean;
-  show_timeline: boolean;
-  show_contact: boolean;
-  primary_color: string;
-  background_style: string;
+const THEMES = [
+  { value: "silver", label: "Silver", color: "#c0c0c0" },
+  { value: "cobalt", label: "Cobalt", color: "#0047ab" },
+  { value: "ember", label: "Ember", color: "#ff4500" },
+  { value: "jade", label: "Jade", color: "#00a86b" },
+];
+
+interface ThemeSettings {
+  active_theme: string;
+  last_theme_changed: string;
 }
 
-const defaultSettings: SiteSettings = {
-  site_title: "",
-  site_description: "",
-  hero_tagline: "",
-  hero_subtext: "",
-  show_hero: true,
-  show_about: true,
-  show_skills: true,
-  show_projects: true,
-  show_timeline: true,
-  show_contact: true,
-  primary_color: "#00ff88",
-  background_style: "default",
-};
+interface ResumeSettings {
+  resume_url: string | null;
+  resume_uploaded_at: string | null;
+}
 
 export default function AdminSettings() {
-  const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
+  const [theme, setTheme] = useState("silver");
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [resumeUploadedAt, setResumeUploadedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch("/api/settings", { credentials: "include" });
-        if (res.ok) {
-          const data = await res.json();
-          setSettings({ ...defaultSettings, ...data });
+        const [themeRes, resumeRes] = await Promise.all([
+          fetch("/api/settings/theme", { credentials: "include" }),
+          fetch("/api/settings/resume", { credentials: "include" }),
+        ]);
+        if (themeRes.ok) {
+          const data: ThemeSettings = await themeRes.json();
+          setTheme(data.active_theme);
+        }
+        if (resumeRes.ok) {
+          const data: ResumeSettings = await resumeRes.json();
+          setResumeUrl(data.resume_url);
+          setResumeUploadedAt(data.resume_uploaded_at);
         }
       } catch {
         setError("Failed to load settings");
@@ -56,24 +54,75 @@ export default function AdminSettings() {
     fetchSettings();
   }, []);
 
-  async function handleSave() {
+  async function handleSaveTheme() {
     setSaving(true);
     setError("");
     setSuccess("");
     try {
-      const res = await fetch("/api/settings", {
+      const res = await fetch("/api/settings/theme", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(settings),
+        body: JSON.stringify({ theme }),
       });
       if (!res.ok) throw new Error("Failed to save");
-      setSuccess("Settings saved successfully");
+      setSuccess("Theme saved successfully");
     } catch {
-      setError("Failed to save settings");
+      setError("Failed to save theme");
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/settings/resume", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data: ResumeSettings = await res.json();
+      setResumeUrl(data.resume_url);
+      setResumeUploadedAt(data.resume_uploaded_at);
+      setSuccess("Resume uploaded successfully");
+    } catch {
+      setError("Failed to upload resume");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleDeleteResume() {
+    if (!confirm("Delete the current resume?")) return;
+    try {
+      await fetch("/api/settings/resume", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      setResumeUrl(null);
+      setResumeUploadedAt(null);
+      setSuccess("Resume deleted");
+    } catch {
+      setError("Failed to delete resume");
+    }
+  }
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   if (loading) return <p className="loading">Loading settings...</p>;
@@ -83,146 +132,90 @@ export default function AdminSettings() {
       <div className="settings__header">
         <div>
           <h1>Site Settings</h1>
-          <p>Manage your site content and appearance</p>
+          <p>Manage your site theme and resume</p>
         </div>
-        <button className="btn-primary" onClick={handleSave} disabled={saving}>
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
       {success && <div className="success-banner">{success}</div>}
 
-      {/* SEO */}
+      {/* Theme */}
       <section className="settings__section">
-        <h2>SEO & Meta</h2>
-        <div className="form-grid">
-          <div className="field field--full">
-            <label>Site Title</label>
-            <input
-              value={settings.site_title}
-              onChange={(e) =>
-                setSettings({ ...settings, site_title: e.target.value })
-              }
-              placeholder="Frandy Slueue — Full Stack Engineer"
-            />
-          </div>
-          <div className="field field--full">
-            <label>Site Description</label>
-            <textarea
-              value={settings.site_description}
-              onChange={(e) =>
-                setSettings({ ...settings, site_description: e.target.value })
-              }
-              placeholder="Portfolio description for search engines"
-              rows={2}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Hero */}
-      <section className="settings__section">
-        <h2>Hero Section</h2>
-        <div className="form-grid">
-          <div className="field field--full">
-            <label>Tagline</label>
-            <input
-              value={settings.hero_tagline}
-              onChange={(e) =>
-                setSettings({ ...settings, hero_tagline: e.target.value })
-              }
-              placeholder="Full Stack Software Engineer"
-            />
-          </div>
-          <div className="field field--full">
-            <label>Subtext</label>
-            <textarea
-              value={settings.hero_subtext}
-              onChange={(e) =>
-                setSettings({ ...settings, hero_subtext: e.target.value })
-              }
-              placeholder="Short intro below your name"
-              rows={2}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Sections visibility */}
-      <section className="settings__section">
-        <h2>Section Visibility</h2>
-        <div className="settings__toggles">
-          {[
-            { key: "show_hero", label: "Hero" },
-            { key: "show_about", label: "About" },
-            { key: "show_skills", label: "Skills" },
-            { key: "show_projects", label: "Projects" },
-            { key: "show_timeline", label: "Timeline" },
-            { key: "show_contact", label: "Contact" },
-          ].map(({ key, label }) => (
-            <label key={key} className="toggle-row">
-              <span>{label}</span>
-              <input
-                type="checkbox"
-                checked={settings[key as keyof SiteSettings] as boolean}
-                onChange={(e) =>
-                  setSettings({ ...settings, [key]: e.target.checked })
-                }
+        <h2>Theme</h2>
+        <div className="themes">
+          {THEMES.map((t) => (
+            <button
+              key={t.value}
+              className={`theme-card ${theme === t.value ? "active" : ""}`}
+              onClick={() => setTheme(t.value)}
+            >
+              <div
+                className="theme-card__swatch"
+                style={{ background: t.color }}
               />
-            </label>
+              <span>{t.label}</span>
+            </button>
           ))}
         </div>
+        <button
+          className="btn-primary"
+          onClick={handleSaveTheme}
+          disabled={saving}
+          style={{ marginTop: "1rem" }}
+        >
+          {saving ? "Saving..." : "Save Theme"}
+        </button>
       </section>
 
-      {/* Appearance */}
+      {/* Resume */}
       <section className="settings__section">
-        <h2>Appearance</h2>
-        <div className="form-grid">
-          <div className="field">
-            <label>Primary Accent Color</label>
-            <div className="color-row">
-              <input
-                type="color"
-                value={settings.primary_color}
-                onChange={(e) =>
-                  setSettings({ ...settings, primary_color: e.target.value })
-                }
-                className="color-picker"
-              />
-              <input
-                type="text"
-                value={settings.primary_color}
-                onChange={(e) =>
-                  setSettings({ ...settings, primary_color: e.target.value })
-                }
-                placeholder="#00ff88"
-              />
+        <h2>Resume</h2>
+        {resumeUrl ? (
+          <div className="resume-row">
+            <div className="resume-info">
+              <span className="resume-icon">📄</span>
+              <div>
+                <div className="resume-url">{resumeUrl}</div>
+                {resumeUploadedAt && (
+                  <div className="resume-date">
+                    Uploaded {formatDate(resumeUploadedAt)}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="resume-actions">
+              <a
+                href={resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-ghost"
+              >
+                View
+              </a>
+              <button className="btn-danger" onClick={handleDeleteResume}>
+                Delete
+              </button>
             </div>
           </div>
-          <div className="field">
-            <label>Background Style</label>
-            <select
-              value={settings.background_style}
-              onChange={(e) =>
-                setSettings({ ...settings, background_style: e.target.value })
-              }
-            >
-              <option value="default">Default</option>
-              <option value="matrix">Matrix Rain</option>
-              <option value="particles">Particles</option>
-              <option value="gradient">Gradient</option>
-              <option value="minimal">Minimal</option>
-            </select>
-          </div>
+        ) : (
+          <p className="no-resume">No resume uploaded yet.</p>
+        )}
+        <div style={{ marginTop: "1rem" }}>
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={handleResumeUpload}
+            style={{ display: "none" }}
+            id="settings-resume-upload"
+          />
+          <label htmlFor="settings-resume-upload" className="btn-primary">
+            {uploading ? "Uploading..." : resumeUrl ? "Replace Resume" : "+ Upload Resume"}
+          </label>
         </div>
       </section>
 
       <style jsx>{`
         .settings__header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
           margin-bottom: 2rem;
         }
         .settings__header h1 {
@@ -264,73 +257,72 @@ export default function AdminSettings() {
           margin: 0 0 1.25rem;
           color: var(--color-accent);
         }
-        .form-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
+        .themes {
+          display: flex;
           gap: 1rem;
+          flex-wrap: wrap;
         }
-        .field {
+        .theme-card {
           display: flex;
           flex-direction: column;
-          gap: 0.4rem;
-        }
-        .field--full {
-          grid-column: 1 / -1;
-        }
-        .field label {
-          font-size: 0.8rem;
-          color: var(--color-text-muted);
-          font-family: var(--font-mono);
-        }
-        .field input,
-        .field textarea,
-        .field select {
+          align-items: center;
+          gap: 0.5rem;
+          padding: 1rem;
           background: var(--color-bg);
-          border: 1px solid var(--color-border);
-          border-radius: 4px;
-          padding: 0.625rem 0.75rem;
-          color: var(--color-text);
-          font-size: 0.9rem;
-          outline: none;
-          font-family: var(--font-body);
+          border: 2px solid var(--color-border);
+          border-radius: 8px;
+          cursor: pointer;
           transition: border-color 0.2s;
+          min-width: 80px;
+          color: var(--color-text);
+          font-size: 0.875rem;
         }
-        .field input:focus,
-        .field textarea:focus,
-        .field select:focus {
+        .theme-card:hover {
+          border-color: var(--color-text-muted);
+        }
+        .theme-card.active {
           border-color: var(--color-accent);
         }
-        .color-row {
-          display: flex;
-          gap: 0.5rem;
-          align-items: center;
+        .theme-card__swatch {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
         }
-        .color-picker {
-          width: 48px;
-          height: 38px;
-          padding: 2px;
-          border-radius: 4px;
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-        .settings__toggles {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-        .toggle-row {
+        .resume-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0.75rem 1rem;
           background: var(--color-bg);
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 0.9rem;
+          border: 1px solid var(--color-border);
+          border-radius: 6px;
+          padding: 1rem;
+        }
+        .resume-info {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        .resume-icon {
+          font-size: 1.75rem;
+        }
+        .resume-url {
+          font-size: 0.875rem;
+          font-family: var(--font-mono);
           color: var(--color-text);
         }
-        .toggle-row:hover {
-          border-color: var(--color-accent);
+        .resume-date {
+          font-size: 0.75rem;
+          color: var(--color-text-muted);
+          margin-top: 0.25rem;
+        }
+        .resume-actions {
+          display: flex;
+          gap: 0.5rem;
+        }
+        .no-resume {
+          color: var(--color-text-muted);
+          font-size: 0.9rem;
+          margin: 0 0 0.5rem;
         }
         .btn-primary {
           background: var(--color-accent);
@@ -341,6 +333,8 @@ export default function AdminSettings() {
           font-size: 0.875rem;
           font-weight: 600;
           cursor: pointer;
+          text-decoration: none;
+          display: inline-block;
           transition: opacity 0.2s;
         }
         .btn-primary:hover {
@@ -349,6 +343,23 @@ export default function AdminSettings() {
         .btn-primary:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+        .btn-ghost {
+          background: none;
+          border: none;
+          color: var(--color-accent);
+          cursor: pointer;
+          font-size: 0.875rem;
+          padding: 0.25rem 0.5rem;
+          text-decoration: none;
+        }
+        .btn-danger {
+          background: none;
+          border: none;
+          color: #ff5050;
+          cursor: pointer;
+          font-size: 0.875rem;
+          padding: 0.25rem 0.5rem;
         }
         .loading {
           padding: 3rem;
