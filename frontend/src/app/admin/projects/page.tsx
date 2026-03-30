@@ -474,54 +474,6 @@ export default function AdminProjects() {
           justify-content: flex-end;
           gap: 0.75rem;
         }
-        .admin-btn-primary {
-          background: var(--color-accent);
-          color: var(--color-bg);
-          border: none;
-          border-radius: 4px;
-          padding: 0.625rem 1.25rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: opacity 0.2s;
-        }
-        .admin-btn-primary:hover {
-          opacity: 0.85;
-        }
-        .admin-btn-primary:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .admin-btn-secondary {
-          background: transparent;
-          color: var(--color-text-muted);
-          border: 1px solid var(--color-border);
-          border-radius: 4px;
-          padding: 0.625rem 1.25rem;
-          font-size: 0.875rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .admin-btn-secondary:hover {
-          border-color: var(--color-text-muted);
-          color: var(--color-text);
-        }
-        .admin-btn-ghost {
-          background: none;
-          border: none;
-          color: var(--color-accent);
-          cursor: pointer;
-          font-size: 0.875rem;
-          padding: 0.25rem 0.5rem;
-        }
-        .admin-btn-danger {
-          background: none;
-          border: none;
-          color: #ff5050;
-          cursor: pointer;
-          font-size: 0.875rem;
-          padding: 0.25rem 0.5rem;
-        }
         .loading {
           color: var(--color-text-muted);
           text-align: center;

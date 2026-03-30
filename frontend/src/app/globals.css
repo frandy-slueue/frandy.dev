@@ -204,3 +204,108 @@ select option {
   background: var(--bg-secondary);
   color: var(--text-primary);
 }
+
+/* ── Admin buttons ──────────────────────────────────────────────── */
+.admin-btn-primary {
+  display: inline-block;
+  padding: 8px 20px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  transition: background 250ms ease, color 250ms ease;
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.admin-btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform: translateX(-100%);
+  transition: transform 250ms ease;
+  z-index: 0;
+}
+
+.admin-btn-primary:hover::before { transform: translateX(0); }
+.admin-btn-primary:hover { color: var(--bg-primary); }
+.admin-btn-primary span,
+.admin-btn-primary * { position: relative; z-index: 1; }
+.admin-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-btn-secondary {
+  display: inline-block;
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 4px;
+  transition: border-color 250ms ease, color 250ms ease;
+}
+
+.admin-btn-secondary:hover {
+  border-color: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+.admin-btn-ghost {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 4px;
+  transition: border-color 250ms ease, color 250ms ease;
+}
+
+.admin-btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.admin-btn-danger {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  color: #ff5050;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 4px;
+  transition: background 250ms ease, border-color 250ms ease;
+}
+
+.admin-btn-danger:hover {
+  background: rgba(255, 80, 80, 0.1);
+  border-color: #ff5050;
+}

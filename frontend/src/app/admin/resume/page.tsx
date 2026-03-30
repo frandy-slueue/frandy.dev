@@ -261,39 +261,6 @@ export default function AdminResume() {
           gap: 0.5rem;
           align-items: center;
         }
-        .admin-btn-primary {
-          background: var(--color-accent);
-          color: var(--color-bg);
-          border: none;
-          border-radius: 4px;
-          padding: 0.625rem 1.25rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-          cursor: pointer;
-          text-decoration: none;
-          display: inline-block;
-          transition: opacity 0.2s;
-        }
-        .admin-btn-primary:hover {
-          opacity: 0.85;
-        }
-        .admin-btn-ghost {
-          background: none;
-          border: none;
-          color: var(--color-accent);
-          cursor: pointer;
-          font-size: 0.875rem;
-          padding: 0.25rem 0.5rem;
-          text-decoration: none;
-        }
-        .admin-btn-danger {
-          background: none;
-          border: none;
-          color: #ff5050;
-          cursor: pointer;
-          font-size: 0.875rem;
-          padding: 0.25rem 0.5rem;
-        }
         .loading,
         .empty {
           padding: 3rem;

@@ -339,35 +339,6 @@ export default function AdminContact() {
           color: var(--color-text-muted);
           font-size: 0.9rem;
         }
-        .btn-primary {
-          background: var(--color-accent);
-          color: var(--color-bg);
-          border: none;
-          border-radius: 4px;
-          padding: 0.625rem 1.25rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-          cursor: pointer;
-          text-decoration: none;
-          display: inline-block;
-          transition: opacity 0.2s;
-        }
-        .btn-primary:hover {
-          opacity: 0.85;
-        }
-        .btn-danger {
-          background: none;
-          border: 1px solid rgba(255, 80, 80, 0.3);
-          color: #ff5050;
-          border-radius: 4px;
-          padding: 0.5rem 1rem;
-          font-size: 0.875rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .btn-danger:hover {
-          background: rgba(255, 80, 80, 0.1);
-        }
         .loading,
         .empty {
           padding: 2rem;

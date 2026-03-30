@@ -51,22 +51,6 @@ export default function AdminAnalytics() {
           border-radius: 8px;
           overflow: hidden;
         }
-        .admin-btn-primary {
-          background: var(--color-accent);
-          color: var(--color-bg);
-          border: none;
-          border-radius: 4px;
-          padding: 0.625rem 1.25rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-          cursor: pointer;
-          text-decoration: none;
-          display: inline-block;
-          transition: opacity 0.2s;
-        }
-        .admin-btn-primary:hover {
-          opacity: 0.85;
-        }
       `}</style>
     </div>
   );
