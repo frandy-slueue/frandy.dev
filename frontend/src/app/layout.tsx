@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Bebas_Neue, Rajdhani, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import Nav from "@/components/Nav";
 import ThemeProvider from "@/components/ThemeProvider";
-import BackToTop from "@/components/ui/BackToTop";
+import NavWrapper from "@/components/NavWrapper";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -72,9 +71,7 @@ export default function RootLayout({
       />
       <body>
         <ThemeProvider>
-          <Nav />
-          <main style={{ paddingTop: "52px" }}>{children}</main>
-          <BackToTop />
+        <NavWrapper>{children}</NavWrapper>
         </ThemeProvider>
       </body>
     </html>
