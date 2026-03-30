@@ -48,3 +48,41 @@ def delete_thumbnail(thumbnail_url: str | None) -> None:
     file_path = UPLOAD_DIR / filename
     if file_path.exists():
         os.remove(file_path)
+
+RESUME_DIR = UPLOAD_DIR / "resumes"
+ALLOWED_RESUME_TYPES = {"application/pdf"}
+MAX_RESUME_SIZE = 10 * 1024 * 1024  # 10MB
+
+
+async def save_resume(file: UploadFile) -> str:
+    RESUME_DIR.mkdir(parents=True, exist_ok=True)
+
+    if file.content_type not in ALLOWED_RESUME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF files are allowed.",
+        )
+
+    contents = await file.read()
+    if len(contents) > MAX_RESUME_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail="File too large. Maximum size is 10MB.",
+        )
+
+    filename = f"resume_{uuid.uuid4()}.pdf"
+    file_path = RESUME_DIR / filename
+
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    return f"/uploads/resumes/{filename}"
+
+
+def delete_resume(file_url: str | None) -> None:
+    if not file_url:
+        return
+    filename = file_url.split("/uploads/resumes/")[-1]
+    file_path = RESUME_DIR / filename
+    if file_path.exists():
+        os.remove(file_path)
