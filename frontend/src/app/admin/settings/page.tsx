@@ -158,7 +158,7 @@ export default function AdminSettings() {
           ))}
         </div>
         <button
-          className="btn-primary"
+          className="admin-btn-primary"
           onClick={handleSaveTheme}
           disabled={saving}
           style={{ marginTop: "1rem" }}
@@ -188,11 +188,11 @@ export default function AdminSettings() {
                 href={resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-ghost"
+                className="admin-btn-ghost"
               >
                 View
               </a>
-              <button className="btn-danger" onClick={handleDeleteResume}>
+              <button className="admin-btn-danger" onClick={handleDeleteResume}>
                 Delete
               </button>
             </div>
@@ -208,7 +208,7 @@ export default function AdminSettings() {
             style={{ display: "none" }}
             id="settings-resume-upload"
           />
-          <label htmlFor="settings-resume-upload" className="btn-primary">
+          <label htmlFor="settings-resume-upload" className="admin-btn-primary">
             {uploading ? "Uploading..." : resumeUrl ? "Replace Resume" : "+ Upload Resume"}
           </label>
         </div>
@@ -324,7 +324,7 @@ export default function AdminSettings() {
           font-size: 0.9rem;
           margin: 0 0 0.5rem;
         }
-        .btn-primary {
+        .admin-btn-primary {
           background: var(--color-accent);
           color: var(--color-bg);
           border: none;
@@ -337,14 +337,14 @@ export default function AdminSettings() {
           display: inline-block;
           transition: opacity 0.2s;
         }
-        .btn-primary:hover {
+        .admin-btn-primary:hover {
           opacity: 0.85;
         }
-        .btn-primary:disabled {
+        .admin-btn-primary:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
-        .btn-ghost {
+        .admin-btn-ghost {
           background: none;
           border: none;
           color: var(--color-accent);
@@ -353,7 +353,7 @@ export default function AdminSettings() {
           padding: 0.25rem 0.5rem;
           text-decoration: none;
         }
-        .btn-danger {
+        .admin-btn-danger {
           background: none;
           border: none;
           color: #ff5050;

@@ -12,7 +12,7 @@ export default function AdminAnalytics() {
           href="http://104.131.169.140:8080"
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary"
+          className="admin-btn-primary"
         >
           Open Umami Dashboard ↗
         </a>
@@ -51,7 +51,7 @@ export default function AdminAnalytics() {
           border-radius: 8px;
           overflow: hidden;
         }
-        .btn-primary {
+        .admin-btn-primary {
           background: var(--color-accent);
           color: var(--color-bg);
           border: none;
@@ -64,7 +64,7 @@ export default function AdminAnalytics() {
           display: inline-block;
           transition: opacity 0.2s;
         }
-        .btn-primary:hover {
+        .admin-btn-primary:hover {
           opacity: 0.85;
         }
       `}</style>

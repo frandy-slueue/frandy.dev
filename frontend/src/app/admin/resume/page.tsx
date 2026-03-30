@@ -116,7 +116,7 @@ export default function AdminResume() {
             style={{ display: "none" }}
             id="resume-upload"
           />
-          <label htmlFor="resume-upload" className="btn-primary">
+          <label htmlFor="resume-upload" className="admin-btn-primary">
             {uploading ? "Uploading..." : "+ Upload PDF"}
           </label>
         </div>
@@ -130,7 +130,7 @@ export default function AdminResume() {
       ) : resumes.length === 0 ? (
         <div className="empty">
           <p>No resumes uploaded yet.</p>
-          <label htmlFor="resume-upload" className="btn-primary">
+          <label htmlFor="resume-upload" className="admin-btn-primary">
             Upload your first resume
           </label>
         </div>
@@ -153,20 +153,20 @@ export default function AdminResume() {
                   href={r.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-ghost"
+                  className="admin-btn-ghost"
                 >
                   View
                 </a>
                 {!r.is_active && (
                   <button
-                    className="btn-ghost"
+                    className="admin-btn-ghost"
                     onClick={() => handleActivate(r.id)}
                   >
                     Set Active
                   </button>
                 )}
                 <button
-                  className="btn-danger"
+                  className="admin-btn-danger"
                   onClick={() => handleDelete(r.id)}
                 >
                   Delete
@@ -261,7 +261,7 @@ export default function AdminResume() {
           gap: 0.5rem;
           align-items: center;
         }
-        .btn-primary {
+        .admin-btn-primary {
           background: var(--color-accent);
           color: var(--color-bg);
           border: none;
@@ -274,10 +274,10 @@ export default function AdminResume() {
           display: inline-block;
           transition: opacity 0.2s;
         }
-        .btn-primary:hover {
+        .admin-btn-primary:hover {
           opacity: 0.85;
         }
-        .btn-ghost {
+        .admin-btn-ghost {
           background: none;
           border: none;
           color: var(--color-accent);
@@ -286,7 +286,7 @@ export default function AdminResume() {
           padding: 0.25rem 0.5rem;
           text-decoration: none;
         }
-        .btn-danger {
+        .admin-btn-danger {
           background: none;
           border: none;
           color: #ff5050;

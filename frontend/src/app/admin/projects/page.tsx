@@ -144,7 +144,7 @@ export default function AdminProjects() {
           <h1>Projects</h1>
           <p>{projects.length} total</p>
         </div>
-        <button className="btn-primary" onClick={openCreate}>
+        <button className="admin-btn-primary" onClick={openCreate}>
           + Add Project
         </button>
       </div>
@@ -303,13 +303,13 @@ export default function AdminProjects() {
 
             <div className="form-actions">
               <button
-                className="btn-secondary"
+                className="admin-btn-secondary"
                 onClick={() => setShowForm(false)}
               >
                 Cancel
               </button>
               <button
-                className="btn-primary"
+                className="admin-btn-primary"
                 onClick={handleSave}
                 disabled={saving}
               >
@@ -326,7 +326,7 @@ export default function AdminProjects() {
       ) : projects.length === 0 ? (
         <div className="empty">
           <p>No projects yet.</p>
-          <button className="btn-primary" onClick={openCreate}>
+          <button className="admin-btn-primary" onClick={openCreate}>
             Add your first project
           </button>
         </div>
@@ -358,13 +358,13 @@ export default function AdminProjects() {
                   <td>
                     <div className="row-actions">
                       <button
-                        className="btn-ghost"
+                        className="admin-btn-ghost"
                         onClick={() => openEdit(p)}
                       >
                         Edit
                       </button>
                       <button
-                        className="btn-danger"
+                        className="admin-btn-danger"
                         onClick={() => handleDelete(p.id)}
                       >
                         Delete
@@ -474,7 +474,7 @@ export default function AdminProjects() {
           justify-content: flex-end;
           gap: 0.75rem;
         }
-        .btn-primary {
+        .admin-btn-primary {
           background: var(--color-accent);
           color: var(--color-bg);
           border: none;
@@ -485,14 +485,14 @@ export default function AdminProjects() {
           cursor: pointer;
           transition: opacity 0.2s;
         }
-        .btn-primary:hover {
+        .admin-btn-primary:hover {
           opacity: 0.85;
         }
-        .btn-primary:disabled {
+        .admin-btn-primary:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
-        .btn-secondary {
+        .admin-btn-secondary {
           background: transparent;
           color: var(--color-text-muted);
           border: 1px solid var(--color-border);
@@ -502,11 +502,11 @@ export default function AdminProjects() {
           cursor: pointer;
           transition: all 0.2s;
         }
-        .btn-secondary:hover {
+        .admin-btn-secondary:hover {
           border-color: var(--color-text-muted);
           color: var(--color-text);
         }
-        .btn-ghost {
+        .admin-btn-ghost {
           background: none;
           border: none;
           color: var(--color-accent);
@@ -514,7 +514,7 @@ export default function AdminProjects() {
           font-size: 0.875rem;
           padding: 0.25rem 0.5rem;
         }
-        .btn-danger {
+        .admin-btn-danger {
           background: none;
           border: none;
           color: #ff5050;
