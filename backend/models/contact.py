@@ -22,6 +22,8 @@ class Contact(Base):
     phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
     company: Mapped[str | None] = mapped_column(String(150), nullable=True)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_starred: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

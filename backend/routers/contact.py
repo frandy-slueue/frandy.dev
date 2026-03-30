@@ -31,7 +31,6 @@ async def submit_contact(
     await db.commit()
     await db.refresh(contact)
 
-    # Fire and forget — email failure does not fail the request
     await send_contact_notification(
         name=contact.name,
         email=contact.email,
@@ -48,7 +47,7 @@ async def submit_contact(
 
 @router.get("", response_model=list[ContactListResponse])
 async def list_contacts(
-    unread_only: bool = Query(default=False),
+    filter: str = Query(default="all"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     _: AdminUser = Depends(get_current_admin),
@@ -56,8 +55,17 @@ async def list_contacts(
 ):
     query = select(Contact)
 
-    if unread_only:
+    if filter == "unread":
         query = query.where(Contact.is_read == False)
+    elif filter == "read":
+        query = query.where(Contact.is_read == True)
+    elif filter == "starred":
+        query = query.where(Contact.is_starred == True)
+    elif filter == "archived":
+        query = query.where(Contact.is_archived == True)
+    else:
+        # "all" — exclude archived by default
+        query = query.where(Contact.is_archived == False)
 
     query = (
         query.order_by(Contact.created_at.desc())
@@ -98,7 +106,13 @@ async def update_contact_status(
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
 
-    contact.is_read = payload.is_read
+    if payload.is_read is not None:
+        contact.is_read = payload.is_read
+    if payload.is_starred is not None:
+        contact.is_starred = payload.is_starred
+    if payload.is_archived is not None:
+        contact.is_archived = payload.is_archived
+
     await db.commit()
     await db.refresh(contact)
     return contact

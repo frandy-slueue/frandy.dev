@@ -9,6 +9,8 @@ interface ContactList {
   subject: string;
   company: string | null;
   is_read: boolean;
+  is_starred: boolean;
+  is_archived: boolean;
   created_at: string;
 }
 
@@ -21,22 +23,32 @@ interface ContactDetail {
   phone: string | null;
   company: string | null;
   is_read: boolean;
+  is_starred: boolean;
+  is_archived: boolean;
   created_at: string;
 }
+
+const FILTERS = [
+  { value: "all", label: "All" },
+  { value: "unread", label: "Unread" },
+  { value: "read", label: "Read" },
+  { value: "starred", label: "Starred" },
+  { value: "archived", label: "Archived" },
+];
 
 export default function AdminContact() {
   const [contacts, setContacts] = useState<ContactList[]>([]);
   const [selected, setSelected] = useState<ContactDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [filter, setFilter] = useState("all");
   const [error, setError] = useState("");
 
-  async function fetchContacts(unread = false) {
+  async function fetchContacts(f = "all") {
+    setLoading(true);
     try {
-      const res = await fetch(
-        `/api/contact?unread_only=${unread}&page_size=50`,
-        { credentials: "include" }
-      );
+      const res = await fetch(`/api/contact?filter=${f}&page_size=50`, {
+        credentials: "include",
+      });
       const data = await res.json();
       setContacts(data);
     } catch {
@@ -54,14 +66,8 @@ export default function AdminContact() {
       const data = await res.json();
       setSelected(data);
 
-      // Mark as read
       if (!data.is_read) {
-        await fetch(`/api/contact/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ is_read: true }),
-        });
+        await patch(id, { is_read: true });
         setContacts((prev) =>
           prev.map((c) => (c.id === id ? { ...c, is_read: true } : c))
         );
@@ -69,6 +75,39 @@ export default function AdminContact() {
     } catch {
       setError("Failed to load message");
     }
+  }
+
+  async function patch(id: string, payload: object) {
+    await fetch(`/api/contact/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async function handleStar(id: string, current: boolean) {
+    await patch(id, { is_starred: !current });
+    setContacts((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, is_starred: !current } : c))
+    );
+    if (selected?.id === id)
+      setSelected((s) => s && { ...s, is_starred: !current });
+  }
+
+  async function handleArchive(id: string, current: boolean) {
+    await patch(id, { is_archived: !current });
+    setContacts((prev) => prev.filter((c) => c.id !== id));
+    if (selected?.id === id) setSelected(null);
+  }
+
+  async function handleMarkRead(id: string, current: boolean) {
+    await patch(id, { is_read: !current });
+    setContacts((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, is_read: !current } : c))
+    );
+    if (selected?.id === id)
+      setSelected((s) => s && { ...s, is_read: !current });
   }
 
   async function handleDelete(id: string) {
@@ -85,9 +124,16 @@ export default function AdminContact() {
     }
   }
 
+  function handleForward(email: string, subject: string) {
+    window.open(
+      `mailto:?subject=Fwd: ${subject}&body=Forwarded from frandy.dev contact form.`,
+      "_blank"
+    );
+  }
+
   useEffect(() => {
-    fetchContacts(unreadOnly);
-  }, [unreadOnly]);
+    fetchContacts(filter);
+  }, [filter]);
 
   const unreadCount = contacts.filter((c) => !c.is_read).length;
 
@@ -107,20 +153,25 @@ export default function AdminContact() {
         <div>
           <h1>Contact Inbox</h1>
           <p>
-            {unreadCount} unread · {contacts.length} total
+            {unreadCount} unread · {contacts.length} shown
           </p>
         </div>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={unreadOnly}
-            onChange={(e) => setUnreadOnly(e.target.checked)}
-          />
-          Unread only
-        </label>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
+
+      {/* Filter tabs */}
+      <div className="contact__filters">
+        {FILTERS.map((f) => (
+          <button
+            key={f.value}
+            className={`filter-tab ${filter === f.value ? "active" : ""}`}
+            onClick={() => setFilter(f.value)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
       <div className="contact__layout">
         {/* Message list */}
@@ -128,21 +179,24 @@ export default function AdminContact() {
           {loading ? (
             <p className="loading">Loading...</p>
           ) : contacts.length === 0 ? (
-            <p className="empty">No messages yet.</p>
+            <p className="empty">No messages here.</p>
           ) : (
             contacts.map((c) => (
               <div
                 key={c.id}
-                className={`contact__item ${
-                  !c.is_read ? "unread" : ""
-                } ${selected?.id === c.id ? "active" : ""}`}
+                className={`contact__item ${!c.is_read ? "unread" : ""} ${
+                  selected?.id === c.id ? "active" : ""
+                }`}
                 onClick={() => openMessage(c.id)}
               >
                 <div className="contact__item-top">
                   <span className="contact__name">{c.name}</span>
-                  <span className="contact__date">
-                    {formatDate(c.created_at)}
-                  </span>
+                  <div className="contact__item-icons">
+                    {c.is_starred && <span className="icon-star active">★</span>}
+                    <span className="contact__date">
+                      {formatDate(c.created_at)}
+                    </span>
+                  </div>
                 </div>
                 <div className="contact__subject">{c.subject}</div>
                 {c.company && (
@@ -162,9 +216,7 @@ export default function AdminContact() {
                 <div>
                   <h2>{selected.subject}</h2>
                   <p>
-                    From{" "}
-                    <strong>{selected.name}</strong>{" "}
-                    &lt;{selected.email}&gt;
+                    From <strong>{selected.name}</strong> &lt;{selected.email}&gt;
                     {selected.company && ` · ${selected.company}`}
                     {selected.phone && ` · ${selected.phone}`}
                   </p>
@@ -172,20 +224,60 @@ export default function AdminContact() {
                     {formatDate(selected.created_at)}
                   </p>
                 </div>
+              </div>
+
+              <div className="contact__message">{selected.message}</div>
+
+              <div className="contact__actions">
+                <a
+                  href={`mailto:${selected.email}?subject=Re: ${selected.subject}`}
+                  className="admin-btn-primary"
+                >
+                  <span>Reply</span>
+                </a>
                 <button
-                  className="btn-danger"
+                  className="admin-btn-ghost"
+                  onClick={() =>
+                    handleForward(selected.email, selected.subject)
+                  }
+                >
+                  <span>Forward</span>
+                </button>
+                <button
+                  className={`admin-btn-ghost ${
+                    selected.is_starred ? "starred" : ""
+                  }`}
+                  onClick={() => handleStar(selected.id, selected.is_starred)}
+                >
+                  <span>{selected.is_starred ? "★ Starred" : "☆ Star"}</span>
+                </button>
+                <button
+                  className="admin-btn-ghost"
+                  onClick={() =>
+                    handleMarkRead(selected.id, selected.is_read)
+                  }
+                >
+                  <span>
+                    {selected.is_read ? "Mark Unread" : "Mark Read"}
+                  </span>
+                </button>
+                <button
+                  className="admin-btn-ghost"
+                  onClick={() =>
+                    handleArchive(selected.id, selected.is_archived)
+                  }
+                >
+                  <span>
+                    {selected.is_archived ? "Unarchive" : "Archive"}
+                  </span>
+                </button>
+                <button
+                  className="admin-btn-danger"
                   onClick={() => handleDelete(selected.id)}
                 >
-                  Delete
+                  <span>Delete</span>
                 </button>
               </div>
-              <div className="contact__message">{selected.message}</div>
-              <a
-                href={`mailto:${selected.email}?subject=Re: ${selected.subject}`}
-                className="btn-primary"
-              >
-                Reply via Email
-              </a>
             </>
           ) : (
             <div className="contact__detail-empty">
@@ -197,10 +289,7 @@ export default function AdminContact() {
 
       <style jsx>{`
         .contact__header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
         }
         .contact__header h1 {
           font-family: var(--font-display);
@@ -212,14 +301,6 @@ export default function AdminContact() {
           margin: 0.25rem 0 0;
           font-size: 0.875rem;
         }
-        .toggle {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.875rem;
-          color: var(--color-text-muted);
-          cursor: pointer;
-        }
         .error-banner {
           background: rgba(255, 80, 80, 0.1);
           border: 1px solid rgba(255, 80, 80, 0.3);
@@ -227,6 +308,32 @@ export default function AdminContact() {
           padding: 0.75rem 1rem;
           border-radius: 4px;
           margin-bottom: 1rem;
+        }
+        .contact__filters {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+          border-bottom: 1px solid var(--color-border);
+          padding-bottom: 0;
+        }
+        .filter-tab {
+          background: none;
+          border: none;
+          border-bottom: 2px solid transparent;
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+          color: var(--color-text-muted);
+          cursor: pointer;
+          transition: color 0.15s, border-color 0.15s;
+          font-family: var(--font-body);
+          margin-bottom: -1px;
+        }
+        .filter-tab:hover {
+          color: var(--color-text);
+        }
+        .filter-tab.active {
+          color: var(--accent);
+          border-bottom-color: var(--accent);
         }
         .contact__layout {
           display: grid;
@@ -248,15 +355,13 @@ export default function AdminContact() {
           position: relative;
           transition: background 0.15s;
         }
-        .contact__item:hover {
-          background: var(--color-bg);
-        }
+        .contact__item:hover { background: var(--color-bg); }
         .contact__item.active {
           background: var(--color-bg);
-          border-left: 2px solid var(--color-accent);
+          border-left: 2px solid var(--accent);
         }
         .contact__item.unread .contact__name {
-          color: var(--color-accent);
+          color: var(--accent);
           font-weight: 600;
         }
         .contact__item-top {
@@ -265,10 +370,12 @@ export default function AdminContact() {
           align-items: center;
           margin-bottom: 0.25rem;
         }
-        .contact__name {
-          font-size: 0.9rem;
-          color: var(--color-text);
+        .contact__item-icons {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
         }
+        .contact__name { font-size: 0.9rem; color: var(--color-text); }
         .contact__date {
           font-size: 0.75rem;
           color: var(--color-text-muted);
@@ -294,19 +401,20 @@ export default function AdminContact() {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: var(--color-accent);
+          background: var(--accent);
         }
+        .icon-star { font-size: 0.75rem; color: var(--color-text-muted); }
+        .icon-star.active { color: #f5a623; }
         .contact__detail {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-radius: 8px;
           padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
         }
         .contact__detail-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1.5rem;
           padding-bottom: 1rem;
           border-bottom: 1px solid var(--color-border);
         }
@@ -329,8 +437,16 @@ export default function AdminContact() {
           line-height: 1.7;
           color: var(--color-text);
           white-space: pre-wrap;
-          margin-bottom: 1.5rem;
+          flex: 1;
         }
+        .contact__actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          padding-top: 1rem;
+          border-top: 1px solid var(--color-border);
+        }
+        .starred span { color: #f5a623; }
         .contact__detail-empty {
           display: flex;
           align-items: center;
@@ -339,8 +455,7 @@ export default function AdminContact() {
           color: var(--color-text-muted);
           font-size: 0.9rem;
         }
-        .loading,
-        .empty {
+        .loading, .empty {
           padding: 2rem;
           text-align: center;
           color: var(--color-text-muted);

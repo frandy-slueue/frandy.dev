@@ -22,6 +22,8 @@ class ContactResponse(BaseModel):
     phone: str | None
     company: str | None
     is_read: bool
+    is_starred: bool
+    is_archived: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -34,10 +36,14 @@ class ContactListResponse(BaseModel):
     subject: str
     company: str | None
     is_read: bool
+    is_starred: bool
+    is_archived: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}
 
 
 class ContactStatusUpdate(BaseModel):
-    is_read: bool
+    is_read: bool | None = None
+    is_starred: bool | None = None
+    is_archived: bool | None = None
