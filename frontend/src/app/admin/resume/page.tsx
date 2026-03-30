@@ -65,18 +65,18 @@ export default function AdminResume() {
   }
 
   async function handleActivate(id: string) {
-    try {
-      const res = await fetch(`/api/resume/${id}/activate`, {
-        method: "PATCH",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to activate");
-      setSuccess("Resume set as active");
-      await fetchResumes();
-    } catch {
-      setError("Failed to activate resume");
-    }
+  try {
+    const res = await fetch(`/api/resume/${id}/activate`, {
+      method: "PATCH",
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error("Failed to activate");
+    setSuccess("Resume set as active");
+    await fetchResumes();
+  } catch {
+    setError("Failed to activate resume");
   }
+}
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this resume?")) return;

@@ -23,7 +23,7 @@ export default function AdminAnalytics() {
         <div>
           <p>Analytics are tracked via Umami running on your server.</p>
           <p>
-            Once your domain is live at{" "}
+            Once the domain is live at{" "}
             <strong>frandy.dev</strong> and SSL is configured, the full
             dashboard will be embeddable here. For now, open the Umami
             dashboard directly using the button above.

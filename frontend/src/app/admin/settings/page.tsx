@@ -14,36 +14,22 @@ interface ThemeSettings {
   last_theme_changed: string;
 }
 
-interface ResumeSettings {
-  resume_url: string | null;
-  resume_uploaded_at: string | null;
-}
-
 export default function AdminSettings() {
   const [theme, setTheme] = useState("silver");
-  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
-  const [resumeUploadedAt, setResumeUploadedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const [themeRes, resumeRes] = await Promise.all([
-          fetch("/api/settings/theme", { credentials: "include" }),
-          fetch("/api/settings/resume", { credentials: "include" }),
-        ]);
-        if (themeRes.ok) {
-          const data: ThemeSettings = await themeRes.json();
+        const res = await fetch("/api/settings/theme", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data: ThemeSettings = await res.json();
           setTheme(data.active_theme);
-        }
-        if (resumeRes.ok) {
-          const data: ResumeSettings = await resumeRes.json();
-          setResumeUrl(data.resume_url);
-          setResumeUploadedAt(data.resume_uploaded_at);
         }
       } catch {
         setError("Failed to load settings");
@@ -74,57 +60,6 @@ export default function AdminSettings() {
     }
   }
 
-  async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setError("");
-    setSuccess("");
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/settings/resume", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const data: ResumeSettings = await res.json();
-      setResumeUrl(data.resume_url);
-      setResumeUploadedAt(data.resume_uploaded_at);
-      setSuccess("Resume uploaded successfully");
-    } catch {
-      setError("Failed to upload resume");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function handleDeleteResume() {
-    if (!confirm("Delete the current resume?")) return;
-    try {
-      await fetch("/api/settings/resume", {
-        method: "DELETE",
-        credentials: "include",
-      });
-      setResumeUrl(null);
-      setResumeUploadedAt(null);
-      setSuccess("Resume deleted");
-    } catch {
-      setError("Failed to delete resume");
-    }
-  }
-
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
   if (loading) return <p className="loading">Loading settings...</p>;
 
   return (
@@ -132,14 +67,13 @@ export default function AdminSettings() {
       <div className="settings__header">
         <div>
           <h1>Site Settings</h1>
-          <p>Manage your site theme and resume</p>
+          <p>Manage your site theme</p>
         </div>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
       {success && <div className="success-banner">{success}</div>}
 
-      {/* Theme */}
       <section className="settings__section">
         <h2>Theme</h2>
         <div className="themes">
@@ -165,53 +99,6 @@ export default function AdminSettings() {
         >
           <span>{saving ? "Saving..." : "Save Theme"}</span>
         </button>
-      </section>
-
-      {/* Resume */}
-      <section className="settings__section">
-        <h2>Resume</h2>
-        {resumeUrl ? (
-          <div className="resume-row">
-            <div className="resume-info">
-              <span className="resume-icon">📄</span>
-              <div>
-                <div className="resume-url">{resumeUrl}</div>
-                {resumeUploadedAt && (
-                  <div className="resume-date">
-                    Uploaded {formatDate(resumeUploadedAt)}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="resume-actions">
-              <a
-                href={resumeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="admin-btn-ghost"
-              >
-                View
-              </a>
-              <button className="admin-btn-danger" onClick={handleDeleteResume}>
-                Delete
-              </button>
-            </div>
-          </div>
-        ) : (
-          <p className="no-resume">No resume uploaded yet.</p>
-        )}
-        <div style={{ marginTop: "1rem" }}>
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={handleResumeUpload}
-            style={{ display: "none" }}
-            id="settings-resume-upload"
-          />
-          <label htmlFor="settings-resume-upload" className="admin-btn-primary">
-            <span>{uploading ? "Uploading..." : resumeUrl ? "Replace Resume" : "+ Upload Resume"}</span>
-          </label>
-        </div>
       </section>
 
       <style jsx>{`
@@ -287,42 +174,6 @@ export default function AdminSettings() {
           width: 40px;
           height: 40px;
           border-radius: 50%;
-        }
-        .resume-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: var(--color-bg);
-          border: 1px solid var(--color-border);
-          border-radius: 6px;
-          padding: 1rem;
-        }
-        .resume-info {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        .resume-icon {
-          font-size: 1.75rem;
-        }
-        .resume-url {
-          font-size: 0.875rem;
-          font-family: var(--font-mono);
-          color: var(--color-text);
-        }
-        .resume-date {
-          font-size: 0.75rem;
-          color: var(--color-text-muted);
-          margin-top: 0.25rem;
-        }
-        .resume-actions {
-          display: flex;
-          gap: 0.5rem;
-        }
-        .no-resume {
-          color: var(--color-text-muted);
-          font-size: 0.9rem;
-          margin: 0 0 0.5rem;
         }
         .loading {
           padding: 3rem;

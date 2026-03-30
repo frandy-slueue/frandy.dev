@@ -15,16 +15,48 @@ router = APIRouter(prefix="/api/resume", tags=["resume"])
 
 # ── Public ────────────────────────────────────────────────────────────────────
 
-@router.get("/active", response_model=ResumeResponse)
-async def get_active_resume(db: AsyncSession = Depends(get_db)):
+@router.patch("/{resume_id}/activate", response_model=ResumeResponse)
+async def activate_resume(
+    resume_id: uuid.UUID,
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    # Deactivate all
+    result = await db.execute(select(Resume))
+    for r in result.scalars().all():
+        r.is_active = False
+
+    # Activate selected
+    result = await db.execute(select(Resume).where(Resume.id == resume_id))
+    resume = result.scalar_one_or_none()
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    resume.is_active = True
+
+    # Sync to site_settings
+    from models.site_settings import SiteSettings
+    from datetime import datetime, timezone
+    settings_result = await db.execute(select(SiteSettings).where(SiteSettings.id == 1))
+    site_settings = settings_result.scalar_one_or_none()
+    if site_settings:
+        site_settings.resume_url = resume.file_url
+        site_settings.resume_uploaded_at = datetime.now(timezone.utc)
+
+    await db.commit()
+    await db.refresh(resume)
+    return resume
+
+@router.get("/active-url", response_model=dict)
+async def get_active_resume_url(
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(
         select(Resume).where(Resume.is_active == True)
     )
     resume = result.scalar_one_or_none()
     if not resume:
-        raise HTTPException(status_code=404, detail="No active resume found")
-    return resume
-
+        return {"url": None}
+    return {"url": resume.file_url}
 
 # ── Admin ─────────────────────────────────────────────────────────────────────
 
@@ -48,28 +80,6 @@ async def upload_resume(
     url = await save_resume(file)
     resume = Resume(filename=file.filename, file_url=url)
     db.add(resume)
-    await db.commit()
-    await db.refresh(resume)
-    return resume
-
-
-@router.patch("/{resume_id}/activate", response_model=ResumeResponse)
-async def activate_resume(
-    resume_id: uuid.UUID,
-    _: AdminUser = Depends(get_current_admin),
-    db: AsyncSession = Depends(get_db),
-):
-    # Deactivate all
-    result = await db.execute(select(Resume))
-    for r in result.scalars().all():
-        r.is_active = False
-
-    # Activate selected
-    result = await db.execute(select(Resume).where(Resume.id == resume_id))
-    resume = result.scalar_one_or_none()
-    if not resume:
-        raise HTTPException(status_code=404, detail="Resume not found")
-    resume.is_active = True
     await db.commit()
     await db.refresh(resume)
     return resume
