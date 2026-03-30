@@ -33,6 +33,16 @@
   --border-subtle: #222222;
 }
 
+/* Admin CSS variable aliases */
+:root {
+  --color-bg: var(--bg-primary);
+  --color-surface: var(--bg-secondary);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-text: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+}
+
 [data-theme="cobalt"] {
   --bg-primary:   #050a12;
   --bg-secondary: #080f1a;
@@ -187,4 +197,10 @@ html {
 
 section {
   scroll-snap-align: start;
+}
+
+/* Fix select dropdown option visibility */
+select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
