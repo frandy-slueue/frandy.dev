@@ -99,7 +99,6 @@ export default function AdminLayout({
           </a>
         ))}
       </nav>
-  
       <style jsx>{`
         .admin {
           display: flex;
@@ -120,12 +119,8 @@ export default function AdminLayout({
           height: 100vh;
           z-index: 100;
         }
-        .admin__sidebar.open {
-          width: 220px;
-        }
-        .admin__sidebar.closed {
-          width: 60px;
-        }
+        .admin__sidebar.open { width: 220px; }
+        .admin__sidebar.closed { width: 60px; }
         .admin__sidebar-header {
           display: flex;
           align-items: center;
@@ -150,9 +145,7 @@ export default function AdminLayout({
           padding: 0.25rem;
           flex-shrink: 0;
         }
-        .admin__toggle:hover {
-          color: var(--color-accent);
-        }
+        .admin__toggle:hover { color: var(--color-accent); }
         .admin__nav {
           display: flex;
           flex-direction: column;
@@ -181,13 +174,8 @@ export default function AdminLayout({
           color: var(--color-accent);
           border-left: 2px solid var(--color-accent);
         }
-        .admin__nav-icon {
-          font-size: 1.1rem;
-          flex-shrink: 0;
-        }
-        .admin__nav-label {
-          font-size: 0.9rem;
-        }
+        .admin__nav-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .admin__nav-label { font-size: 0.9rem; }
         .admin__sidebar-footer {
           display: flex;
           align-items: center;
@@ -212,9 +200,7 @@ export default function AdminLayout({
           padding: 0.25rem;
           flex-shrink: 0;
         }
-        .admin__logout:hover {
-          color: #ff5050;
-        }
+        .admin__logout:hover { color: #ff5050; }
         .admin__main {
           flex: 1;
           margin-left: 220px;
@@ -224,6 +210,61 @@ export default function AdminLayout({
         .admin__content {
           padding: 2rem;
           max-width: 1200px;
+        }
+
+        /* Bottom nav — hidden on desktop */
+        .admin__bottom-nav {
+          display: none;
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+          .admin__sidebar {
+            display: none;
+          }
+          .admin__main {
+            margin-left: 0;
+          }
+          .admin__content {
+            padding: 1.25rem 1rem 90px;
+          }
+          .admin__bottom-nav {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--color-surface);
+            border-top: 1px solid var(--color-border);
+            z-index: 200;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 0.25rem;
+            padding-bottom: env(safe-area-inset-bottom);
+          }
+          .admin__bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 0.5rem 0.25rem;
+            text-decoration: none;
+            color: var(--color-text-muted);
+            font-size: 11px;
+            font-family: var(--font-mono);
+            transition: color 0.15s;
+            flex: 1;
+            text-align: center;
+          }
+          .admin__bottom-nav-item:hover,
+          .admin__bottom-nav-item.active {
+            color: var(--accent);
+          }
+          .admin__bottom-nav-icon {
+            font-size: 1.3rem;
+            line-height: 1;
+          }
         }
       `}</style>
     </div>

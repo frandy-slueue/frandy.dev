@@ -1,4 +1,3 @@
-
 @import "tailwindcss";
 
 @theme {
@@ -182,14 +181,6 @@ code, pre, kbd { font-family: var(--font-mono); }
   color: var(--text-secondary);
 }
 
-/* ── About section responsive ───────────────────────────────────── */
-@media (max-width: 768px) {
-  .about-grid {
-    grid-template-columns: 1fr !important;
-    gap: 40px !important;
-  }
-}
-
 /* ── Section snap ───────────────────────────────────────────────── */
 html {
   scroll-snap-type: y proximity;
@@ -310,16 +301,20 @@ select option {
   border-color: #ff5050;
 }
 
+/* ── Admin bottom nav — hidden on desktop ───────────────────────── */
+.admin__bottom-nav {
+  display: none;
+}
 
-/* ── Mobile typography & spacing ────────────────────────────────── */
+/* ── Mobile ─────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   body {
-    font-size: 17px;
+    font-size: 19px;
   }
 
-  h1 { font-size: 2.5rem; }
-  h2 { font-size: 2rem; }
-  h3 { font-size: 1.5rem; }
+  h1 { font-size: 2.75rem; }
+  h2 { font-size: 2.25rem; }
+  h3 { font-size: 1.75rem; }
 
   .section-pad {
     padding-top: 60px;
@@ -333,7 +328,7 @@ select option {
 
   .btn-primary,
   .btn-ghost {
-    font-size: 14px;
+    font-size: 15px;
     padding: 12px 20px;
     letter-spacing: 1px;
   }
@@ -342,29 +337,29 @@ select option {
   .admin-btn-secondary,
   .admin-btn-ghost,
   .admin-btn-danger {
-    font-size: 14px;
+    font-size: 15px;
     padding: 10px 16px;
     letter-spacing: 0.5px;
   }
-}
 
-/* ── Admin mobile layout ─────────────────────────────────────────── */
-@media (max-width: 768px) {
-  /* Hide sidebar on mobile */
+  .about-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+
+  /* ── Admin layout ── */
   .admin__sidebar {
     display: none !important;
   }
 
-  /* Full width main content */
   .admin__main {
     margin-left: 0 !important;
   }
 
   .admin__content {
-    padding: 1rem;
+    padding: 1.25rem 1rem 90px;
   }
 
-  /* Stack form grids */
   .form-grid {
     grid-template-columns: 1fr !important;
   }
@@ -373,12 +368,10 @@ select option {
     grid-column: 1 !important;
   }
 
-  /* Contact layout stack */
   .contact__layout {
     grid-template-columns: 1fr !important;
   }
 
-  /* Projects table scroll */
   .projects__table-wrap {
     overflow-x: auto;
   }
@@ -387,19 +380,15 @@ select option {
     min-width: 600px;
   }
 
-  /* Dashboard grid */
   .dashboard__grid {
     grid-template-columns: 1fr 1fr !important;
   }
 
-  /* Analytics grid */
   .analytics__grid {
     grid-template-columns: 1fr 1fr !important;
   }
-}
 
-/* ── Admin bottom nav (mobile) ──────────────────────────────────── */
-@media (max-width: 768px) {
+  /* ── Admin bottom nav ── */
   .admin__bottom-nav {
     display: flex;
     position: fixed;
@@ -409,7 +398,7 @@ select option {
     height: 64px;
     background: var(--bg-secondary);
     border-top: 1px solid var(--border);
-    z-index: 100;
+    z-index: 200;
     align-items: center;
     justify-content: space-around;
     padding: 0 0.5rem;
@@ -424,7 +413,7 @@ select option {
     padding: 0.5rem;
     text-decoration: none;
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 11px;
     font-family: var(--font-mono);
     transition: color 0.15s;
     flex: 1;
@@ -437,17 +426,7 @@ select option {
   }
 
   .admin__bottom-nav-icon {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     line-height: 1;
   }
-
-  /* Add padding to admin content so bottom nav doesn't cover it */
-  .admin__content {
-    padding-bottom: 80px;
-  }
-}
-
-/* Hide bottom nav on desktop */
-.admin__bottom-nav {
-  display: none;
 }
