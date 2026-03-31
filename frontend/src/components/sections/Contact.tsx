@@ -564,7 +564,7 @@ export default function Contact() {
           align-items: flex-start;
           flex-wrap: wrap;
           padding-top: 24px;
-          padding-bottom: 8px;
+          padding-top: 8px;
         }
         .contact-btn-wrap {
           display: flex;
@@ -573,7 +573,7 @@ export default function Contact() {
           gap: 16px;
           flex: 1;
           min-width: 80px;
-          padding: 0 8px;
+          padding: 8px;
         }
         .contact-btn {
           width: 80px;
