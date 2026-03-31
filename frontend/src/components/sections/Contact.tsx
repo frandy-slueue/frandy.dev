@@ -674,7 +674,36 @@ export default function Contact() {
             justify-content: center;
           }
         }
-      `}</style>
+        @media (max-width: 600px) {
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+          .contact-buttons {
+            justify-content: center;
+            gap: 16px;
+          }
+          .contact-btn {
+            width: 56px;
+            height: 56px;
+          }
+          .contact-btn__hint {
+            font-size: 10px;
+          }
+          .contact-btn__action {
+            font-size: 11px;
+            padding: 5px 10px;
+          }
+        }
+        @media (max-width: 600px) {
+          .contact-btn__icon svg,
+          .contact-btn__icon * {
+            width: 24px !important;
+            height: 24px !important;
+          }
+        }
+      `}
+
+      </style>
     </section>
   );
 }
