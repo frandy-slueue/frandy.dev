@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from pydantic import BaseModel
 
 
@@ -19,3 +18,21 @@ class ResumeResponse(BaseModel):
     resume_uploaded_at: datetime | None
 
     model_config = {"from_attributes": True}
+
+
+class SocialLinks(BaseModel):
+    social_github: str | None = None
+    social_linkedin: str | None = None
+    social_x: str | None = None
+    social_facebook: str | None = None
+    social_medium: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class SocialLinksUpdate(BaseModel):
+    social_github: str | None = None
+    social_linkedin: str | None = None
+    social_x: str | None = None
+    social_facebook: str | None = None
+    social_medium: str | None = None

@@ -10,6 +10,8 @@ from models.admin_user import AdminUser
 from models.site_settings import SiteSettings, THEMES
 from schemas.settings import ResumeResponse, ThemeResponse, ThemeUpdate
 from services.resume import save_resume
+from schemas.settings import ResumeResponse, SocialLinks, SocialLinksUpdate, ThemeResponse, ThemeUpdate
+
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -96,3 +98,31 @@ async def delete_resume(
     row.resume_url = None
     row.resume_uploaded_at = None
     await db.commit()
+
+
+@router.get("/social", response_model=SocialLinks)
+async def get_social_links(db: AsyncSession = Depends(get_db)):
+    row = await get_or_create_settings(db)
+    return row
+
+
+@router.put("/social", response_model=SocialLinks)
+async def update_social_links(
+    payload: SocialLinksUpdate,
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    row = await get_or_create_settings(db)
+    if payload.social_github is not None:
+        row.social_github = payload.social_github
+    if payload.social_linkedin is not None:
+        row.social_linkedin = payload.social_linkedin
+    if payload.social_x is not None:
+        row.social_x = payload.social_x
+    if payload.social_facebook is not None:
+        row.social_facebook = payload.social_facebook
+    if payload.social_medium is not None:
+        row.social_medium = payload.social_medium
+    await db.commit()
+    await db.refresh(row)
+    return row

@@ -14,22 +14,49 @@ interface ThemeSettings {
   last_theme_changed: string;
 }
 
+interface SocialLinks {
+  social_github: string | null;
+  social_linkedin: string | null;
+  social_x: string | null;
+  social_facebook: string | null;
+  social_medium: string | null;
+}
+
 export default function AdminSettings() {
   const [theme, setTheme] = useState("silver");
+  const [social, setSocial] = useState<SocialLinks>({
+    social_github: "",
+    social_linkedin: "",
+    social_x: "",
+    social_facebook: "",
+    social_medium: "",
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingSocial, setSavingSocial] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch("/api/settings/theme", {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data: ThemeSettings = await res.json();
+        const [themeRes, socialRes] = await Promise.all([
+          fetch("/api/settings/theme", { credentials: "include" }),
+          fetch("/api/settings/social", { credentials: "include" }),
+        ]);
+        if (themeRes.ok) {
+          const data: ThemeSettings = await themeRes.json();
           setTheme(data.active_theme);
+        }
+        if (socialRes.ok) {
+          const data: SocialLinks = await socialRes.json();
+          setSocial({
+            social_github: data.social_github ?? "",
+            social_linkedin: data.social_linkedin ?? "",
+            social_x: data.social_x ?? "",
+            social_facebook: data.social_facebook ?? "",
+            social_medium: data.social_medium ?? "",
+          });
         }
       } catch {
         setError("Failed to load settings");
@@ -60,6 +87,26 @@ export default function AdminSettings() {
     }
   }
 
+  async function handleSaveSocial() {
+    setSavingSocial(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch("/api/settings/social", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(social),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setSuccess("Social links saved successfully");
+    } catch {
+      setError("Failed to save social links");
+    } finally {
+      setSavingSocial(false);
+    }
+  }
+
   if (loading) return <p className="loading">Loading settings...</p>;
 
   return (
@@ -67,13 +114,14 @@ export default function AdminSettings() {
       <div className="settings__header">
         <div>
           <h1>Site Settings</h1>
-          <p>Manage your site theme</p>
+          <p>Manage your site theme and social links</p>
         </div>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
       {success && <div className="success-banner">{success}</div>}
 
+      {/* Theme */}
       <section className="settings__section">
         <h2>Theme</h2>
         <div className="themes">
@@ -98,6 +146,40 @@ export default function AdminSettings() {
           style={{ marginTop: "1rem" }}
         >
           <span>{saving ? "Saving..." : "Save Theme"}</span>
+        </button>
+      </section>
+
+      {/* Social Links */}
+      <section className="settings__section">
+        <h2>Social Links</h2>
+        <div className="social-grid">
+          {[
+            { key: "social_github", label: "GitHub", placeholder: "https://github.com/username" },
+            { key: "social_linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/in/username" },
+            { key: "social_x", label: "X (Twitter)", placeholder: "https://x.com/username" },
+            { key: "social_facebook", label: "Facebook", placeholder: "https://facebook.com/username" },
+            { key: "social_medium", label: "Medium", placeholder: "https://medium.com/@username" },
+          ].map(({ key, label, placeholder }) => (
+            <div className="field" key={key}>
+              <label>{label}</label>
+              <input
+                type="url"
+                value={social[key as keyof SocialLinks] ?? ""}
+                onChange={(e) =>
+                  setSocial({ ...social, [key]: e.target.value })
+                }
+                placeholder={placeholder}
+              />
+            </div>
+          ))}
+        </div>
+        <button
+          className="admin-btn-primary"
+          onClick={handleSaveSocial}
+          disabled={savingSocial}
+          style={{ marginTop: "1rem" }}
+        >
+          <span>{savingSocial ? "Saving..." : "Save Social Links"}</span>
         </button>
       </section>
 
@@ -164,17 +246,40 @@ export default function AdminSettings() {
           color: var(--color-text);
           font-size: 0.875rem;
         }
-        .theme-card:hover {
-          border-color: var(--color-text-muted);
-        }
-        .theme-card.active {
-          border-color: var(--color-accent);
-        }
+        .theme-card:hover { border-color: var(--color-text-muted); }
+        .theme-card.active { border-color: var(--color-accent); }
         .theme-card__swatch {
           width: 40px;
           height: 40px;
           border-radius: 50%;
         }
+        .social-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .field {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+        .field label {
+          font-size: 0.8rem;
+          color: var(--color-text-muted);
+          font-family: var(--font-mono);
+        }
+        .field input {
+          background: var(--color-bg);
+          border: 1px solid var(--color-border);
+          border-radius: 4px;
+          padding: 0.625rem 0.75rem;
+          color: var(--color-text);
+          font-size: 0.9rem;
+          outline: none;
+          font-family: var(--font-body);
+          transition: border-color 0.2s;
+        }
+        .field input:focus { border-color: var(--color-accent); }
         .loading {
           padding: 3rem;
           text-align: center;

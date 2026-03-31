@@ -21,3 +21,8 @@ class SiteSettings(Base):
     resume_uploaded_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    social_github: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    social_linkedin: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    social_x: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    social_facebook: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    social_medium: Mapped[str | None] = mapped_column(String(500), nullable=True)
