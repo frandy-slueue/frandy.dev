@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  FaGithub,
+  FaLinkedin,
+  FaXTwitter,
+  FaFacebook,
+  FaMedium,
+} from "react-icons/fa6";
 
 interface SocialLinks {
   social_github: string | null;
@@ -10,65 +18,92 @@ interface SocialLinks {
   social_medium: string | null;
 }
 
-const GitHubIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-  </svg>
-);
+const TOTAL = 100;
+const colBits: string[] = [];
+for (let i = 0; i < TOTAL; i++)
+  colBits.push(Math.random() > 0.5 ? "1" : "0");
 
-const LinkedInIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-  </svg>
-);
+const NUM_COLS = 18;
+const colOffsets: number[] = [];
+const colSpeeds: number[] = [];
+for (let c = 0; c < NUM_COLS; c++) {
+  colOffsets.push(Math.random() * TOTAL);
+  colSpeeds.push(0.18 + Math.random() * 0.12);
+}
 
-const XIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-  </svg>
-);
+function drawMark(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  const CX = W / 2, CY = H / 2, R = W * 0.46;
+  ctx.clearRect(0, 0, W, H);
 
-const FacebookIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-  </svg>
-);
+  const fontSize = Math.max(7, W * 0.085);
+  const cellW = fontSize * 1.05;
+  const cellH = fontSize * 1.25;
+  const COLS = Math.ceil(W / cellW) + 2;
+  const ROWS = Math.ceil(H / cellH) + 4;
 
-const MediumIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/>
-  </svg>
-);
+  function inDiamond(px: number, py: number) {
+    return Math.abs(px - CX) / R + Math.abs(py - CY) / R <= 1;
+  }
+  function radialAlpha(px: number, py: number) {
+    const d = Math.abs(px - CX) / R + Math.abs(py - CY) / R;
+    if (d >= 1) return 0;
+    if (d < 0.22) return 1;
+    if (d < 0.58) return 1 - ((d - 0.22) / 0.36) * 0.42;
+    return 0.58 - ((d - 0.58) / 0.42) * 0.58;
+  }
 
-const CodeBreederDiamond = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <polygon
-      points="16,2 30,16 16,30 2,16"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      fill="none"
-      opacity="0.8"
-    />
-    <polygon
-      points="16,6 26,16 16,26 6,16"
-      stroke="currentColor"
-      strokeWidth="0.5"
-      fill="none"
-      opacity="0.3"
-    />
-    <text
-      x="16"
-      y="20"
-      textAnchor="middle"
-      fill="currentColor"
-      fontSize="9"
-      fontFamily="var(--font-display)"
-      letterSpacing="1"
-    >
-      CB
-    </text>
-  </svg>
-);
+  for (let c = 0; c < COLS; c++) {
+    const scroll = colOffsets[c % NUM_COLS] || 0;
+    for (let r = -1; r < ROWS + 3; r++) {
+      const srcIdx = ((Math.floor(r + scroll)) % TOTAL + TOTAL) % TOTAL;
+      const bit = colBits[(c * 13 + srcIdx) % TOTAL];
+      const px = c * cellW + cellW * 0.35;
+      const py = r * cellH + cellH * 0.5 - (scroll % 1) * cellH;
+      if (!inDiamond(px, py)) continue;
+      const alpha = radialAlpha(px, py);
+      if (alpha < 0.04) continue;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = bit === "1" ? "#00ee55" : "#00ddff";
+      ctx.font = `900 ${fontSize.toFixed(1)}px monospace`;
+      ctx.fillText(bit, px - fontSize * 0.28, py + fontSize * 0.36);
+    }
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.moveTo(CX, CY - (R - 1));
+  ctx.lineTo(CX + (R - 1), CY);
+  ctx.lineTo(CX, CY + (R - 1));
+  ctx.lineTo(CX - (R - 1), CY);
+  ctx.closePath();
+  ctx.strokeStyle = "rgba(220,220,220,0.85)";
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(CX, CY - (R - 7));
+  ctx.lineTo(CX + (R - 7), CY);
+  ctx.lineTo(CX, CY + (R - 7));
+  ctx.lineTo(CX - (R - 7), CY);
+  ctx.closePath();
+  ctx.strokeStyle = "rgba(200,200,200,0.3)";
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+}
+
+function CBDiamond({ size = 36 }: { size?: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    drawMark(ctx, size, size);
+  }, [size]);
+
+  return <canvas ref={canvasRef} width={size} height={size} />;
+}
 
 export default function Footer() {
   const [social, setSocial] = useState<SocialLinks>({
@@ -87,36 +122,33 @@ export default function Footer() {
   }, []);
 
   const socialLinks = [
-    { key: "social_github", icon: <GitHubIcon />, label: "GitHub" },
-    { key: "social_linkedin", icon: <LinkedInIcon />, label: "LinkedIn" },
-    { key: "social_x", icon: <XIcon />, label: "X" },
-    { key: "social_facebook", icon: <FacebookIcon />, label: "Facebook" },
-    { key: "social_medium", icon: <MediumIcon />, label: "Medium" },
+    { key: "social_github", icon: <FaGithub size={18} />, label: "GitHub" },
+    { key: "social_linkedin", icon: <FaLinkedin size={18} />, label: "LinkedIn" },
+    { key: "social_x", icon: <FaXTwitter size={18} />, label: "X" },
+    { key: "social_facebook", icon: <FaFacebook size={18} />, label: "Facebook" },
+    { key: "social_medium", icon: <FaMedium size={18} />, label: "Medium" },
   ];
 
   return (
     <>
       <footer className="site-footer">
         <div className="site-footer__inner site-container">
-          {/* Left — CodeBreeder brand */}
-          <div className="site-footer__brand">
-            <div className="site-footer__logo">
-              <CodeBreederDiamond />
+
+          {/* Left — Frandy.dev logo */}
+          <Link href="/" className="site-footer__brand">
+            <div className="site-footer__fs-diamond">
+              <div className="site-footer__fs-inner">
+                <div className="site-footer__fs-border" />
+                <span className="site-footer__fs-text">FS</span>
+              </div>
             </div>
             <div className="site-footer__brand-text">
-              <span className="site-footer__name">frandy.dev</span>
-              <span className="site-footer__tagline">CodeBreeder</span>
+              <span className="site-footer__name">FRANDY</span>
+              <span className="site-footer__sub">· dev</span>
             </div>
-          </div>
+          </Link>
 
-          {/* Center — copyright */}
-          <div className="site-footer__copy">
-            <span>© {new Date().getFullYear()} Frandy Slueue</span>
-            <span className="site-footer__dot">·</span>
-            <span>CodeBreeder</span>
-          </div>
-
-          {/* Right — social links */}
+          {/* Center — Social icons */}
           <div className="site-footer__social">
             {socialLinks.map(({ key, icon, label }) => {
               const url = social[key as keyof SocialLinks];
@@ -135,6 +167,21 @@ export default function Footer() {
               );
             })}
           </div>
+
+          {/* Right — Copyright + CodeBreeder */}
+          <div className="site-footer__right">
+            <span className="site-footer__copy">
+              © {new Date().getFullYear()} Frandy Slueue · All rights reserved
+            </span>
+            <div className="site-footer__cb">
+              <CBDiamond size={28} />
+              <span className="site-footer__cb-text">
+                Built with precision by{" "}
+                <span className="site-footer__cb-name">CodeBreeder</span>
+              </span>
+            </div>
+          </div>
+
         </div>
       </footer>
 
@@ -143,7 +190,7 @@ export default function Footer() {
           display: none;
           border-top: 1px solid var(--border);
           background: var(--bg-secondary);
-          padding: 1.5rem 0;
+          padding: 1.25rem 0;
         }
 
         @media (min-width: 768px) {
@@ -156,74 +203,128 @@ export default function Footer() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 2rem;
+          gap: 1.5rem;
         }
 
         .site-footer__brand {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 8px;
+          text-decoration: none;
+          flex-shrink: 0;
         }
 
-        .site-footer__logo {
+        .site-footer__fs-diamond {
+          width: 28px;
+          height: 28px;
+          transform: rotate(45deg);
+          border: 1.5px solid var(--accent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          position: relative;
+        }
+
+        .site-footer__fs-inner {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+        }
+
+        .site-footer__fs-border {
+          position: absolute;
+          inset: 3px;
+          border: 0.5px solid rgba(192,192,192,0.2);
+        }
+
+        .site-footer__fs-text {
+          transform: rotate(-45deg);
+          font-family: var(--font-display);
+          font-size: 10px;
           color: var(--accent);
-          opacity: 0.8;
-          transition: opacity 0.2s;
-        }
-
-        .site-footer__logo:hover {
-          opacity: 1;
+          letter-spacing: 1px;
+          line-height: 1;
+          position: relative;
+          z-index: 1;
         }
 
         .site-footer__brand-text {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 1px;
         }
 
         .site-footer__name {
           font-family: var(--font-display);
-          font-size: 1rem;
+          font-size: 16px;
           color: var(--text-primary);
-          letter-spacing: 2px;
+          letter-spacing: 3px;
+          line-height: 1;
         }
 
-        .site-footer__tagline {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
+        .site-footer__sub {
+          font-family: var(--font-body);
+          font-size: 9px;
+          letter-spacing: 3px;
           color: var(--accent-muted);
-          letter-spacing: 1px;
-        }
-
-        .site-footer__copy {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
-          color: var(--text-muted);
-        }
-
-        .site-footer__dot {
-          color: var(--border);
+          text-transform: uppercase;
+          line-height: 1;
         }
 
         .site-footer__social {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 1.25rem;
         }
 
         .site-footer__social-link {
           color: var(--text-muted);
           text-decoration: none;
-          transition: color 0.2s;
+          transition: color 0.2s, transform 0.2s;
           display: flex;
           align-items: center;
         }
 
         .site-footer__social-link:hover {
           color: var(--accent);
+          transform: translateY(-2px);
+        }
+
+        .site-footer__right {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 6px;
+          flex-shrink: 0;
+        }
+
+        .site-footer__copy {
+          font-family: var(--font-mono);
+          font-size: 0.7rem;
+          color: var(--text-muted);
+          white-space: nowrap;
+        }
+
+        .site-footer__cb {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .site-footer__cb-text {
+          font-family: var(--font-mono);
+          font-size: 0.7rem;
+          color: var(--text-muted);
+          white-space: nowrap;
+        }
+
+        .site-footer__cb-name {
+          color: var(--accent);
+          letter-spacing: 1px;
         }
       `}</style>
     </>
