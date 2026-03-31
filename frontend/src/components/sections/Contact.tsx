@@ -54,7 +54,6 @@ const SOCIAL_CONFIG = [
   { key: "social_devto",     icon: <FaDev size={20} />,       label: "Dev.to" },
 ];
 
-// Custom email SVG icon — open envelope with @ on paper
 function EmailIcon({ size = 48 }: { size?: number }) {
   return (
     <svg
@@ -64,7 +63,6 @@ function EmailIcon({ size = 48 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Envelope body */}
       <path
         d="M8 28 L8 54 L56 54 L56 28"
         stroke="currentColor"
@@ -72,7 +70,6 @@ function EmailIcon({ size = 48 }: { size?: number }) {
         strokeLinejoin="round"
         fill="var(--bg-elevated)"
       />
-      {/* Envelope flap left */}
       <path
         d="M8 28 L32 44 L56 28"
         stroke="currentColor"
@@ -80,7 +77,6 @@ function EmailIcon({ size = 48 }: { size?: number }) {
         strokeLinejoin="round"
         fill="none"
       />
-      {/* Envelope bottom fold */}
       <path
         d="M8 54 L28 38 M56 54 L36 38"
         stroke="currentColor"
@@ -88,7 +84,6 @@ function EmailIcon({ size = 48 }: { size?: number }) {
         strokeLinecap="round"
         opacity="0.4"
       />
-      {/* Paper coming out */}
       <rect
         x="20" y="8"
         width="24" height="30"
@@ -97,7 +92,6 @@ function EmailIcon({ size = 48 }: { size?: number }) {
         stroke="currentColor"
         strokeWidth="2"
       />
-      {/* @ symbol on paper */}
       <text
         x="32"
         y="28"
@@ -109,7 +103,6 @@ function EmailIcon({ size = 48 }: { size?: number }) {
       >
         @
       </text>
-      {/* Open flap triangle */}
       <path
         d="M20 8 L32 18 L44 8"
         stroke="currentColor"
@@ -245,11 +238,10 @@ export default function Contact() {
     <section
       id="contact"
       className="section-pad"
-      style={{ backgroundColor: "var(--bg-secondary)" }}
+      style={{ backgroundColor: "var(--bg-secondary)", overflowX: "hidden" }}
     >
       <div className="site-container">
 
-        {/* Section label */}
         <motion.p
           initial={{ opacity: 0, x: -16 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -264,7 +256,6 @@ export default function Contact() {
           05 — Contact
         </motion.p>
 
-        {/* Headline */}
         <motion.h2
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -299,7 +290,6 @@ export default function Contact() {
           my inbox is always open.
         </motion.p>
 
-        {/* Two-column split */}
         <div className="contact-grid">
 
           {/* Left — Form */}
@@ -436,8 +426,6 @@ export default function Contact() {
             transition={{ duration: 0.5, delay: 0.3 }}
             style={{ display: "flex", flexDirection: "column", gap: "48px" }}
           >
-
-            {/* Contact buttons */}
             {contactButtons.length > 0 && (
               <div className="contact-buttons">
                 {contactButtons.map(({ key, value, icon, label, hint }) => (
@@ -445,8 +433,12 @@ export default function Contact() {
                     <button
                       className={`contact-btn ${activeReveal === key ? "active" : ""} contact-btn--${key}`}
                       onClick={() => toggleReveal(key)}
-                      onMouseEnter={() => setActiveReveal(key)}
-                      onMouseLeave={() => setActiveReveal(null)}
+                      onMouseEnter={() => {
+                        if (window.matchMedia("(hover: hover)").matches) setActiveReveal(key);
+                      }}
+                      onMouseLeave={() => {
+                        if (window.matchMedia("(hover: hover)").matches) setActiveReveal(null);
+                      }}
                       aria-label={label}
                     >
                       <span className="contact-btn__icon">{icon}</span>
@@ -465,7 +457,6 @@ export default function Contact() {
               </div>
             )}
 
-            {/* Follow me on */}
             {activeSocials.length > 0 && (
               <div className="contact-follow">
                 <p className="contact-follow__label">Follow me on</p>
@@ -487,7 +478,6 @@ export default function Contact() {
               </div>
             )}
 
-            {/* Resume download */}
             {resumeUrl && (
               <a
                 href={resumeUrl}
@@ -506,7 +496,6 @@ export default function Contact() {
               </a>
             )}
 
-            {/* Availability indicator */}
             <div style={{
               padding: "16px 20px",
               border: "1px solid var(--border)",
@@ -535,21 +524,22 @@ export default function Contact() {
 
         .contact-grid {
           display: grid;
-          grid-template-columns: 1fr 380px;
+          grid-template-columns: 1fr min(380px, 100%);
           gap: 80px;
           align-items: start;
+          width: 100%;
+          overflow: hidden;
         }
         .form-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 16px;
         }
-
-        /* Contact buttons */
         .contact-buttons {
           display: flex;
           gap: 32px;
           align-items: flex-start;
+          flex-wrap: wrap;
         }
         .contact-btn-wrap {
           display: flex;
@@ -557,6 +547,7 @@ export default function Contact() {
           align-items: center;
           gap: 16px;
           flex: 1;
+          min-width: 80px;
         }
         .contact-btn {
           width: 80px;
@@ -570,7 +561,6 @@ export default function Contact() {
           justify-content: center;
           cursor: pointer;
           transition: all 300ms ease;
-          position: relative;
         }
         .contact-btn:hover,
         .contact-btn.active {
@@ -584,6 +574,19 @@ export default function Contact() {
           border-color: #25d366;
           color: #25d366;
           box-shadow: 0 8px 24px rgba(37,211,102,0.2);
+        }
+        .contact-btn--email:hover,
+        .contact-btn--email.active {
+          border-color: #c0c0c0;
+          color: #c0c0c0;
+          box-shadow: 0 8px 24px rgba(192,192,192,0.2);
+        }
+
+        .contact-btn--phone:hover,
+        .contact-btn--phone.active {
+          border-color: #3b82f6;
+          color: #3b82f6;
+          box-shadow: 0 8px 24px rgba(59,130,246,0.2);
         }
         .contact-btn__icon {
           display: flex;
@@ -600,6 +603,7 @@ export default function Contact() {
           transition: opacity 250ms ease, transform 250ms ease;
           pointer-events: none;
           text-align: center;
+          width: 100%;
         }
         .contact-btn__reveal.visible {
           opacity: 1;
@@ -633,8 +637,30 @@ export default function Contact() {
           background: var(--accent);
           color: var(--bg-primary);
         }
-
-        /* Follow me on */
+        .contact-btn-wrap:has(.contact-btn--email.active) .contact-btn__action {
+          border-color: #c0c0c0;
+          color: #c0c0c0;
+        }
+        .contact-btn-wrap:has(.contact-btn--email.active) .contact-btn__action:hover {
+          background: #c0c0c0;
+          color: #080808;
+        }
+        .contact-btn-wrap:has(.contact-btn--phone.active) .contact-btn__action {
+          border-color: #3b82f6;
+          color: #3b82f6;
+        }
+        .contact-btn-wrap:has(.contact-btn--phone.active) .contact-btn__action:hover {
+          background: #3b82f6;
+          color: #fff;
+        }
+        .contact-btn-wrap:has(.contact-btn--whatsapp.active) .contact-btn__action {
+          border-color: #25d366;
+          color: #25d366;
+        }
+        .contact-btn-wrap:has(.contact-btn--whatsapp.active) .contact-btn__action:hover {
+          background: #25d366;
+          color: #fff;
+        }
         .contact-follow__label {
           font-family: var(--font-mono);
           font-size: 11px;
@@ -666,15 +692,11 @@ export default function Contact() {
             gap: 48px;
           }
         }
+
         @media (max-width: 600px) {
-          .form-row {
-            grid-template-columns: 1fr;
+          .contact-grid {
+            gap: 32px;
           }
-          .contact-buttons {
-            justify-content: center;
-          }
-        }
-        @media (max-width: 600px) {
           .form-row {
             grid-template-columns: 1fr;
           }
@@ -683,8 +705,12 @@ export default function Contact() {
             gap: 16px;
           }
           .contact-btn {
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
+          }
+          .contact-btn__icon svg {
+            width: 22px !important;
+            height: 22px !important;
           }
           .contact-btn__hint {
             font-size: 10px;
@@ -693,17 +719,11 @@ export default function Contact() {
             font-size: 11px;
             padding: 5px 10px;
           }
-        }
-        @media (max-width: 600px) {
-          .contact-btn__icon svg,
-          .contact-btn__icon * {
-            width: 24px !important;
-            height: 24px !important;
+          .contact-follow__icons {
+            gap: 14px;
           }
         }
-      `}
-
-      </style>
+      `}</style>
     </section>
   );
 }
