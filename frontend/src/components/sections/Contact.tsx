@@ -130,11 +130,28 @@ export default function Contact() {
     contact_email: null, contact_phone: null, contact_whatsapp: null,
   });
   const [activeReveal, setActiveReveal] = useState<string | null>(null);
+  const [lockedReveal, setLockedReveal] = useState<string | null>(null);
 
   useEffect(() => {
     settingsApi.getResume().then((d) => setResumeUrl(d.resume_url)).catch(() => {});
     fetch("/api/settings/social").then((r) => r.json()).then(setSocial).catch(() => {});
     fetch("/api/settings/contact-info").then((r) => r.json()).then(setContactInfo).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".contact-btn-wrap")) {
+        setLockedReveal(null);
+        setActiveReveal(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const activeSocials = SOCIAL_CONFIG.filter(
@@ -207,7 +224,13 @@ export default function Contact() {
   }
 
   function toggleReveal(key: string) {
-    setActiveReveal((prev) => (prev === key ? null : key));
+    if (lockedReveal === key) {
+      setLockedReveal(null);
+      setActiveReveal(null);
+    } else {
+      setLockedReveal(key);
+      setActiveReveal(key);
+    }
   }
 
   const contactButtons = [
@@ -431,19 +454,19 @@ export default function Contact() {
                 {contactButtons.map(({ key, value, icon, label, hint }) => (
                   <div key={key} className="contact-btn-wrap">
                     <button
-                      className={`contact-btn ${activeReveal === key ? "active" : ""} contact-btn--${key}`}
+                      className={`contact-btn ${(activeReveal === key || lockedReveal === key) ? "active" : ""} contact-btn--${key}`}
                       onClick={() => toggleReveal(key)}
                       onMouseEnter={() => {
                         if (window.matchMedia("(hover: hover)").matches) setActiveReveal(key);
                       }}
                       onMouseLeave={() => {
-                        if (window.matchMedia("(hover: hover)").matches) setActiveReveal(null);
+                        if (window.matchMedia("(hover: hover)").matches && lockedReveal !== key) setActiveReveal(null);
                       }}
                       aria-label={label}
                     >
                       <span className="contact-btn__icon">{icon}</span>
                     </button>
-                    <div className={`contact-btn__reveal ${activeReveal === key ? "visible" : ""}`}>
+                  <div className={`contact-btn__reveal ${(activeReveal === key || lockedReveal === key) ? "visible" : ""}`}>
                       <p className="contact-btn__hint">{hint}</p>
                       <button
                         className="contact-btn__action"
@@ -540,6 +563,8 @@ export default function Contact() {
           gap: 32px;
           align-items: flex-start;
           flex-wrap: wrap;
+          padding-top: 24px;
+          padding-bottom: 8px;
         }
         .contact-btn-wrap {
           display: flex;
@@ -548,6 +573,7 @@ export default function Contact() {
           gap: 16px;
           flex: 1;
           min-width: 80px;
+          padding: 0 8px;
         }
         .contact-btn {
           width: 80px;
@@ -581,7 +607,6 @@ export default function Contact() {
           color: #c0c0c0;
           box-shadow: 0 8px 24px rgba(192,192,192,0.2);
         }
-
         .contact-btn--phone:hover,
         .contact-btn--phone.active {
           border-color: #3b82f6;
@@ -636,30 +661,6 @@ export default function Contact() {
         .contact-btn__action:hover {
           background: var(--accent);
           color: var(--bg-primary);
-        }
-        .contact-btn-wrap:has(.contact-btn--email.active) .contact-btn__action {
-          border-color: #c0c0c0;
-          color: #c0c0c0;
-        }
-        .contact-btn-wrap:has(.contact-btn--email.active) .contact-btn__action:hover {
-          background: #c0c0c0;
-          color: #080808;
-        }
-        .contact-btn-wrap:has(.contact-btn--phone.active) .contact-btn__action {
-          border-color: #3b82f6;
-          color: #3b82f6;
-        }
-        .contact-btn-wrap:has(.contact-btn--phone.active) .contact-btn__action:hover {
-          background: #3b82f6;
-          color: #fff;
-        }
-        .contact-btn-wrap:has(.contact-btn--whatsapp.active) .contact-btn__action {
-          border-color: #25d366;
-          color: #25d366;
-        }
-        .contact-btn-wrap:has(.contact-btn--whatsapp.active) .contact-btn__action:hover {
-          background: #25d366;
-          color: #fff;
         }
         .contact-follow__label {
           font-family: var(--font-mono);
