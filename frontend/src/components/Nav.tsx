@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowUp } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "About",    href: "#about" },
@@ -23,18 +22,15 @@ const BOTTOM_NAV = [
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [activeBottom, setActiveBottom] = useState(0);
-  const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 20);
-      setShowTop(window.scrollY > 400);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
     <>
@@ -195,6 +191,7 @@ export default function Nav() {
             alignItems: "center",
             width: "100%",
             maxWidth: "420px",
+            margin: "0 auto",
           }}
         >
           <ul
