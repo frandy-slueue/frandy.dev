@@ -447,7 +447,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            style={{ display: "flex", flexDirection: "column", gap: "48px" }}
+            style={{ display: "flex", flexDirection: "column", gap: "48px", overflow: "visible" }}
           >
             {contactButtons.length > 0 && (
               <div className="contact-buttons">
@@ -563,8 +563,8 @@ export default function Contact() {
           gap: 32px;
           align-items: flex-start;
           flex-wrap: wrap;
-          padding-top: 24px;
-          padding-bottom: 8px;
+          padding: 24px 16px 8px;
+          overflow: visible;
         }
         .contact-btn-wrap {
           display: flex;
