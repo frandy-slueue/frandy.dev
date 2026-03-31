@@ -6,18 +6,12 @@ import {
   Send,
   Loader2,
   CheckCircle,
-  Check,
   ExternalLink,
-  AtSign,
 } from "lucide-react";
+import { FaPhone, FaWhatsapp } from "react-icons/fa";
 import {
-  FaLinkedin,
-  FaGithub,
-  FaXTwitter,
-  FaFacebook,
-  FaMedium,
-  FaHashnode,
-  FaDev,
+  FaLinkedin, FaGithub, FaXTwitter,
+  FaFacebook, FaMedium, FaHashnode, FaDev,
 } from "react-icons/fa6";
 import { contactApi, settingsApi } from "@/lib/api";
 
@@ -40,26 +34,92 @@ interface SocialLinks {
   social_devto: string | null;
 }
 
+interface ContactInfo {
+  contact_email: string | null;
+  contact_phone: string | null;
+  contact_whatsapp: string | null;
+}
+
 const INITIAL: FormState = {
-  name: "",
-  email: "",
-  subject: "",
-  message: "",
-  phone: "",
-  company: "",
+  name: "", email: "", subject: "", message: "", phone: "", company: "",
 };
 
-const EMAIL = "frandyslueue@gmail.com";
-
 const SOCIAL_CONFIG = [
-  { key: "social_linkedin", icon: <FaLinkedin size={18} />, label: "LinkedIn" },
-  { key: "social_github", icon: <FaGithub size={18} />, label: "GitHub" },
-  { key: "social_x", icon: <FaXTwitter size={18} />, label: "X" },
-  { key: "social_facebook", icon: <FaFacebook size={18} />, label: "Facebook" },
-  { key: "social_medium", icon: <FaMedium size={18} />, label: "Medium" },
-  { key: "social_hashnode", icon: <FaHashnode size={18} />, label: "Hashnode" },
-  { key: "social_devto", icon: <FaDev size={18} />, label: "Dev.to" },
+  { key: "social_linkedin",  icon: <FaLinkedin size={20} />,  label: "LinkedIn" },
+  { key: "social_github",    icon: <FaGithub size={20} />,    label: "GitHub" },
+  { key: "social_x",        icon: <FaXTwitter size={20} />,  label: "X" },
+  { key: "social_facebook",  icon: <FaFacebook size={20} />,  label: "Facebook" },
+  { key: "social_medium",    icon: <FaMedium size={20} />,    label: "Medium" },
+  { key: "social_hashnode",  icon: <FaHashnode size={20} />,  label: "Hashnode" },
+  { key: "social_devto",     icon: <FaDev size={20} />,       label: "Dev.to" },
 ];
+
+// Custom email SVG icon — open envelope with @ on paper
+function EmailIcon({ size = 48 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Envelope body */}
+      <path
+        d="M8 28 L8 54 L56 54 L56 28"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        fill="var(--bg-elevated)"
+      />
+      {/* Envelope flap left */}
+      <path
+        d="M8 28 L32 44 L56 28"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      {/* Envelope bottom fold */}
+      <path
+        d="M8 54 L28 38 M56 54 L36 38"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.4"
+      />
+      {/* Paper coming out */}
+      <rect
+        x="20" y="8"
+        width="24" height="30"
+        rx="1"
+        fill="var(--bg-secondary)"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      {/* @ symbol on paper */}
+      <text
+        x="32"
+        y="28"
+        textAnchor="middle"
+        fill="currentColor"
+        fontSize="14"
+        fontWeight="900"
+        fontFamily="monospace"
+      >
+        @
+      </text>
+      {/* Open flap triangle */}
+      <path
+        d="M20 8 L32 18 L44 8"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        fill="var(--bg-elevated)"
+      />
+    </svg>
+  );
+}
 
 export default function Contact() {
   const [form, setForm] = useState<FormState>(INITIAL);
@@ -67,24 +127,21 @@ export default function Contact() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [social, setSocial] = useState<SocialLinks>({
-    social_github: null,
-    social_linkedin: null,
-    social_x: null,
-    social_facebook: null,
-    social_medium: null,
-    social_hashnode: null,
-    social_devto: null,
+    social_github: null, social_linkedin: null, social_x: null,
+    social_facebook: null, social_medium: null,
+    social_hashnode: null, social_devto: null,
   });
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    contact_email: null, contact_phone: null, contact_whatsapp: null,
+  });
+  const [activeReveal, setActiveReveal] = useState<string | null>(null);
 
   useEffect(() => {
     settingsApi.getResume().then((d) => setResumeUrl(d.resume_url)).catch(() => {});
-    fetch("/api/settings/social")
-      .then((r) => r.json())
-      .then((data) => setSocial(data))
-      .catch(() => {});
+    fetch("/api/settings/social").then((r) => r.json()).then(setSocial).catch(() => {});
+    fetch("/api/settings/contact-info").then((r) => r.json()).then(setContactInfo).catch(() => {});
   }, []);
 
   const activeSocials = SOCIAL_CONFIG.filter(
@@ -103,14 +160,11 @@ export default function Contact() {
     return Object.keys(e).length === 0;
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormState]) {
+    if (errors[name as keyof FormState])
       setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
   };
 
   const handleSubmit = async () => {
@@ -119,10 +173,8 @@ export default function Contact() {
     setSubmitError(null);
     try {
       await contactApi.submit({
-        name: form.name,
-        email: form.email,
-        subject: form.subject,
-        message: form.message,
+        name: form.name, email: form.email,
+        subject: form.subject, message: form.message,
         phone: form.phone || undefined,
         company: form.company || undefined,
       });
@@ -135,44 +187,59 @@ export default function Contact() {
     }
   };
 
-  const copyEmail = () => {
-    navigator.clipboard.writeText(EMAIL).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
   const inputStyle = (hasError: boolean) => ({
-    width: "100%",
-    padding: "12px 14px",
+    width: "100%", padding: "12px 14px",
     backgroundColor: "var(--bg-elevated)",
     border: `1px solid ${hasError ? "#e05252" : "var(--border)"}`,
-    color: "var(--text-primary)",
-    fontFamily: "var(--font-body)",
-    fontSize: "14px",
-    outline: "none",
-    transition: "border-color 250ms ease",
-    borderRadius: "0",
+    color: "var(--text-primary)", fontFamily: "var(--font-body)",
+    fontSize: "14px", outline: "none",
+    transition: "border-color 250ms ease", borderRadius: "0",
   });
 
   const labelStyle = {
-    fontFamily: "var(--font-body)",
-    fontSize: "11px",
-    fontWeight: 600,
-    letterSpacing: "2px",
-    textTransform: "uppercase" as const,
-    color: "var(--text-muted)",
-    display: "block",
-    marginBottom: "6px",
+    fontFamily: "var(--font-body)", fontSize: "11px", fontWeight: 600,
+    letterSpacing: "2px", textTransform: "uppercase" as const,
+    color: "var(--text-muted)", display: "block", marginBottom: "6px",
   };
 
   const errorStyle = {
-    fontFamily: "var(--font-body)",
-    fontSize: "11px",
-    color: "#e05252",
-    marginTop: "4px",
-    letterSpacing: "0.5px",
+    fontFamily: "var(--font-body)", fontSize: "11px",
+    color: "#e05252", marginTop: "4px", letterSpacing: "0.5px",
   };
+
+  function handleContactClick(type: string, value: string) {
+    if (type === "email") window.location.href = `mailto:${value}`;
+    else if (type === "phone") window.location.href = `tel:${value}`;
+    else if (type === "whatsapp") window.open(`https://wa.me/${value.replace(/\D/g, "")}`, "_blank");
+  }
+
+  function toggleReveal(key: string) {
+    setActiveReveal((prev) => (prev === key ? null : key));
+  }
+
+  const contactButtons = [
+    {
+      key: "email",
+      value: contactInfo.contact_email,
+      icon: <EmailIcon size={48} />,
+      label: "Email Me",
+      hint: "Send an email",
+    },
+    {
+      key: "phone",
+      value: contactInfo.contact_phone,
+      icon: <FaPhone size={32} />,
+      label: "Call Me",
+      hint: "Place a direct call",
+    },
+    {
+      key: "whatsapp",
+      value: contactInfo.contact_whatsapp,
+      icon: <FaWhatsapp size={36} />,
+      label: "WhatsApp",
+      hint: "Chat on WhatsApp",
+    },
+  ].filter(({ value }) => !!value);
 
   return (
     <section
@@ -189,12 +256,9 @@ export default function Contact() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
           style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "12px",
-            letterSpacing: "6px",
-            textTransform: "uppercase",
-            color: "var(--accent-muted)",
-            marginBottom: "16px",
+            fontFamily: "var(--font-body)", fontSize: "12px",
+            letterSpacing: "6px", textTransform: "uppercase",
+            color: "var(--accent-muted)", marginBottom: "16px",
           }}
         >
           05 — Contact
@@ -209,10 +273,8 @@ export default function Contact() {
           style={{
             fontFamily: "var(--font-display)",
             fontSize: "clamp(2rem, 5vw, 3.5rem)",
-            color: "var(--text-primary)",
-            letterSpacing: "2px",
-            lineHeight: 1,
-            marginBottom: "12px",
+            color: "var(--text-primary)", letterSpacing: "2px",
+            lineHeight: 1, marginBottom: "12px",
           }}
         >
           Open to Opportunities,
@@ -228,12 +290,9 @@ export default function Contact() {
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
           style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "15px",
-            color: "var(--text-muted)",
-            lineHeight: 1.7,
-            maxWidth: "560px",
-            marginBottom: "56px",
+            fontFamily: "var(--font-body)", fontSize: "15px",
+            color: "var(--text-muted)", lineHeight: 1.7,
+            maxWidth: "560px", marginBottom: "56px",
           }}
         >
           Whether you have a project in mind or just want to connect —
@@ -255,31 +314,20 @@ export default function Contact() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 style={{
-                  border: "1px solid var(--accent)",
-                  padding: "48px 32px",
-                  textAlign: "center",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "16px",
+                  border: "1px solid var(--accent)", padding: "48px 32px",
+                  textAlign: "center", display: "flex", flexDirection: "column",
+                  alignItems: "center", gap: "16px",
                   backgroundColor: "var(--bg-elevated)",
                 }}
               >
                 <CheckCircle size={40} style={{ color: "var(--accent)" }} />
                 <h3 style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "28px",
-                  color: "var(--text-primary)",
-                  letterSpacing: "2px",
-                }}>
-                  Message Sent
-                </h3>
+                  fontFamily: "var(--font-display)", fontSize: "28px",
+                  color: "var(--text-primary)", letterSpacing: "2px",
+                }}>Message Sent</h3>
                 <p style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "14px",
-                  color: "var(--text-muted)",
-                  lineHeight: 1.7,
-                  maxWidth: "320px",
+                  fontFamily: "var(--font-body)", fontSize: "14px",
+                  color: "var(--text-muted)", lineHeight: 1.7, maxWidth: "320px",
                 }}>
                   Thanks for reaching out. I'll get back to you as soon as possible.
                 </p>
@@ -292,8 +340,7 @@ export default function Contact() {
                 <div className="form-row">
                   <div>
                     <label style={labelStyle}>Name *</label>
-                    <input
-                      name="name" value={form.name} onChange={handleChange}
+                    <input name="name" value={form.name} onChange={handleChange}
                       placeholder="Your name" style={inputStyle(!!errors.name)}
                       onFocus={(e) => (e.target.style.borderColor = "var(--accent-muted)")}
                       onBlur={(e) => (e.target.style.borderColor = errors.name ? "#e05252" : "var(--border)")}
@@ -302,8 +349,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <label style={labelStyle}>Email *</label>
-                    <input
-                      name="email" type="email" value={form.email} onChange={handleChange}
+                    <input name="email" type="email" value={form.email} onChange={handleChange}
                       placeholder="your@email.com" style={inputStyle(!!errors.email)}
                       onFocus={(e) => (e.target.style.borderColor = "var(--accent-muted)")}
                       onBlur={(e) => (e.target.style.borderColor = errors.email ? "#e05252" : "var(--border)")}
@@ -314,8 +360,7 @@ export default function Contact() {
 
                 <div>
                   <label style={labelStyle}>Subject *</label>
-                  <input
-                    name="subject" value={form.subject} onChange={handleChange}
+                  <input name="subject" value={form.subject} onChange={handleChange}
                     placeholder="What's this about?" style={inputStyle(!!errors.subject)}
                     onFocus={(e) => (e.target.style.borderColor = "var(--accent-muted)")}
                     onBlur={(e) => (e.target.style.borderColor = errors.subject ? "#e05252" : "var(--border)")}
@@ -326,8 +371,7 @@ export default function Contact() {
                 <div className="form-row">
                   <div>
                     <label style={labelStyle}>Phone</label>
-                    <input
-                      name="phone" value={form.phone} onChange={handleChange}
+                    <input name="phone" value={form.phone} onChange={handleChange}
                       placeholder="Optional" style={inputStyle(false)}
                       onFocus={(e) => (e.target.style.borderColor = "var(--accent-muted)")}
                       onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
@@ -335,8 +379,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <label style={labelStyle}>Company</label>
-                    <input
-                      name="company" value={form.company} onChange={handleChange}
+                    <input name="company" value={form.company} onChange={handleChange}
                       placeholder="Optional" style={inputStyle(false)}
                       onFocus={(e) => (e.target.style.borderColor = "var(--accent-muted)")}
                       onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
@@ -346,8 +389,7 @@ export default function Contact() {
 
                 <div>
                   <label style={labelStyle}>Message *</label>
-                  <textarea
-                    name="message" value={form.message} onChange={handleChange}
+                  <textarea name="message" value={form.message} onChange={handleChange}
                     placeholder="Tell me about your project or opportunity..."
                     rows={6}
                     style={{ ...inputStyle(!!errors.message), resize: "vertical", minHeight: "140px" }}
@@ -362,13 +404,10 @@ export default function Contact() {
                     fontFamily: "var(--font-body)", fontSize: "13px", color: "#e05252",
                     padding: "12px 14px", border: "1px solid #e05252",
                     backgroundColor: "rgba(224,82,82,0.06)",
-                  }}>
-                    {submitError}
-                  </p>
+                  }}>{submitError}</p>
                 )}
 
-                <button
-                  onClick={handleSubmit} disabled={submitting}
+                <button onClick={handleSubmit} disabled={submitting}
                   className="btn-primary"
                   style={{
                     display: "flex", alignItems: "center", gap: "8px",
@@ -389,92 +428,44 @@ export default function Contact() {
             )}
           </motion.div>
 
-          {/* Right — Links */}
+          {/* Right panel */}
           <motion.div
             initial={{ opacity: 0, x: 24 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            style={{ display: "flex", flexDirection: "column", gap: "0" }}
+            style={{ display: "flex", flexDirection: "column", gap: "48px" }}
           >
-            {/* Email — copy to clipboard */}
-            <button
-              onClick={copyEmail}
-              style={{
-                display: "flex", alignItems: "center", gap: "16px",
-                padding: "20px 0",
-                borderBottom: "1px solid var(--border-subtle)",
-                background: "none", border: "none",
-                cursor: "pointer", textAlign: "left",
-                transition: "padding-left 200ms ease", width: "100%",
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.paddingLeft = "8px"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.paddingLeft = "0"; }}
-            >
-              <span style={{ color: "var(--accent)", display: "flex", alignItems: "center" }}>
-                {copied ? <Check size={18} /> : <AtSign size={18} />}
-              </span>
-              <div>
-                <p style={{
-                  fontFamily: "var(--font-body)", fontSize: "11px",
-                  letterSpacing: "2px", textTransform: "uppercase",
-                  color: "var(--text-muted)", marginBottom: "2px",
-                }}>
-                  Email {copied && "— Copied!"}
-                </p>
-                <p style={{
-                  fontFamily: "var(--font-body)", fontSize: "14px",
-                  color: copied ? "var(--accent)" : "var(--text-secondary)",
-                  transition: "color 200ms ease",
-                }}>
-                  {EMAIL}
-                </p>
+
+            {/* Contact buttons */}
+            {contactButtons.length > 0 && (
+              <div className="contact-buttons">
+                {contactButtons.map(({ key, value, icon, label, hint }) => (
+                  <div key={key} className="contact-btn-wrap">
+                    <button
+                      className={`contact-btn ${activeReveal === key ? "active" : ""} contact-btn--${key}`}
+                      onClick={() => toggleReveal(key)}
+                      onMouseEnter={() => setActiveReveal(key)}
+                      onMouseLeave={() => setActiveReveal(null)}
+                      aria-label={label}
+                    >
+                      <span className="contact-btn__icon">{icon}</span>
+                    </button>
+                    <div className={`contact-btn__reveal ${activeReveal === key ? "visible" : ""}`}>
+                      <p className="contact-btn__hint">{hint}</p>
+                      <button
+                        className="contact-btn__action"
+                        onClick={() => handleContactClick(key, value!)}
+                      >
+                        {label} →
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </button>
+            )}
 
-            {/* Dynamic social links list */}
-            {activeSocials.map(({ key, icon, label }) => (
-              <a
-                key={key}
-                href={social[key as keyof SocialLinks]!}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "flex", alignItems: "center", gap: "16px",
-                  padding: "20px 0",
-                  borderBottom: "1px solid var(--border-subtle)",
-                  textDecoration: "none", color: "var(--text-muted)",
-                  transition: "padding-left 200ms ease, color 200ms ease",
-                  fontFamily: "var(--font-body)",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.paddingLeft = "8px";
-                  (e.currentTarget as HTMLElement).style.color = "var(--accent)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.paddingLeft = "0";
-                  (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
-                }}
-              >
-                <span style={{ color: "var(--accent)", display: "flex", alignItems: "center" }}>
-                  {icon}
-                </span>
-                <div>
-                  <p style={{
-                    fontSize: "11px", letterSpacing: "2px",
-                    textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "2px",
-                  }}>
-                    {label}
-                  </p>
-                  <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>
-                    {social[key as keyof SocialLinks]}
-                  </p>
-                </div>
-                <ExternalLink size={14} style={{ marginLeft: "auto", opacity: 0.4 }} />
-              </a>
-            ))}
-
-            {/* Follow me on — mobile social icons row */}
+            {/* Follow me on */}
             {activeSocials.length > 0 && (
               <div className="contact-follow">
                 <p className="contact-follow__label">Follow me on</p>
@@ -504,9 +495,8 @@ export default function Contact() {
                 rel="noopener noreferrer"
                 className="btn-primary"
                 style={{
-                  marginTop: "32px", display: "flex",
-                  alignItems: "center", justifyContent: "center",
-                  gap: "8px", textAlign: "center",
+                  display: "flex", alignItems: "center",
+                  justifyContent: "center", gap: "8px", textAlign: "center",
                 }}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -518,7 +508,7 @@ export default function Contact() {
 
             {/* Availability indicator */}
             <div style={{
-              marginTop: "40px", padding: "16px 20px",
+              padding: "16px 20px",
               border: "1px solid var(--border)",
               backgroundColor: "var(--bg-elevated)",
               display: "flex", alignItems: "center", gap: "12px",
@@ -542,9 +532,10 @@ export default function Contact() {
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
         .contact-grid {
           display: grid;
-          grid-template-columns: 1fr 400px;
+          grid-template-columns: 1fr 380px;
           gap: 80px;
           align-items: start;
         }
@@ -553,11 +544,97 @@ export default function Contact() {
           grid-template-columns: 1fr 1fr;
           gap: 16px;
         }
-        .contact-follow {
-          margin-top: 32px;
-          padding-top: 24px;
-          border-top: 1px solid var(--border-subtle);
+
+        /* Contact buttons */
+        .contact-buttons {
+          display: flex;
+          gap: 32px;
+          align-items: flex-start;
         }
+        .contact-btn-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          flex: 1;
+        }
+        .contact-btn {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          border: 1px solid var(--border);
+          background: var(--bg-elevated);
+          color: var(--text-muted);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 300ms ease;
+          position: relative;
+        }
+        .contact-btn:hover,
+        .contact-btn.active {
+          border-color: var(--accent);
+          color: var(--accent);
+          transform: translateY(-4px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .contact-btn--whatsapp:hover,
+        .contact-btn--whatsapp.active {
+          border-color: #25d366;
+          color: #25d366;
+          box-shadow: 0 8px 24px rgba(37,211,102,0.2);
+        }
+        .contact-btn__icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .contact-btn__reveal {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          opacity: 0;
+          transform: translateY(8px);
+          transition: opacity 250ms ease, transform 250ms ease;
+          pointer-events: none;
+          text-align: center;
+        }
+        .contact-btn__reveal.visible {
+          opacity: 1;
+          transform: translateY(0);
+          pointer-events: all;
+        }
+        .contact-btn__hint {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 1px;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .contact-btn__action {
+          background: none;
+          border: 1px solid var(--accent);
+          color: var(--accent);
+          font-family: var(--font-body);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          padding: 6px 14px;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: background 200ms ease, color 200ms ease;
+          white-space: nowrap;
+        }
+        .contact-btn__action:hover {
+          background: var(--accent);
+          color: var(--bg-primary);
+        }
+
+        /* Follow me on */
         .contact-follow__label {
           font-family: var(--font-mono);
           font-size: 11px;
@@ -569,7 +646,7 @@ export default function Contact() {
         .contact-follow__icons {
           display: flex;
           flex-wrap: wrap;
-          gap: 16px;
+          gap: 20px;
         }
         .contact-follow__icon {
           color: var(--text-muted);
@@ -582,6 +659,7 @@ export default function Contact() {
           color: var(--accent);
           transform: translateY(-2px);
         }
+
         @media (max-width: 900px) {
           .contact-grid {
             grid-template-columns: 1fr;
@@ -591,6 +669,9 @@ export default function Contact() {
         @media (max-width: 600px) {
           .form-row {
             grid-template-columns: 1fr;
+          }
+          .contact-buttons {
+            justify-content: center;
           }
         }
       `}</style>
