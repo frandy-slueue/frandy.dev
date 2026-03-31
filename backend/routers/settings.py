@@ -118,6 +118,8 @@ async def update_social_links(
     row.social_x = payload.social_x or None
     row.social_facebook = payload.social_facebook or None
     row.social_medium = payload.social_medium or None
+    row.social_hashnode = payload.social_hashnode or None
+    row.social_devto = payload.social_devto or None
     await db.commit()
     await db.refresh(row)
     return row

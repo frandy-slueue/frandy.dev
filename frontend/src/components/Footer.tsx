@@ -8,6 +8,8 @@ import {
   FaXTwitter,
   FaFacebook,
   FaMedium,
+  FaHashnode,
+  FaDev,
 } from "react-icons/fa6";
 
 interface SocialLinks {
@@ -16,6 +18,8 @@ interface SocialLinks {
   social_x: string | null;
   social_facebook: string | null;
   social_medium: string | null;
+  social_hashnode: string | null;
+  social_devto: string | null;
 }
 
 const TOTAL = 100;
@@ -34,7 +38,6 @@ for (let c = 0; c < NUM_COLS; c++) {
 function drawMark(ctx: CanvasRenderingContext2D, W: number, H: number) {
   const CX = W / 2, CY = H / 2, R = W * 0.46;
   ctx.clearRect(0, 0, W, H);
-
   const fontSize = Math.max(7, W * 0.085);
   const cellW = fontSize * 1.05;
   const cellH = fontSize * 1.25;
@@ -93,7 +96,6 @@ function drawMark(ctx: CanvasRenderingContext2D, W: number, H: number) {
 
 function CBDiamond({ size = 36 }: { size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -101,7 +103,6 @@ function CBDiamond({ size = 36 }: { size?: number }) {
     if (!ctx) return;
     drawMark(ctx, size, size);
   }, [size]);
-
   return <canvas ref={canvasRef} width={size} height={size} />;
 }
 
@@ -112,6 +113,8 @@ export default function Footer() {
     social_x: null,
     social_facebook: null,
     social_medium: null,
+    social_hashnode: null,
+    social_devto: null,
   });
 
   useEffect(() => {
@@ -127,7 +130,13 @@ export default function Footer() {
     { key: "social_x", icon: <FaXTwitter size={18} />, label: "X" },
     { key: "social_facebook", icon: <FaFacebook size={18} />, label: "Facebook" },
     { key: "social_medium", icon: <FaMedium size={18} />, label: "Medium" },
+    { key: "social_hashnode", icon: <FaHashnode size={18} />, label: "Hashnode" },
+    { key: "social_devto", icon: <FaDev size={18} />, label: "Dev.to" },
   ];
+
+  const activeSocials = socialLinks.filter(
+    ({ key }) => !!social[key as keyof SocialLinks]
+  );
 
   return (
     <>
@@ -148,24 +157,26 @@ export default function Footer() {
             </div>
           </Link>
 
-          {/* Center — Social icons */}
-          <div className="site-footer__social">
-            {socialLinks.map(({ key, icon, label }) => {
-              const url = social[key as keyof SocialLinks];
-              if (!url) return null;
-              return (
+          {/* Center — Follow me + social icons */}
+          <div className="site-footer__social-wrap">
+            {activeSocials.length > 0 && (
+              <span className="site-footer__follow">Follow me on</span>
+            )}
+            <div className="site-footer__social">
+              {activeSocials.map(({ key, icon, label }) => (
                 <a
                   key={key}
-                  href={url}
+                  href={social[key as keyof SocialLinks]!}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="site-footer__social-link"
                   aria-label={label}
+                  title={label}
                 >
                   {icon}
                 </a>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
           {/* Right — Copyright + CodeBreeder */}
@@ -192,20 +203,15 @@ export default function Footer() {
           background: var(--bg-secondary);
           padding: 1.25rem 0;
         }
-
         @media (min-width: 768px) {
-          .site-footer {
-            display: block;
-          }
+          .site-footer { display: block; }
         }
-
         .site-footer__inner {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 1.5rem;
         }
-
         .site-footer__brand {
           display: flex;
           align-items: center;
@@ -213,7 +219,6 @@ export default function Footer() {
           text-decoration: none;
           flex-shrink: 0;
         }
-
         .site-footer__fs-diamond {
           width: 28px;
           height: 28px;
@@ -225,7 +230,6 @@ export default function Footer() {
           flex-shrink: 0;
           position: relative;
         }
-
         .site-footer__fs-inner {
           position: relative;
           display: flex;
@@ -234,13 +238,11 @@ export default function Footer() {
           width: 100%;
           height: 100%;
         }
-
         .site-footer__fs-border {
           position: absolute;
           inset: 3px;
           border: 0.5px solid rgba(192,192,192,0.2);
         }
-
         .site-footer__fs-text {
           transform: rotate(-45deg);
           font-family: var(--font-display);
@@ -251,13 +253,11 @@ export default function Footer() {
           position: relative;
           z-index: 1;
         }
-
         .site-footer__brand-text {
           display: flex;
           flex-direction: column;
           gap: 1px;
         }
-
         .site-footer__name {
           font-family: var(--font-display);
           font-size: 16px;
@@ -265,7 +265,6 @@ export default function Footer() {
           letter-spacing: 3px;
           line-height: 1;
         }
-
         .site-footer__sub {
           font-family: var(--font-body);
           font-size: 9px;
@@ -274,13 +273,24 @@ export default function Footer() {
           text-transform: uppercase;
           line-height: 1;
         }
-
+        .site-footer__social-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+        .site-footer__follow {
+          font-family: var(--font-mono);
+          font-size: 0.7rem;
+          color: var(--text-muted);
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
         .site-footer__social {
           display: flex;
           align-items: center;
-          gap: 1.25rem;
+          gap: 1rem;
         }
-
         .site-footer__social-link {
           color: var(--text-muted);
           text-decoration: none;
@@ -288,12 +298,10 @@ export default function Footer() {
           display: flex;
           align-items: center;
         }
-
         .site-footer__social-link:hover {
           color: var(--accent);
           transform: translateY(-2px);
         }
-
         .site-footer__right {
           display: flex;
           flex-direction: column;
@@ -301,27 +309,23 @@ export default function Footer() {
           gap: 6px;
           flex-shrink: 0;
         }
-
         .site-footer__copy {
           font-family: var(--font-mono);
           font-size: 0.7rem;
           color: var(--text-muted);
           white-space: nowrap;
         }
-
         .site-footer__cb {
           display: flex;
           align-items: center;
           gap: 8px;
         }
-
         .site-footer__cb-text {
           font-family: var(--font-mono);
           font-size: 0.7rem;
           color: var(--text-muted);
           white-space: nowrap;
         }
-
         .site-footer__cb-name {
           color: var(--accent);
           letter-spacing: 1px;

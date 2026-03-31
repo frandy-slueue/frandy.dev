@@ -20,6 +20,8 @@ interface SocialLinks {
   social_x: string | null;
   social_facebook: string | null;
   social_medium: string | null;
+  social_hashnode: string | null;
+  social_devto: string | null;
 }
 
 export default function AdminSettings() {
@@ -30,6 +32,8 @@ export default function AdminSettings() {
     social_x: "",
     social_facebook: "",
     social_medium: "",
+    social_hashnode: "",
+    social_devto: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -56,6 +60,8 @@ export default function AdminSettings() {
             social_x: data.social_x ?? "",
             social_facebook: data.social_facebook ?? "",
             social_medium: data.social_medium ?? "",
+            social_hashnode: data.social_hashnode ?? "",
+            social_devto: data.social_devto ?? "",
           });
         }
       } catch {
@@ -159,6 +165,8 @@ export default function AdminSettings() {
             { key: "social_x", label: "X (Twitter)", placeholder: "https://x.com/username" },
             { key: "social_facebook", label: "Facebook", placeholder: "https://facebook.com/username" },
             { key: "social_medium", label: "Medium", placeholder: "https://medium.com/@username" },
+            { key: "social_hashnode", label: "Hashnode", placeholder: "https://hashnode.com/@username" },
+            { key: "social_devto", label: "Dev.to", placeholder: "https://dev.to/username" },
           ].map(({ key, label, placeholder }) => (
             <div className="field" key={key}>
               <label>{label}</label>

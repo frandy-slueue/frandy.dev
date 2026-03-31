@@ -35,7 +35,7 @@ nginx/ssl/
 .vscode/
 .idea/
 
-SOCIAL_POST_v3.md
+SOCIAL*.md
 
 # Server dotfiles
 .bash_history

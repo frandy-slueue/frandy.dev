@@ -26,3 +26,5 @@ class SiteSettings(Base):
     social_x: Mapped[str | None] = mapped_column(String(500), nullable=True)
     social_facebook: Mapped[str | None] = mapped_column(String(500), nullable=True)
     social_medium: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    social_hashnode: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    social_devto: Mapped[str | None] = mapped_column(String(500), nullable=True)

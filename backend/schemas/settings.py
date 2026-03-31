@@ -26,6 +26,8 @@ class SocialLinks(BaseModel):
     social_x: str | None = None
     social_facebook: str | None = None
     social_medium: str | None = None
+    social_hashnode: str | None = None
+    social_devto: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -36,3 +38,5 @@ class SocialLinksUpdate(BaseModel):
     social_x: str | None = None
     social_facebook: str | None = None
     social_medium: str | None = None
+    social_hashnode: str | None = None
+    social_devto: str | None = None
