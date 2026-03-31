@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, Rajdhani, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import NavWrapper from "@/components/NavWrapper";
@@ -21,6 +21,12 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "Frandy Slueue — Full Stack Software Engineer",
@@ -46,11 +52,6 @@ export const metadata: Metadata = {
     siteName: "frandy.dev",
     type: "website",
   },
-};
-
-export const viewport = {
-  width: "device-width",
-  initialScale: 1,
 };
 
 export default function RootLayout({

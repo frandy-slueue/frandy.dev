@@ -23,6 +23,7 @@ const BOTTOM_NAV = [
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [activeBottom, setActiveBottom] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -36,10 +37,8 @@ export default function Nav() {
       <header
         style={{
           position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "52px",
+          top: 0, left: 0, right: 0,
+          height: "64px",
           zIndex: 50,
           backgroundColor: scrolled ? "rgba(8,8,8,0.95)" : "rgba(8,8,8,0.80)",
           borderBottom: "1px solid var(--border)",
@@ -48,15 +47,10 @@ export default function Nav() {
           transition: "background-color 300ms ease",
         }}
       >
-        <div
-          className="site-container"
-          style={{
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+        <div className="site-container" style={{
+          height: "100%", display: "flex",
+          alignItems: "center", justifyContent: "space-between",
+        }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
             <div style={{
               width: "28px", height: "28px",
@@ -91,17 +85,15 @@ export default function Nav() {
             </div>
           </Link>
 
-          <nav className="hidden md:flex" style={{ gap: "32px", alignItems: "center" }}>
+          {/* Desktop nav */}
+          <nav className="nav-desktop" style={{ gap: "32px", alignItems: "center", display: "flex" }}>
             {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                style={{
-                  fontFamily: "var(--font-body)", fontSize: "13px",
-                  fontWeight: 600, letterSpacing: "2px",
-                  textTransform: "uppercase", color: "var(--accent-muted)",
-                  textDecoration: "none", transition: "color 200ms ease",
-                }}
+              <a key={link.href} href={link.href} style={{
+                fontFamily: "var(--font-body)", fontSize: "13px",
+                fontWeight: 600, letterSpacing: "2px",
+                textTransform: "uppercase", color: "var(--accent-muted)",
+                textDecoration: "none", transition: "color 200ms ease",
+              }}
                 onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "var(--accent)")}
                 onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "var(--accent-muted)")}
               >
@@ -109,10 +101,45 @@ export default function Nav() {
               </a>
             ))}
           </nav>
+
+          {/* Mobile hamburger in top bar */}
+          <button
+            className="nav-hamburger"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Menu"
+          >
+            <span className={`nav-ham-line line1 ${menuOpen ? "open" : ""}`} />
+            <span className={`nav-ham-line line2 ${menuOpen ? "open" : ""}`} />
+            <span className={`nav-ham-line line3 ${menuOpen ? "open" : ""}`} />
+          </button>
         </div>
       </header>
 
-      {/* ── Bottom nav — mobile only ───────────────────────────── */}
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <div className="nav-mobile-menu">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="nav-mobile-link"
+              onClick={() => setMenuOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Backdrop */}
+      {menuOpen && (
+        <div
+          className="nav-mobile-backdrop"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      {/* ── Bottom nav — portrait mobile only ─────────────────── */}
       <nav className="bottom-nav-mobile">
         <ul className="bottom-nav-list">
           {BOTTOM_NAV.map((item, i) => {
@@ -141,11 +168,95 @@ export default function Nav() {
       </nav>
 
       <style>{`
-        .bottom-nav-mobile {
-          display: none;
+        /* Desktop nav — show on wide screens */
+        .nav-desktop { display: flex; }
+        .nav-hamburger { display: none; }
+        .nav-mobile-menu { display: none; }
+        .nav-mobile-backdrop { display: none; }
+        .bottom-nav-mobile { display: none; }
+
+        /* Landscape phone / small tablet — hamburger in top bar */
+        @media (max-width: 1024px) {
+          .nav-desktop { display: none; }
+          .nav-hamburger {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            width: 44px;
+            height: 44px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 0;
+          }
+          .nav-ham-line {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 2px;
+            transform-origin: center;
+            transition: transform 300ms ease, opacity 300ms ease;
+          }
+          .nav-ham-line:not(.open) {
+            animation: navwave 2s ease-in-out infinite;
+          }
+          .line2:not(.open) { animation-delay: 0.15s; }
+          .line3:not(.open) { animation-delay: 0.3s; }
+          @keyframes navwave {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(3px); }
+            75% { transform: translateX(-3px); }
+          }
+          .line1.open { transform: translateY(7px) rotate(45deg); animation: none; }
+          .line2.open { opacity: 0; transform: scaleX(0); animation: none; }
+          .line3.open { transform: translateY(-7px) rotate(-45deg); animation: none; }
+
+          .nav-mobile-backdrop {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 48;
+            backdrop-filter: blur(2px);
+          }
+          .nav-mobile-menu {
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 64px;
+            right: 0;
+            width: min(280px, 80vw);
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            z-index: 49;
+            padding: 8px 0;
+          }
+          .nav-mobile-link {
+            padding: 16px 24px;
+            font-family: var(--font-body);
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-bottom: 1px solid var(--border-subtle);
+            transition: color 200ms ease, padding-left 200ms ease;
+          }
+          .nav-mobile-link:last-child { border-bottom: none; }
+          .nav-mobile-link:hover {
+            color: var(--accent);
+            padding-left: 32px;
+          }
         }
 
-        @media (max-width: 767px) {
+        /* Portrait mobile only — show bottom nav */
+        @media (max-width: 767px) and (orientation: portrait) {
           .bottom-nav-mobile {
             display: flex;
             position: fixed;
@@ -225,7 +336,6 @@ export default function Nav() {
             transform: translateY(0);
           }
 
-          /* Sliding indicator */
           .bottom-nav-indicator {
             position: absolute;
             top: -28px;
@@ -240,7 +350,6 @@ export default function Nav() {
             z-index: 0;
           }
 
-          /* Curved cutouts */
           .bottom-nav-indicator::before {
             content: "";
             position: absolute;

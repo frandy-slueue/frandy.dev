@@ -242,7 +242,7 @@ export default function AdminLayout({
 
         .admin__fab-wrap { display: none; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
           .admin__sidebar { display: none; }
           .admin__main { margin-left: 0; }
           .admin__content { padding: 1.25rem 1rem 100px; }
