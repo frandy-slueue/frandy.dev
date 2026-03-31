@@ -113,16 +113,11 @@ async def update_social_links(
     db: AsyncSession = Depends(get_db),
 ):
     row = await get_or_create_settings(db)
-    if payload.social_github is not None:
-        row.social_github = payload.social_github
-    if payload.social_linkedin is not None:
-        row.social_linkedin = payload.social_linkedin
-    if payload.social_x is not None:
-        row.social_x = payload.social_x
-    if payload.social_facebook is not None:
-        row.social_facebook = payload.social_facebook
-    if payload.social_medium is not None:
-        row.social_medium = payload.social_medium
+    row.social_github = payload.social_github or None
+    row.social_linkedin = payload.social_linkedin or None
+    row.social_x = payload.social_x or None
+    row.social_facebook = payload.social_facebook or None
+    row.social_medium = payload.social_medium or None
     await db.commit()
     await db.refresh(row)
     return row
