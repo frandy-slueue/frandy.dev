@@ -139,7 +139,7 @@ export default function Contact() {
   }, []);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    function handleClickOutside(e: Event) {
       const target = e.target as HTMLElement;
       if (!target.closest(".contact-btn-wrap")) {
         setLockedReveal(null);
@@ -564,7 +564,7 @@ export default function Contact() {
           align-items: flex-start;
           flex-wrap: wrap;
           padding-top: 24px;
-          padding-top: 8px;
+          padding-bottom: 8px;
         }
         .contact-btn-wrap {
           display: flex;
@@ -573,7 +573,7 @@ export default function Contact() {
           gap: 16px;
           flex: 1;
           min-width: 80px;
-          padding: 8px;
+          padding: 0 8px;
         }
         .contact-btn {
           width: 80px;
