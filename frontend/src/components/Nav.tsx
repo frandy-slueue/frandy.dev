@@ -150,10 +150,12 @@ export default function Nav() {
             display: flex;
             position: fixed;
             bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
+            right: 0;
+            justify-content: center;
             z-index: 50;
-            padding: 0 8px;
+            padding: 0 16px;
+            box-sizing: border-box;
           }
 
           .bottom-nav-list {
@@ -167,7 +169,7 @@ export default function Nav() {
             margin: 0;
             list-style: none;
             overflow: visible;
-            width: 350px;
+            width: min(350px, calc(100vw - 32px));
           }
 
           .bottom-nav-item {
