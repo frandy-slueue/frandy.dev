@@ -24,6 +24,12 @@ interface SocialLinks {
   social_devto: string | null;
 }
 
+interface ContactInfo {
+  contact_email: string | null;
+  contact_phone: string | null;
+  contact_whatsapp: string | null;
+}
+
 export default function AdminSettings() {
   const [theme, setTheme] = useState("silver");
   const [social, setSocial] = useState<SocialLinks>({
@@ -40,6 +46,12 @@ export default function AdminSettings() {
   const [savingSocial, setSavingSocial] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    contact_email: "",
+    contact_phone: "",
+    contact_whatsapp: "",
+  });
+  const [savingContact, setSavingContact] = useState(false);
 
   useEffect(() => {
     async function fetchSettings() {
@@ -69,6 +81,16 @@ export default function AdminSettings() {
       } finally {
         setLoading(false);
       }
+
+      const contactRes = await fetch("/api/settings/contact-info", { credentials: "include" });
+      if (contactRes.ok) {
+        const data: ContactInfo = await contactRes.json();
+        setContactInfo({
+          contact_email: data.contact_email ?? "",
+          contact_phone: data.contact_phone ?? "",
+          contact_whatsapp: data.contact_whatsapp ?? "",
+        });
+      }
     }
     fetchSettings();
   }, []);
@@ -90,6 +112,26 @@ export default function AdminSettings() {
       setError("Failed to save theme");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveContactInfo() {
+    setSavingContact(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch("/api/settings/contact-info", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(contactInfo),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setSuccess("Contact info saved successfully");
+    } catch {
+      setError("Failed to save contact info");
+    } finally {
+      setSavingContact(false);
     }
   }
 
@@ -188,6 +230,37 @@ export default function AdminSettings() {
           style={{ marginTop: "1rem" }}
         >
           <span>{savingSocial ? "Saving..." : "Save Social Links"}</span>
+        </button>
+      </section>
+      {/* Contact Info */}
+      <section className="settings__section">
+        <h2>Contact Info</h2>
+        <div className="social-grid">
+          {[
+            { key: "contact_email", label: "Email", placeholder: "your@email.com" },
+            { key: "contact_phone", label: "Phone (with country code)", placeholder: "+19188004855" },
+            { key: "contact_whatsapp", label: "WhatsApp (with country code)", placeholder: "+19188004855" },
+          ].map(({ key, label, placeholder }) => (
+            <div className="field" key={key}>
+              <label>{label}</label>
+              <input
+                type="text"
+                value={contactInfo[key as keyof ContactInfo] ?? ""}
+                onChange={(e) =>
+                  setContactInfo({ ...contactInfo, [key]: e.target.value })
+                }
+                placeholder={placeholder}
+              />
+            </div>
+          ))}
+        </div>
+        <button
+          className="admin-btn-primary"
+          onClick={handleSaveContactInfo}
+          disabled={savingContact}
+          style={{ marginTop: "1rem" }}
+        >
+          <span>{savingContact ? "Saving..." : "Save Contact Info"}</span>
         </button>
       </section>
 

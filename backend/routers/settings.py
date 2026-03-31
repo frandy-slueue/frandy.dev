@@ -10,7 +10,7 @@ from models.admin_user import AdminUser
 from models.site_settings import SiteSettings, THEMES
 from schemas.settings import ResumeResponse, ThemeResponse, ThemeUpdate
 from services.resume import save_resume
-from schemas.settings import ResumeResponse, SocialLinks, SocialLinksUpdate, ThemeResponse, ThemeUpdate
+from schemas.settings import ContactInfo, ContactInfoUpdate, ResumeResponse, SocialLinks, SocialLinksUpdate, ThemeResponse, ThemeUpdate
 
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
@@ -120,6 +120,27 @@ async def update_social_links(
     row.social_medium = payload.social_medium or None
     row.social_hashnode = payload.social_hashnode or None
     row.social_devto = payload.social_devto or None
+    await db.commit()
+    await db.refresh(row)
+    return row
+
+
+@router.get("/contact-info", response_model=ContactInfo)
+async def get_contact_info(db: AsyncSession = Depends(get_db)):
+    row = await get_or_create_settings(db)
+    return row
+
+
+@router.put("/contact-info", response_model=ContactInfo)
+async def update_contact_info(
+    payload: ContactInfoUpdate,
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    row = await get_or_create_settings(db)
+    row.contact_email = payload.contact_email or None
+    row.contact_phone = payload.contact_phone or None
+    row.contact_whatsapp = payload.contact_whatsapp or None
     await db.commit()
     await db.refresh(row)
     return row

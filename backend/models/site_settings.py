@@ -28,3 +28,6 @@ class SiteSettings(Base):
     social_medium: Mapped[str | None] = mapped_column(String(500), nullable=True)
     social_hashnode: Mapped[str | None] = mapped_column(String(500), nullable=True)
     social_devto: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    contact_phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    contact_whatsapp: Mapped[str | None] = mapped_column(String(50), nullable=True)
