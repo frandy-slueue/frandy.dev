@@ -47,8 +47,8 @@ export default function BackToTop() {
       <style>{`
         .back-to-top {
           position: fixed;
-          bottom: 90px;
-          right: 20px;
+          bottom: 88px;
+          right: 16px;
           width: 44px;
           height: 44px;
           border-radius: 50%;
@@ -59,7 +59,7 @@ export default function BackToTop() {
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          z-index: 49;
+          z-index: 55;
           opacity: 0;
           transform: translateY(10px);
           transition: opacity 350ms ease, transform 350ms ease,
