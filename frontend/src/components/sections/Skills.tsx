@@ -2,46 +2,76 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaCode, FaPalette, FaServer, FaDatabase, FaTools } from "react-icons/fa";
+import {
+  FaCode, FaPalette, FaServer, FaDatabase, FaTools,
+} from "react-icons/fa";
+import {
+  SiPython, SiJavascript, SiReact, SiNextdotjs, SiHtml5, SiCss,
+  SiTailwindcss, SiDjango, SiFastapi, SiGraphql, SiPostgresql,
+  SiMongodb, SiRedis, SiDocker, SiGit,
+} from "react-icons/si";
 import SectionLabel from "@/components/ui/SectionLabel";
 import TabBar, { TabItem } from "@/components/ui/TabBar";
 import { BtnSecondary } from "@/components/ui/Button";
 import { VIEWPORT } from "@/lib/animations";
 
 const TABS: TabItem[] = [
-  { label: "Languages",      icon: <FaCode size={14} /> },
-  { label: "Frontend",       icon: <FaPalette size={14} /> },
-  { label: "Backend",        icon: <FaServer size={14} /> },
-  { label: "Databases",      icon: <FaDatabase size={14} /> },
-  { label: "DevOps & Tools", icon: <FaTools size={14} /> },
+  { label: "Languages",      icon: <FaCode size={13} /> },
+  { label: "Frontend",       icon: <FaPalette size={13} /> },
+  { label: "Backend",        icon: <FaServer size={13} /> },
+  { label: "Databases",      icon: <FaDatabase size={13} /> },
+  { label: "DevOps & Tools", icon: <FaTools size={13} /> },
 ];
 
-const SKILLS: Record<string, { name: string }[]> = {
-  Languages:        [{ name: "Python" }, { name: "JavaScript" }, { name: "C" }],
-  Frontend:         [{ name: "React" }, { name: "Next.js" }, { name: "HTML" }, { name: "CSS" }, { name: "Tailwind CSS" }],
-  Backend:          [{ name: "Django" }, { name: "FastAPI" }, { name: "GraphQL" }, { name: "RESTful APIs" }],
-  Databases:        [{ name: "PostgreSQL" }, { name: "MongoDB" }, { name: "Redis" }, { name: "SQLAlchemy" }],
-  "DevOps & Tools": [{ name: "Docker" }, { name: "Git" }],
+// Brand icon + color per skill
+const SKILL_META: Record<string, { icon: React.ReactNode; color: string }> = {
+  "Python":       { icon: <SiPython size={28} />,      color: "#3776AB" },
+  "JavaScript":   { icon: <SiJavascript size={28} />,  color: "#F7DF1E" },
+  "C":            { icon: <span style={{ fontFamily:"var(--font-mono)", fontSize:22, fontWeight:700 }}>C</span>, color: "var(--accent)" },
+  "React":        { icon: <SiReact size={28} />,        color: "#61DAFB" },
+  "Next.js":      { icon: <SiNextdotjs size={28} />,    color: "#ffffff" },
+  "HTML":         { icon: <SiHtml5 size={28} />,        color: "#E34F26" },
+  "CSS":          { icon: <SiCss size={28} />,         color: "#1572B6" },
+  "Tailwind CSS": { icon: <SiTailwindcss size={28} />,  color: "#06B6D4" },
+  "Django":       { icon: <SiDjango size={28} />,       color: "#092E20" },
+  "FastAPI":      { icon: <SiFastapi size={28} />,      color: "#009688" },
+  "GraphQL":      { icon: <SiGraphql size={28} />,      color: "#E10098" },
+  "RESTful APIs": { icon: <span style={{ fontFamily:"var(--font-mono)", fontSize:12, fontWeight:700 }}>REST</span>, color: "var(--accent)" },
+  "PostgreSQL":   { icon: <SiPostgresql size={28} />,   color: "#4169E1" },
+  "MongoDB":      { icon: <SiMongodb size={28} />,      color: "#47A248" },
+  "Redis":        { icon: <SiRedis size={28} />,        color: "#DC382D" },
+  "SQLAlchemy":   { icon: <span style={{ fontFamily:"var(--font-mono)", fontSize:11, fontWeight:700 }}>SA</span>, color: "var(--accent)" },
+  "Docker":       { icon: <SiDocker size={28} />,       color: "#2496ED" },
+  "Git":          { icon: <SiGit size={28} />,          color: "#F05032" },
+};
+
+const SKILLS: Record<string, string[]> = {
+  "Languages":        ["Python", "JavaScript", "C"],
+  "Frontend":         ["React", "Next.js", "HTML", "CSS", "Tailwind CSS"],
+  "Backend":          ["Django", "FastAPI", "GraphQL", "RESTful APIs"],
+  "Databases":        ["PostgreSQL", "MongoDB", "Redis", "SQLAlchemy"],
+  "DevOps & Tools":   ["Docker", "Git"],
 };
 
 const SKILL_PROJECTS: Record<string, { title: string; description: string }[]> = {
-  Python:     [{ title: "frandy.dev API",  description: "FastAPI backend powering this portfolio" }],
-  FastAPI:    [{ title: "frandy.dev API",  description: "Async REST API with PostgreSQL and Docker" }],
-  "Next.js":  [{ title: "frandy.dev",      description: "This portfolio — Next.js 16+ with App Router" }],
-  PostgreSQL: [{ title: "frandy.dev API",  description: "Primary database for projects, contacts, cache" }],
-  Docker:     [{ title: "frandy.dev",      description: "Five-service Docker Compose orchestration" }],
+  "Python":     [{ title: "frandy.dev API",  description: "FastAPI backend powering this portfolio" }],
+  "FastAPI":    [{ title: "frandy.dev API",  description: "Async REST API with PostgreSQL and Docker" }],
+  "Next.js":    [{ title: "frandy.dev",      description: "This portfolio — Next.js 16+ with App Router" }],
+  "PostgreSQL": [{ title: "frandy.dev API",  description: "Primary database for projects, contacts, cache" }],
+  "Docker":     [{ title: "frandy.dev",      description: "Five-service Docker Compose orchestration" }],
 };
 
-// ── Skill card — double frame ─────────────────────────────────────────
+// ── Skill card — dframe + brand icon ─────────────────────────────────
 function SkillCard({ skill, active, onClick }: { skill: string; active: boolean; onClick: () => void }) {
+  const meta = SKILL_META[skill] ?? { icon: null, color: "var(--accent)" };
   return (
     <button
       className={`skill-card dframe ${active ? "active" : ""}`}
       onClick={onClick}
       aria-pressed={active}
     >
-      <div className="skill-card__badge">
-        <span className="skill-card__abbr">{skill.slice(0, 2).toUpperCase()}</span>
+      <div className="skill-card__badge" style={{ color: meta.color }}>
+        {meta.icon}
       </div>
       <span className="skill-card__name">{skill}</span>
     </button>
@@ -68,20 +98,33 @@ export default function Skills() {
 
         <TabBar tabs={TABS} active={activeCategory} onChange={handleCategoryChange} />
 
-        <motion.div key={activeCategory} className="skill-grid" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <motion.div
+          key={activeCategory}
+          className="skill-grid"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           {currentSkills.map((skill) => (
             <SkillCard
-              key={skill.name}
-              skill={skill.name}
-              active={activeSkill === skill.name}
-              onClick={() => setActiveSkill(activeSkill === skill.name ? null : skill.name)}
+              key={skill}
+              skill={skill}
+              active={activeSkill === skill}
+              onClick={() => setActiveSkill(activeSkill === skill ? null : skill)}
             />
           ))}
         </motion.div>
 
         <AnimatePresence>
           {activeSkill && (
-            <motion.div key={activeSkill} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.35, ease: "easeInOut" }} style={{ overflow: "hidden" }}>
+            <motion.div
+              key={activeSkill}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              style={{ overflow: "hidden" }}
+            >
               <div className="skill-preview dframe">
                 <p className="skill-preview__label">Projects using {activeSkill}</p>
                 {activeProjects.length > 0 ? (

@@ -907,13 +907,42 @@ select option {
   padding-bottom: 4px;
 }
 
+/* Nav container — dframe: sharp outer, rounded inner, corner accents fade on hover */
 .tab-bar {
   position: relative;
   display: inline-flex;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-subtle);
   padding: 4px;
   white-space: nowrap;
 }
+
+/* Rounded inner frame */
+.tab-bar::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Corner accents TL + BR — fade on hover */
+.tab-bar::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background:
+    linear-gradient(var(--accent), var(--accent)) top left  / 14px 1.5px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) top left  / 1.5px 14px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) bottom right / 14px 1.5px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) bottom right / 1.5px 14px no-repeat;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity 250ms ease;
+}
+
+.tab-bar:hover::after { opacity: 0; }
 
 .tab-bar__indicator {
   position: absolute;
