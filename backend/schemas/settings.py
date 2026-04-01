@@ -40,7 +40,7 @@ class SocialLinksUpdate(BaseModel):
     social_medium: str | None = None
     social_hashnode: str | None = None
     social_devto: str | None = None
-   
+
 
 class ContactInfo(BaseModel):
     contact_email: str | None = None
@@ -54,3 +54,21 @@ class ContactInfoUpdate(BaseModel):
     contact_email: str | None = None
     contact_phone: str | None = None
     contact_whatsapp: str | None = None
+
+
+class SectionVisibility(BaseModel):
+    section_about:    bool = True
+    section_skills:   bool = True
+    section_projects: bool = True
+    section_timeline: bool = True
+    section_contact:  bool = True
+
+    model_config = {"from_attributes": True}
+
+
+class SectionVisibilityUpdate(BaseModel):
+    section_about:    bool = True
+    section_skills:   bool = True
+    section_projects: bool = True
+    section_timeline: bool = True
+    section_contact:  bool = True

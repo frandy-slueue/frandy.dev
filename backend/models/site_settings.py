@@ -1,12 +1,15 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from core.database import Base
 
 THEMES = ["silver", "cobalt", "ember", "jade"]
+
+# All navigable sections on the main site
+SECTIONS = ["about", "skills", "projects", "timeline", "contact"]
 
 
 class SiteSettings(Base):
@@ -31,3 +34,11 @@ class SiteSettings(Base):
     contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     contact_phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     contact_whatsapp: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    # ── Section visibility ────────────────────────────────────────────
+    # Hero is always visible — not togglable.
+    section_about:    Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    section_skills:   Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    section_projects: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    section_timeline: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    section_contact:  Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")

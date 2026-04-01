@@ -144,3 +144,31 @@ async def update_contact_info(
     await db.commit()
     await db.refresh(row)
     return row
+
+
+# ── Section visibility ─────────────────────────────────────────────────────────
+
+from schemas.settings import SectionVisibility, SectionVisibilityUpdate
+
+@router.get("/sections", response_model=SectionVisibility)
+async def get_section_visibility(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — frontend reads this to decide which sections to render."""
+    row = await get_or_create_settings(db)
+    return row
+
+
+@router.put("/sections", response_model=SectionVisibility)
+async def update_section_visibility(
+    payload: SectionVisibilityUpdate,
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    row = await get_or_create_settings(db)
+    row.section_about    = payload.section_about
+    row.section_skills   = payload.section_skills
+    row.section_projects = payload.section_projects
+    row.section_timeline = payload.section_timeline
+    row.section_contact  = payload.section_contact
+    await db.commit()
+    await db.refresh(row)
+    return row
