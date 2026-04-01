@@ -172,3 +172,32 @@ async def update_section_visibility(
     await db.commit()
     await db.refresh(row)
     return row
+
+
+# ── Background pattern ─────────────────────────────────────────────────────────
+
+from schemas.settings import BackgroundPattern, BackgroundPatternUpdate, BACKGROUND_PATTERNS
+
+@router.get("/pattern", response_model=BackgroundPattern)
+async def get_background_pattern(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — frontend reads this to apply the hero background pattern."""
+    row = await get_or_create_settings(db)
+    return row
+
+
+@router.put("/pattern", response_model=BackgroundPattern)
+async def update_background_pattern(
+    payload: BackgroundPatternUpdate,
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    if payload.background_pattern not in BACKGROUND_PATTERNS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid pattern. Must be one of: {', '.join(BACKGROUND_PATTERNS)}"
+        )
+    row = await get_or_create_settings(db)
+    row.background_pattern = payload.background_pattern
+    await db.commit()
+    await db.refresh(row)
+    return row

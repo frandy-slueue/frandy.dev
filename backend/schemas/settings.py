@@ -72,3 +72,16 @@ class SectionVisibilityUpdate(BaseModel):
     section_projects: bool = True
     section_timeline: bool = True
     section_contact:  bool = True
+
+
+BACKGROUND_PATTERNS = ["grid", "dots", "diagonal", "cross"]
+
+
+class BackgroundPattern(BaseModel):
+    background_pattern: str = "grid"
+
+    model_config = {"from_attributes": True}
+
+
+class BackgroundPatternUpdate(BaseModel):
+    background_pattern: str = "grid"

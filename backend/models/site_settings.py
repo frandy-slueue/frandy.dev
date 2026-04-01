@@ -42,3 +42,8 @@ class SiteSettings(Base):
     section_projects: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     section_timeline: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     section_contact:  Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+
+    # ── Hero background pattern ───────────────────────────────────────
+    # Options: "grid" | "dots" | "diagonal" | "cross"
+    background_pattern: Mapped[str] = mapped_column(String(20), default="grid", server_default="grid")
+    

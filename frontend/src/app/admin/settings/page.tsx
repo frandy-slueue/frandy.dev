@@ -27,6 +27,33 @@ const CONTACT_FIELDS = [
   { key: "contact_whatsapp", label: "WhatsApp (with country code)", placeholder: "+19188004855" },
 ];
 
+const PATTERNS = [
+  {
+    value: "grid",
+    label: "Grid",
+    preview: "linear-gradient(#333 1px,transparent 1px),linear-gradient(90deg,#333 1px,transparent 1px)",
+    size: "24px 24px",
+  },
+  {
+    value: "dots",
+    label: "Dots",
+    preview: "radial-gradient(circle,#333 1.5px,transparent 1.5px)",
+    size: "12px 12px",
+  },
+  {
+    value: "diagonal",
+    label: "Diagonal",
+    preview: "repeating-linear-gradient(45deg,transparent,transparent 10px,#333 10px,#333 11px)",
+    size: "auto",
+  },
+  {
+    value: "cross",
+    label: "Cross",
+    preview: "linear-gradient(#333 1px,transparent 1px),linear-gradient(90deg,#333 1px,transparent 1px),repeating-linear-gradient(45deg,transparent,transparent 8px,#333 8px,#333 9px)",
+    size: "16px 16px,16px 16px,16px 16px",
+  },
+];
+
 const SECTION_FIELDS = [
   { key: "section_about",    label: "About",    description: "Your story and photo" },
   { key: "section_skills",   label: "Skills",   description: "Tech stack grid" },
@@ -130,6 +157,8 @@ export default function AdminSettings() {
     section_timeline: true, section_contact: true,
   });
 
+  const [pattern,  setPattern]  = useState("grid");
+  const [savingPattern, setSavingPattern] = useState(false);
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
   const [savingSocial,   setSavingSocial]   = useState(false);
@@ -141,16 +170,18 @@ export default function AdminSettings() {
   useEffect(() => {
     async function fetchAll() {
       try {
-        const [themeRes, socialRes, contactRes, sectionsRes] = await Promise.all([
+        const [themeRes, socialRes, contactRes, sectionsRes, patternRes] = await Promise.all([
           fetch("/api/settings/theme",        { credentials: "include" }),
           fetch("/api/settings/social",       { credentials: "include" }),
           fetch("/api/settings/contact-info", { credentials: "include" }),
           fetch("/api/settings/sections",     { credentials: "include" }),
+          fetch("/api/settings/pattern",      { credentials: "include" }),
         ]);
         if (themeRes.ok)    { const d = await themeRes.json();    setTheme(d.active_theme); }
         if (socialRes.ok)   { const d = await socialRes.json();   setSocial(d); }
         if (contactRes.ok)  { const d = await contactRes.json();  setContact(d); }
         if (sectionsRes.ok) { const d = await sectionsRes.json(); setSections(d); }
+        if (patternRes.ok)  { const d = await patternRes.json();  setPattern(d.background_pattern ?? "grid"); }
       } catch {
         setError("Failed to load settings");
       } finally {
@@ -190,6 +221,19 @@ export default function AdminSettings() {
       if (!res.ok) throw new Error();
       notify("Section visibility saved");
     } catch { notifyError("Failed to save visibility"); } finally { setSavingSections(false); }
+  }
+
+  async function handleSavePattern() {
+    setSavingPattern(true);
+    try {
+      const res = await fetch("/api/settings/pattern", {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ background_pattern: pattern }),
+      });
+      if (!res.ok) throw new Error();
+      notify("Background pattern saved");
+    } catch { notifyError("Failed to save pattern"); } finally { setSavingPattern(false); }
   }
 
   async function handleSaveSocial() {
@@ -288,6 +332,39 @@ export default function AdminSettings() {
         </button>
       </Collapsible>
 
+      {/* ── Background Pattern — collapsible ── */}
+      <Collapsible title="Background Pattern">
+        <p className="settings__hint">
+          Choose the hero section background pattern. Changes apply to the live site immediately after saving.
+        </p>
+        <div className="pattern-grid">
+          {PATTERNS.map((p) => (
+            <button
+              key={p.value}
+              className={`pattern-card ${pattern === p.value ? "active" : ""}`}
+              onClick={() => setPattern(p.value)}
+            >
+              <div
+                className="pattern-card__preview"
+                style={{
+                  backgroundImage: p.preview,
+                  backgroundSize: p.size,
+                }}
+              />
+              <span className="pattern-card__label">{p.label}</span>
+            </button>
+          ))}
+        </div>
+        <button
+          className="admin-btn-primary"
+          onClick={handleSavePattern}
+          disabled={savingPattern}
+          style={{ marginTop: "1.25rem" }}
+        >
+          <span>{savingPattern ? "Saving..." : "Save Pattern"}</span>
+        </button>
+      </Collapsible>
+
       {/* ── Social Links — collapsible ── */}
       <Collapsible title="Social Links">
         <div className="social-grid">
@@ -372,6 +449,16 @@ export default function AdminSettings() {
         .field label { font-size: 0.8rem; color: var(--color-text-muted); font-family: var(--font-mono); }
         .field input { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 0; padding: 0.625rem 0.75rem; color: var(--color-text); font-size: 0.9rem; outline: none; font-family: var(--font-body); transition: border-color 0.2s; }
         .field input:focus { border-color: var(--color-accent); }
+
+        /* Pattern picker */
+        .pattern-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+        .pattern-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.75rem; background: var(--color-bg); border: 1px solid var(--color-border); cursor: pointer; transition: border-color 0.2s; }
+        .pattern-card:hover  { border-color: var(--color-text-muted); }
+        .pattern-card.active { border-color: var(--color-accent); }
+        .pattern-card__preview { width: 100%; height: 52px; opacity: 0.6; }
+        .pattern-card__label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-text-muted); letter-spacing: 1px; text-transform: uppercase; }
+        .pattern-card.active .pattern-card__label { color: var(--color-accent); }
+        @media (max-width: 600px) { .pattern-grid { grid-template-columns: repeat(2, 1fr); } }
       `}</style>
     </div>
   );

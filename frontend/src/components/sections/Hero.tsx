@@ -7,11 +7,16 @@ import { fadeUp } from "@/lib/animations";
 import { BtnPrimary, BtnSecondary } from "@/components/ui/Button";
 
 export default function Hero() {
-  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
-  const [scrolled, setScrolled]   = useState(false);
+  const [resumeUrl, setResumeUrl]   = useState<string | null>(null);
+  const [scrolled, setScrolled]     = useState(false);
+  const [pattern, setPattern]       = useState("grid");
 
   useEffect(() => {
     settingsApi.getResume().then((d) => setResumeUrl(d.resume_url)).catch(() => {});
+    fetch("/api/settings/pattern")
+      .then((r) => r.json())
+      .then((d) => setPattern(d.background_pattern ?? "grid"))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -22,7 +27,7 @@ export default function Hero() {
 
   return (
     <section className="hero-section">
-      <div className="hero-grid-bg" aria-hidden />
+      <div className="hero-grid-bg" data-pattern={pattern} aria-hidden />
       <div className="hero-bloom" aria-hidden />
 
       <div className="site-container hero-content">
