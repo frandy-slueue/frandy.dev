@@ -144,7 +144,7 @@ export default function AdminDashboard() {
         .dashboard__card {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 8px;
+          border-radius: 0;
           padding: 1.5rem;
           display: flex;
           align-items: center;
@@ -178,7 +178,7 @@ export default function AdminDashboard() {
         .dashboard__action {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 6px;
+          border-radius: 0;
           padding: 0.625rem 1.25rem;
           text-decoration: none;
           color: var(--color-text-muted);

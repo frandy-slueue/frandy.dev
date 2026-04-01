@@ -343,22 +343,22 @@ export default function AdminSettings() {
         .settings__header h1 { font-family: var(--font-display); font-size: 2rem; margin: 0; }
         .settings__header p  { color: var(--color-text-muted); margin: 0.25rem 0 0; font-size: 0.875rem; }
 
-        .error-banner   { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); color: #ff5050; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
-        .success-banner { background: rgba(0,255,128,0.1); border: 1px solid rgba(0,255,128,0.3); color: #00ff80; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        .error-banner   { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); color: #ff5050; padding: 0.75rem 1rem; border-radius: 0; margin-bottom: 1rem; }
+        .success-banner { background: rgba(0,255,128,0.1); border: 1px solid rgba(0,255,128,0.3); color: #00ff80; padding: 0.75rem 1rem; border-radius: 0; margin-bottom: 1rem; }
 
         /* Theme section — always open, no collapsible wrapper */
-        .settings__section { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .settings__section { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 0; padding: 1.5rem; margin-bottom: 1.5rem; }
         .settings__section h2 { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 1.25rem; color: var(--color-accent); }
         .settings__hint { font-size: 0.825rem; color: var(--color-text-muted); margin: 0 0 1.25rem; line-height: 1.6; }
 
         .themes { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .theme-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; background: var(--color-bg); border: 2px solid var(--color-border); border-radius: 8px; cursor: pointer; transition: border-color 0.2s; min-width: 80px; color: var(--color-text); font-size: 0.875rem; }
+        .theme-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; background: var(--color-bg); border: 2px solid var(--color-border); border-radius: 0; cursor: pointer; transition: border-color 0.2s; min-width: 80px; color: var(--color-text); font-size: 0.875rem; }
         .theme-card:hover  { border-color: var(--color-text-muted); }
         .theme-card.active { border-color: var(--color-accent); }
         .theme-card__swatch { width: 40px; height: 40px; border-radius: 50%; }
 
         /* Section visibility rows */
-        .sections-grid { display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 6px; overflow: hidden; }
+        .sections-grid { display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; }
         .section-row { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; border-bottom: 1px solid var(--color-border); transition: background 0.15s; }
         .section-row:last-child { border-bottom: none; }
         .section-row:hover { background: var(--color-bg); }
@@ -370,7 +370,7 @@ export default function AdminSettings() {
         .social-grid { display: flex; flex-direction: column; gap: 1rem; }
         .field { display: flex; flex-direction: column; gap: 0.4rem; }
         .field label { font-size: 0.8rem; color: var(--color-text-muted); font-family: var(--font-mono); }
-        .field input { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 4px; padding: 0.625rem 0.75rem; color: var(--color-text); font-size: 0.9rem; outline: none; font-family: var(--font-body); transition: border-color 0.2s; }
+        .field input { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 0; padding: 0.625rem 0.75rem; color: var(--color-text); font-size: 0.9rem; outline: none; font-family: var(--font-body); transition: border-color 0.2s; }
         .field input:focus { border-color: var(--color-accent); }
       `}</style>
     </div>

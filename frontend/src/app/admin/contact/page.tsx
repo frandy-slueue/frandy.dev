@@ -317,7 +317,7 @@ export default function AdminContact() {
           border: 1px solid rgba(255, 80, 80, 0.3);
           color: #ff5050;
           padding: 0.75rem 1rem;
-          border-radius: 4px;
+          border-radius: 0;
           margin-bottom: 1rem;
         }
         .contact__filters {
@@ -355,7 +355,7 @@ export default function AdminContact() {
         .contact__list {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 8px;
+          border-radius: 0;
           overflow-y: auto;
           max-height: 70vh;
         }
@@ -419,7 +419,7 @@ export default function AdminContact() {
         .contact__detail {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 8px;
+          border-radius: 0;
           padding: 1.5rem;
           display: flex;
           flex-direction: column;

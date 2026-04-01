@@ -100,7 +100,7 @@ export default function AdminAnalytics() {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-left: 3px solid var(--accent);
-          border-radius: 8px;
+          border-radius: 0;
           padding: 1.25rem;
           margin-bottom: 2rem;
         }
@@ -130,7 +130,7 @@ export default function AdminAnalytics() {
         .analytics__card {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 8px;
+          border-radius: 0;
           padding: 1.25rem;
           display: flex;
           flex-direction: column;

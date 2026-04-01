@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaCode, FaPalette, FaServer, FaDatabase, FaTools } from "react-icons/fa";
 import SectionLabel from "@/components/ui/SectionLabel";
 import TabBar, { TabItem } from "@/components/ui/TabBar";
+import { BtnSecondary } from "@/components/ui/Button";
 import { VIEWPORT } from "@/lib/animations";
 
 const TABS: TabItem[] = [
@@ -31,32 +32,22 @@ const SKILL_PROJECTS: Record<string, { title: string; description: string }[]> =
   Docker:     [{ title: "frandy.dev",      description: "Five-service Docker Compose orchestration" }],
 };
 
-// ── Skill Card ───────────────────────────────────────────────────────
-// All hover/active styles live in globals.css — no inline style manipulation.
-interface SkillCardProps {
-  skill: string;
-  active: boolean;
-  onClick: () => void;
-}
-
-function SkillCard({ skill, active, onClick }: SkillCardProps) {
+// ── Skill card — double frame ─────────────────────────────────────────
+function SkillCard({ skill, active, onClick }: { skill: string; active: boolean; onClick: () => void }) {
   return (
     <button
-      className={`skill-card ${active ? "active" : ""}`}
+      className={`skill-card dframe ${active ? "active" : ""}`}
       onClick={onClick}
       aria-pressed={active}
     >
       <div className="skill-card__badge">
-        <span className="skill-card__abbr">
-          {skill.slice(0, 2).toUpperCase()}
-        </span>
+        <span className="skill-card__abbr">{skill.slice(0, 2).toUpperCase()}</span>
       </div>
       <span className="skill-card__name">{skill}</span>
     </button>
   );
 }
 
-// ── Main section ─────────────────────────────────────────────────────
 export default function Skills() {
   const [activeCategory, setActiveCategory] = useState("Languages");
   const [activeSkill, setActiveSkill]       = useState<string | null>(null);
@@ -69,103 +60,52 @@ export default function Skills() {
     setActiveSkill(null);
   }
 
-  function handleSkillClick(name: string) {
-    setActiveSkill((prev) => (prev === name ? null : name));
-  }
-
   return (
-    <section
-      id="skills"
-      className="section-pad"
-      aria-labelledby="skills-heading"
-      style={{ backgroundColor: "var(--bg-primary)" }}
-    >
+    <section id="skills" className="section-pad" aria-labelledby="skills-heading" style={{ backgroundColor: "var(--bg-primary)" }}>
       <div className="site-container">
         <SectionLabel>02 — Skills</SectionLabel>
-
         <h2 id="skills-heading" className="sr-only">Skills</h2>
 
-        <TabBar
-          tabs={TABS}
-          active={activeCategory}
-          onChange={handleCategoryChange}
-        />
+        <TabBar tabs={TABS} active={activeCategory} onChange={handleCategoryChange} />
 
-        {/* Icon grid */}
-        <motion.div
-          key={activeCategory}
-          className="skill-grid"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
+        <motion.div key={activeCategory} className="skill-grid" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
           {currentSkills.map((skill) => (
             <SkillCard
               key={skill.name}
               skill={skill.name}
               active={activeSkill === skill.name}
-              onClick={() => handleSkillClick(skill.name)}
+              onClick={() => setActiveSkill(activeSkill === skill.name ? null : skill.name)}
             />
           ))}
         </motion.div>
 
-        {/* Preview panel */}
         <AnimatePresence>
           {activeSkill && (
-            <motion.div
-              key={activeSkill}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-              style={{ overflow: "hidden" }}
-            >
-              <div className="skill-preview">
-                <p className="skill-preview__label">
-                  Projects using {activeSkill}
-                </p>
-
+            <motion.div key={activeSkill} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.35, ease: "easeInOut" }} style={{ overflow: "hidden" }}>
+              <div className="skill-preview dframe">
+                <p className="skill-preview__label">Projects using {activeSkill}</p>
                 {activeProjects.length > 0 ? (
                   <div className="skill-project-list">
                     {activeProjects.map((project) => (
-                      <div key={project.title} className="skill-project">
+                      <div key={project.title} className="skill-project dframe">
                         <p className="skill-project__title">{project.title}</p>
                         <p className="skill-project__desc">{project.description}</p>
                         <div className="skill-project__actions">
-                          <button className="btn-ghost" style={{ padding: "6px 14px", fontSize: "11px" }}>
-                            Demo
-                          </button>
-                          <button className="btn-ghost" style={{ padding: "6px 14px", fontSize: "11px" }}>
-                            GitHub
-                          </button>
+                          <BtnSecondary>Demo</BtnSecondary>
+                          <BtnSecondary>GitHub</BtnSecondary>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="skill-preview__empty">
-                    Used as a supporting tool in infrastructure work.
-                  </p>
+                  <p className="skill-preview__empty">Used as a supporting tool in infrastructure work.</p>
                 )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-
-      <style>{`
-        .sr-only {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0,0,0,0);
-          white-space: nowrap;
-          border: 0;
-        }
-      `}</style>
+      <style>{`.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}`}</style>
     </section>
   );
 }

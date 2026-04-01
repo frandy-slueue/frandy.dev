@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import SectionLabel from "@/components/ui/SectionLabel";
-import Chip from "@/components/ui/Chip";
 import { fadeLeft, fadeRight, staggerContainer, fadeUp, VIEWPORT, TRANSITION_SLOW } from "@/lib/animations";
 
 const CHIPS = [
@@ -13,31 +12,19 @@ const CHIPS = [
 
 export default function About() {
   return (
-    <section
-      id="about"
-      className="section-pad"
-      aria-labelledby="about-heading"
-      style={{ backgroundColor: "var(--bg-secondary)" }}
-    >
+    <section id="about" className="section-pad" aria-labelledby="about-heading" style={{ backgroundColor: "var(--bg-secondary)" }}>
       <div className="site-container">
         <SectionLabel>01 — About</SectionLabel>
 
         <div className="about-grid">
-          {/* Photo column */}
-          <motion.div
-            className="about-photo-col"
-            variants={fadeLeft}
-            initial="hidden"
-            whileInView="visible"
-            viewport={VIEWPORT}
-            transition={TRANSITION_SLOW}
-          >
+          {/* Photo column — intentionally kept as-is */}
+          <motion.div className="about-photo-col" variants={fadeLeft} initial="hidden" whileInView="visible" viewport={VIEWPORT} transition={TRANSITION_SLOW}>
             <div className="about-photo-frame">
               <div className="about-photo-inner-border" />
               {/*
-                Replace the placeholder below with:
+                Replace placeholder with real photo:
                 import Image from "next/image";
-                <Image src="/your-photo.jpg" alt="Frandy Slueue" fill style={{ objectFit: "cover" }} />
+                <Image src="/photo.jpg" alt="Frandy Slueue" fill style={{ objectFit: "cover" }} />
               */}
               <div className="about-photo-img">
                 <span className="about-photo-label">Photo</span>
@@ -47,51 +34,29 @@ export default function About() {
           </motion.div>
 
           {/* Text column */}
-          <motion.div
-            className="about-text-col"
-            variants={fadeRight}
-            initial="hidden"
-            whileInView="visible"
-            viewport={VIEWPORT}
-            transition={TRANSITION_SLOW}
-          >
-            <h2 id="about-heading" className="about-heading">
-              The Story
-            </h2>
+          <motion.div className="about-text-col" variants={fadeRight} initial="hidden" whileInView="visible" viewport={VIEWPORT} transition={TRANSITION_SLOW}>
+            <h2 id="about-heading" className="about-heading">The Story</h2>
 
             <div className="about-bio-group">
               <p className="section-prose">
-                Before software, there was a drive to understand how things
-                work and a persistent need to build. That instinct led me to
-                Atlas School of Tulsa — an intensive, project-based software
-                engineering program where theory meets real execution from day one.
+                Before software, there was a drive to understand how things work and a persistent need to build. That instinct led me to Atlas School of Tulsa — an intensive, project-based software engineering program where theory meets real execution from day one.
               </p>
               <p className="section-prose">
-                Today I work across the full stack — React and Next.js on the
-                frontend, FastAPI and Django on the backend, PostgreSQL and
-                MongoDB for data, Docker for deployment. I build under the name{" "}
+                Today I work across the full stack — React and Next.js on the frontend, FastAPI and Django on the backend, PostgreSQL and MongoDB for data, Docker for deployment. I build under the name{" "}
                 <span style={{ color: "var(--accent)" }}>CodeBreeder</span>
                 {" "}— a personal brand for the work I create and ship.
               </p>
               <p className="section-prose">
-                I am actively seeking my first full-time engineering role and
-                available for freelance projects. If you have something worth
-                building, I want to hear about it.
+                I am actively seeking my first full-time engineering role and available for freelance projects. If you have something worth building, I want to hear about it.
               </p>
             </div>
 
-            {/* Chips */}
-            <motion.div
-              className="about-chips"
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={VIEWPORT}
-            >
+            {/* Chips — double frame design */}
+            <motion.div className="about-chips" variants={staggerContainer} initial="hidden" whileInView="visible" viewport={VIEWPORT}>
               {CHIPS.map((chip) => (
-                <motion.div key={chip} variants={fadeUp} transition={{ duration: 0.4 }}>
-                  <Chip label={chip} />
-                </motion.div>
+                <motion.span key={chip} className="chip" variants={fadeUp} transition={{ duration: 0.4 }}>
+                  {chip}
+                </motion.span>
               ))}
             </motion.div>
           </motion.div>
@@ -106,33 +71,22 @@ export default function About() {
           border: 1px solid var(--accent-muted);
         }
         .about-photo-inner-border {
-          position: absolute;
-          inset: 6px;
+          position: absolute; inset: 6px;
           border: 1px solid var(--border);
-          z-index: 1;
-          pointer-events: none;
+          z-index: 1; pointer-events: none;
         }
         .about-photo-img {
-          position: absolute;
-          inset: 0;
+          position: absolute; inset: 0;
           background-color: var(--bg-elevated);
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          display: flex; align-items: center; justify-content: center;
         }
         .about-photo-label {
-          font-family: var(--font-body);
-          font-size: 11px;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-          color: var(--border);
+          font-family: var(--font-body); font-size: 11px;
+          letter-spacing: 3px; text-transform: uppercase; color: var(--border);
         }
         .about-photo-corner {
-          position: absolute;
-          bottom: -8px;
-          right: -8px;
-          width: 40px;
-          height: 40px;
+          position: absolute; bottom: -8px; right: -8px;
+          width: 40px; height: 40px;
           border-right: 1px solid var(--accent);
           border-bottom: 1px solid var(--accent);
           pointer-events: none;

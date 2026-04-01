@@ -317,7 +317,7 @@ export default function AdminResume() {
           border: 1px solid rgba(255,80,80,0.3);
           color: #ff5050;
           padding: 0.75rem 1rem;
-          border-radius: 4px;
+          border-radius: 0;
           margin-bottom: 1rem;
         }
         .success-banner {
@@ -325,7 +325,7 @@ export default function AdminResume() {
           border: 1px solid rgba(0,255,128,0.3);
           color: #00ff80;
           padding: 0.75rem 1rem;
-          border-radius: 4px;
+          border-radius: 0;
           margin-bottom: 1rem;
         }
         .resume__list {
@@ -340,7 +340,7 @@ export default function AdminResume() {
           gap: 1rem;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 8px;
+          border-radius: 0;
           padding: 1.25rem;
           transition: border-color 0.2s;
         }
@@ -405,7 +405,7 @@ export default function AdminResume() {
         .filename-editor__input {
           background: var(--color-bg);
           border: 1px solid var(--color-accent);
-          border-radius: 4px;
+          border-radius: 0;
           padding: 6px 10px;
           color: var(--color-text);
           font-family: var(--font-mono);

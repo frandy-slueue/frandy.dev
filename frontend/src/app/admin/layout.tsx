@@ -186,7 +186,7 @@ export default function AdminLayout({
           align-items: center;
           gap: 0.75rem;
           padding: 0.75rem;
-          border-radius: 6px;
+          border-radius: 0;
           text-decoration: none;
           color: var(--color-text-muted);
           transition: all 0.15s;
@@ -270,7 +270,7 @@ export default function AdminLayout({
             left: 0;
             background: var(--color-surface);
             border: 1px solid var(--color-border);
-            border-radius: 16px 16px 0 0;
+            border-radius: 0;
             overflow-y: auto;
             max-height: 70vh;
             z-index: 295;
@@ -345,7 +345,7 @@ export default function AdminLayout({
           .admin__fab {
             width: 52px;
             height: 52px;
-            border-radius: 50%;
+            border-radius: 0;
             background: var(--accent);
             border: none;
             cursor: pointer;
@@ -367,7 +367,7 @@ export default function AdminLayout({
             width: 22px;
             height: 2px;
             background: var(--bg-primary);
-            border-radius: 2px;
+            border-radius: 0;
             transform-origin: center;
             transition: transform 300ms ease, opacity 300ms ease;
           }

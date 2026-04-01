@@ -271,16 +271,16 @@ export default function AdminProjects() {
         .projects__header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; }
         .projects__header h1 { font-family: var(--font-display); font-size: 2rem; margin: 0; }
         .projects__header p { color: var(--color-text-muted); margin: 0.25rem 0 0; font-size: 0.875rem; }
-        .error-banner { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); color: #ff5050; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        .error-banner { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); color: #ff5050; padding: 0.75rem 1rem; border-radius: 0; margin-bottom: 1rem; }
         .projects__form-wrap { margin-bottom: 2rem; }
-        .projects__form { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 1.5rem; }
+        .projects__form { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 0; padding: 1.5rem; }
         .projects__form h2 { font-family: var(--font-display); font-size: 1.25rem; margin: 0 0 1.5rem; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
         .field { display: flex; flex-direction: column; gap: 0.4rem; }
         .field--full { grid-column: 1 / -1; }
         .field--checks { display: flex; flex-direction: row; align-items: center; gap: 1.5rem; grid-column: 1 / -1; }
         .field label { font-size: 0.8rem; color: var(--color-text-muted); font-family: var(--font-mono); }
-        .field input, .field textarea, .field select { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 4px; padding: 0.625rem 0.75rem; color: var(--color-text); font-size: 0.9rem; outline: none; font-family: var(--font-body); transition: border-color 0.2s; }
+        .field input, .field textarea, .field select { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 0; padding: 0.625rem 0.75rem; color: var(--color-text); font-size: 0.9rem; outline: none; font-family: var(--font-body); transition: border-color 0.2s; }
         .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--color-accent); }
         .checkbox { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--color-text); cursor: pointer; }
         .form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; }
