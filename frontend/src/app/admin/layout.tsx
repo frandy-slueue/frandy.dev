@@ -250,8 +250,8 @@ export default function AdminLayout({
           .admin__fab-wrap {
             display: block;
             position: fixed;
-            bottom: 28px;
-            right: 24px;
+            bottom: 32px;
+            right: 32px;
             z-index: 300;
           }
 
@@ -343,30 +343,65 @@ export default function AdminLayout({
           }
 
           .admin__fab {
-            width: 52px;
-            height: 52px;
+            width: 44px;
+            height: 44px;
             border-radius: 0;
-            background: var(--accent);
-            border: none;
+            background: var(--color-surface);
+            border: 1px solid var(--accent);
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 5px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            transition: transform 0.2s ease;
             position: relative;
             z-index: 300;
+            color: var(--accent);
+            transition: background 200ms ease, color 200ms ease;
+            animation: fab-glow 3s ease-in-out infinite;
           }
 
-          .admin__fab:hover { transform: scale(1.05); }
+          /* Double-frame corner accents — matches BackToTop/dframe */
+          .admin__fab::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 2px;
+            pointer-events: none;
+          }
+
+          .admin__fab::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            background:
+              linear-gradient(var(--accent), var(--accent)) top left / 10px 1.5px no-repeat,
+              linear-gradient(var(--accent), var(--accent)) top left / 1.5px 10px no-repeat,
+              linear-gradient(var(--accent), var(--accent)) bottom right / 10px 1.5px no-repeat,
+              linear-gradient(var(--accent), var(--accent)) bottom right / 1.5px 10px no-repeat;
+            pointer-events: none;
+            transition: opacity 200ms ease;
+          }
+
+          .admin__fab:hover {
+            background: var(--accent);
+            color: var(--color-bg);
+            animation: none;
+          }
+
+          .admin__fab:hover::after { opacity: 0; }
+
+          @keyframes fab-glow {
+            0%, 100% { box-shadow: 0 0 4px var(--accent-glow); }
+            50%       { box-shadow: 0 0 12px var(--accent-glow); }
+          }
 
           .admin__fab-line {
             display: block;
-            width: 22px;
-            height: 2px;
-            background: var(--bg-primary);
+            width: 18px;
+            height: 1.5px;
+            background: currentColor;
             border-radius: 0;
             transform-origin: center;
             transition: transform 300ms ease, opacity 300ms ease;
