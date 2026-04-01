@@ -3,192 +3,390 @@
 import { useEffect, useState } from "react";
 import { Skel } from "@/components/ui/Skeleton";
 
-interface Stats {
-  projects: number;
-  messages: number;
-  views: number;
-}
-
-const CARDS = [
-  { label: "Projects",   icon: "◈", href: "/admin/projects" },
-  { label: "Messages",   icon: "◎", href: "/admin/contact" },
-  { label: "Page Views", icon: "◐", href: "/admin/analytics" },
+const THEMES = [
+  { value: "silver", label: "Silver", color: "#c0c0c0" },
+  { value: "cobalt", label: "Cobalt", color: "#3b82f6" },
+  { value: "ember",  label: "Ember",  color: "#d4842a" },
+  { value: "jade",   label: "Jade",   color: "#3d9970" },
 ];
 
-const QUICK_ACTIONS = [
-  { label: "+ Add Project",    href: "/admin/projects" },
-  { label: "+ Update Resume",  href: "/admin/resume" },
-  { label: "⚙ Site Settings",  href: "/admin/settings" },
-  { label: "↗ View Site",      href: "/", target: "_blank" },
+const SOCIAL_FIELDS = [
+  { key: "social_github",   label: "GitHub",      placeholder: "https://github.com/username" },
+  { key: "social_linkedin", label: "LinkedIn",     placeholder: "https://linkedin.com/in/username" },
+  { key: "social_x",        label: "X (Twitter)", placeholder: "https://x.com/username" },
+  { key: "social_facebook", label: "Facebook",     placeholder: "https://facebook.com/username" },
+  { key: "social_medium",   label: "Medium",       placeholder: "https://medium.com/@username" },
+  { key: "social_hashnode", label: "Hashnode",     placeholder: "https://hashnode.com/@username" },
+  { key: "social_devto",    label: "Dev.to",       placeholder: "https://dev.to/username" },
 ];
 
-function DashboardSkeleton() {
+const CONTACT_FIELDS = [
+  { key: "contact_email",    label: "Email",                        placeholder: "your@email.com" },
+  { key: "contact_phone",    label: "Phone (with country code)",    placeholder: "+19188004855" },
+  { key: "contact_whatsapp", label: "WhatsApp (with country code)", placeholder: "+19188004855" },
+];
+
+const PATTERNS = [
+  { value: "grid",     label: "Grid",     preview: "linear-gradient(#333 1px,transparent 1px),linear-gradient(90deg,#333 1px,transparent 1px)", size: "24px 24px" },
+  { value: "dots",     label: "Dots",     preview: "radial-gradient(circle,#333 1.5px,transparent 1.5px)", size: "12px 12px" },
+  { value: "diagonal", label: "Diagonal", preview: "repeating-linear-gradient(45deg,transparent,transparent 10px,#333 10px,#333 11px)", size: "auto" },
+  { value: "cross",    label: "Cross",    preview: "linear-gradient(#333 1px,transparent 1px),linear-gradient(90deg,#333 1px,transparent 1px),repeating-linear-gradient(45deg,transparent,transparent 8px,#333 8px,#333 9px)", size: "16px 16px,16px 16px,16px 16px" },
+];
+
+const SECTION_FIELDS = [
+  { key: "section_about",    label: "About",    description: "Your story and photo" },
+  { key: "section_skills",   label: "Skills",   description: "Tech stack grid" },
+  { key: "section_projects", label: "Projects", description: "Portfolio mosaic" },
+  { key: "section_timeline", label: "Timeline", description: "Career history" },
+  { key: "section_contact",  label: "Contact",  description: "Contact form and links" },
+];
+
+interface SocialLinks       { [key: string]: string | null; }
+interface ContactInfo       { [key: string]: string | null; }
+interface SectionVisibility { [key: string]: boolean; }
+
+// ── Skeleton ──────────────────────────────────────────────────────────
+function SettingsSkeleton() {
   return (
-    <div className="dashboard">
-      <div className="dashboard__header">
+    <div className="settings">
+      <div className="settings__header">
         <Skel.Title width="quarter" />
-        <Skel.Text width="half" />
+        <Skel.Text width="half" size="sm" />
       </div>
-
-      {/* Stat cards */}
-      <div className="dashboard__grid">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="dashboard__card" style={{ pointerEvents: "none" }}>
-            <Skel.Circle size={36} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-              <Skel.Box height={32} className="skel--w-quarter" />
-              <Skel.Text width="third" size="sm" />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Quick actions */}
-      <div className="dashboard__quick">
+      <div className="s-panel">
         <Skel.Heading width="quarter" />
-        <div className="dashboard__actions" style={{ marginTop: "1rem" }}>
-          {[0, 1, 2, 3].map((i) => (
-            <Skel.Box key={i} height={38} className="skel--w-quarter" />
-          ))}
+        <div className="skel-group" style={{ marginTop: 8 }}>
+          <Skel.Text width="3-4" />
+          <Skel.Box height={36} style={{ width: 140 }} />
         </div>
       </div>
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="s-panel" style={{ padding: "1.1rem 1.5rem" }}>
+          <Skel.Heading width="quarter" />
+        </div>
+      ))}
     </div>
   );
 }
 
-export default function AdminDashboard() {
-  const [stats, setStats]   = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
+// ── Toggle ────────────────────────────────────────────────────────────
+function Toggle({ id, checked, onChange }: { id: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} id={id}
+      className={`toggle ${checked ? "on" : "off"}`} onClick={() => onChange(!checked)}>
+      <span className="toggle__thumb" />
+    </button>
+  );
+}
+
+// ── Collapsible ───────────────────────────────────────────────────────
+function Collapsible({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="s-panel s-collapsible">
+      <button type="button" className="s-collapsible__trigger" onClick={() => setOpen(p => !p)} aria-expanded={open}>
+        <h2 className="s-collapsible__title">{title}</h2>
+        <span className={`collapsible__chevron ${open ? "open" : ""}`}>▼</span>
+      </button>
+      {open && <div className="s-collapsible__body">{children}</div>}
+    </div>
+  );
+}
+
+// ── Save button helper ────────────────────────────────────────────────
+function SaveBtn({ onClick, disabled, label, saving }: { onClick: () => void; disabled: boolean; label: string; saving: boolean }) {
+  return (
+    <button className="admin-btn-primary s-save-btn" onClick={onClick} disabled={disabled}>
+      <span>{saving ? "Saving..." : label}</span>
+    </button>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────
+export default function AdminSettings() {
+  const [theme,    setTheme]    = useState("silver");
+  const [social,   setSocial]   = useState<SocialLinks>({});
+  const [contact,  setContact]  = useState<ContactInfo>({});
+  const [sections, setSections] = useState<SectionVisibility>({ section_about: true, section_skills: true, section_projects: true, section_timeline: true, section_contact: true });
+  const [pattern,  setPattern]  = useState("grid");
+
+  const [loading,        setLoading]        = useState(true);
+  const [saving,         setSaving]         = useState(false);
+  const [savingSocial,   setSavingSocial]   = useState(false);
+  const [savingContact,  setSavingContact]  = useState(false);
+  const [savingSections, setSavingSections] = useState(false);
+  const [savingPattern,  setSavingPattern]  = useState(false);
+  const [error,   setError]   = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchAll() {
       try {
-        const [projectsRes, messagesRes] = await Promise.all([
-          fetch("/api/projects", { credentials: "include" }),
-          fetch("/api/contact",  { credentials: "include" }),
+        const [themeRes, socialRes, contactRes, sectionsRes, patternRes] = await Promise.all([
+          fetch("/api/settings/theme",        { credentials: "include" }),
+          fetch("/api/settings/social",       { credentials: "include" }),
+          fetch("/api/settings/contact-info", { credentials: "include" }),
+          fetch("/api/settings/sections",     { credentials: "include" }),
+          fetch("/api/settings/pattern",      { credentials: "include" }),
         ]);
-        const projects = await projectsRes.json();
-        const messages = await messagesRes.json();
-        setStats({
-          projects: projects?.length ?? 0,
-          messages: messages?.length ?? 0,
-          views: 0,
-        });
-      } catch {
-        setStats({ projects: 0, messages: 0, views: 0 });
-      } finally {
-        setLoading(false);
-      }
+        if (themeRes.ok)    { const d = await themeRes.json();    setTheme(d.active_theme); }
+        if (socialRes.ok)   { const d = await socialRes.json();   setSocial(d); }
+        if (contactRes.ok)  { const d = await contactRes.json();  setContact(d); }
+        if (sectionsRes.ok) { const d = await sectionsRes.json(); setSections(d); }
+        if (patternRes.ok)  { const d = await patternRes.json();  setPattern(d.background_pattern ?? "grid"); }
+      } catch { setError("Failed to load settings"); }
+      finally  { setLoading(false); }
     }
-    fetchStats();
+    fetchAll();
   }, []);
 
-  if (loading) return <DashboardSkeleton />;
+  function notify(msg: string) { setError(""); setSuccess(msg); setTimeout(() => setSuccess(""), 3000); }
+  function notifyError(msg: string) { setSuccess(""); setError(msg); }
 
-  const cardValues = [stats!.projects, stats!.messages, stats!.views];
+  async function save(url: string, body: object, msg: string, setFn: (v: boolean) => void) {
+    setFn(true);
+    try {
+      const res = await fetch(url, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!res.ok) throw new Error();
+      notify(msg);
+    } catch { notifyError(`Failed to save`); }
+    finally  { setFn(false); }
+  }
+
+  if (loading) return <SettingsSkeleton />;
 
   return (
-    <div className="dashboard">
-      <div className="dashboard__header">
-        <h1>Dashboard</h1>
-        <p>Welcome back, here's what's happening on frandy.dev</p>
-      </div>
-
-      <div className="dashboard__grid">
-        {CARDS.map((card, i) => (
-          <a key={card.label} href={card.href} className="dashboard__card">
-            <div className="dashboard__card-icon">{card.icon}</div>
-            <div className="dashboard__card-body">
-              <span className="dashboard__card-value">{cardValues[i]}</span>
-              <span className="dashboard__card-label">{card.label}</span>
-            </div>
-          </a>
-        ))}
-      </div>
-
-      <div className="dashboard__quick">
-        <h2>Quick Actions</h2>
-        <div className="dashboard__actions">
-          {QUICK_ACTIONS.map((a) => (
-            <a
-              key={a.label}
-              href={a.href}
-              target={(a as { target?: string }).target}
-              className="dashboard__action"
-            >
-              {a.label}
-            </a>
-          ))}
+    <div className="settings">
+      <div className="settings__header">
+        <div>
+          <h1>Site Settings</h1>
+          <p>Manage theme, visibility, social links, and contact info</p>
         </div>
       </div>
 
+      {error   && <div className="s-banner s-banner--error">{error}</div>}
+      {success && <div className="s-banner s-banner--ok">{success}</div>}
+
+      {/* ── Theme ── always expanded ── */}
+      <div className="s-panel">
+        <h2 className="s-panel__title">Theme</h2>
+        <div className="themes">
+          {THEMES.map((t) => (
+            <button key={t.value} className={`theme-card ${theme === t.value ? "active" : ""}`} onClick={() => setTheme(t.value)}>
+              {/* dframe inner frame via ::before / ::after in CSS */}
+              <div className="theme-card__swatch" style={{ background: t.color }} />
+              <span className="theme-card__label">{t.label}</span>
+            </button>
+          ))}
+        </div>
+        <SaveBtn onClick={() => save("/api/settings/theme", { theme }, "Theme saved", setSaving)} disabled={saving} label="Save Theme" saving={saving} />
+      </div>
+
+      {/* ── Section Visibility ── */}
+      <Collapsible title="Section Visibility" defaultOpen={true}>
+        <p className="s-hint">Hero is always shown. Toggle sections on or off.</p>
+        <div className="sections-grid">
+          {SECTION_FIELDS.map(({ key, label, description }) => (
+            <div key={key} className="section-row">
+              <div className="section-row__info">
+                <span className="section-row__label">{label}</span>
+                <span className="section-row__desc">{description}</span>
+              </div>
+              <Toggle id={`toggle-${key}`} checked={!!sections[key]} onChange={(v) => setSections({ ...sections, [key]: v })} />
+            </div>
+          ))}
+        </div>
+        <SaveBtn onClick={() => save("/api/settings/sections", sections, "Visibility saved", setSavingSections)} disabled={savingSections} label="Save Visibility" saving={savingSections} />
+      </Collapsible>
+
+      {/* ── Background Pattern ── */}
+      <Collapsible title="Background Pattern">
+        <p className="s-hint">Hero section background pattern.</p>
+        <div className="pattern-grid">
+          {PATTERNS.map((p) => (
+            <button key={p.value} className={`pattern-card ${pattern === p.value ? "active" : ""}`} onClick={() => setPattern(p.value)}>
+              <div className="pattern-card__preview" style={{ backgroundImage: p.preview, backgroundSize: p.size }} />
+              <span className="pattern-card__label">{p.label}</span>
+            </button>
+          ))}
+        </div>
+        <SaveBtn onClick={() => save("/api/settings/pattern", { background_pattern: pattern }, "Pattern saved", setSavingPattern)} disabled={savingPattern} label="Save Pattern" saving={savingPattern} />
+      </Collapsible>
+
+      {/* ── Social Links ── */}
+      <Collapsible title="Social Links">
+        <div className="s-field-group">
+          {SOCIAL_FIELDS.map(({ key, label, placeholder }) => (
+            <div className="s-field" key={key}>
+              <label className="s-field__label">{label}</label>
+              <input type="url" className="s-field__input" value={(social[key] as string) ?? ""} onChange={(e) => setSocial({ ...social, [key]: e.target.value })} placeholder={placeholder} />
+            </div>
+          ))}
+        </div>
+        <SaveBtn onClick={() => save("/api/settings/social", social, "Social links saved", setSavingSocial)} disabled={savingSocial} label="Save Social Links" saving={savingSocial} />
+      </Collapsible>
+
+      {/* ── Contact Info ── */}
+      <Collapsible title="Contact Info">
+        <div className="s-field-group">
+          {CONTACT_FIELDS.map(({ key, label, placeholder }) => (
+            <div className="s-field" key={key}>
+              <label className="s-field__label">{label}</label>
+              <input type="text" className="s-field__input" value={(contact[key] as string) ?? ""} onChange={(e) => setContact({ ...contact, [key]: e.target.value })} placeholder={placeholder} />
+            </div>
+          ))}
+        </div>
+        <SaveBtn onClick={() => save("/api/settings/contact-info", contact, "Contact info saved", setSavingContact)} disabled={savingContact} label="Save Contact Info" saving={savingContact} />
+      </Collapsible>
+
       <style jsx>{`
-        .dashboard__header { margin-bottom: 2rem; }
-        .dashboard__header h1 {
-          font-family: var(--font-display);
-          font-size: 2rem;
-          color: var(--color-text);
-          margin: 0;
-        }
-        .dashboard__header p {
-          color: var(--color-text-muted);
-          margin: 0.25rem 0 0;
-          font-size: 0.9rem;
-        }
-        .dashboard__grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-          gap: 1rem;
-          margin-bottom: 2.5rem;
-        }
-        .dashboard__card {
-          background: var(--color-surface);
+        /* ── Page header ── */
+        .settings__header { margin-bottom: 2rem; }
+        .settings__header h1 { font-family: var(--font-display); font-size: 2rem; margin: 0; }
+        .settings__header p  { color: var(--color-text-muted); margin: 0.25rem 0 0; font-size: 0.875rem; }
+
+        /* ── Banners ── */
+        .s-banner { padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
+        .s-banner--error { background: rgba(255,80,80,0.08); border: 1px solid rgba(255,80,80,0.3); color: #ff5050; }
+        .s-banner--ok    { background: rgba(0,255,128,0.08); border: 1px solid rgba(0,255,128,0.3); color: #00ff80; }
+
+        /* ── Panel — dframe style with admin CSS vars ── */
+        .s-panel {
+          position: relative;
           border: 1px solid var(--color-border);
-          border-radius: 0;
+          background: var(--color-surface);
           padding: 1.5rem;
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          text-decoration: none;
-          color: var(--color-text);
+          margin-bottom: 1rem;
+        }
+        /* inner rounded frame */
+        .s-panel::before {
+          content: '';
+          position: absolute;
+          inset: 4px;
+          border: 1px solid rgba(255,255,255,0.04);
+          border-radius: 6px;
+          pointer-events: none;
+          z-index: 0;
+        }
+        /* corner accents TL + BR */
+        .s-panel::after {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          background:
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 14px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 1.5px 14px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 14px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 1.5px 14px no-repeat;
+          pointer-events: none;
+          z-index: 2;
+          transition: opacity 250ms ease;
+        }
+        .s-panel > * { position: relative; z-index: 1; }
+
+        .s-panel__title { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 1.25rem; color: var(--color-accent); }
+
+        /* ── Collapsible ── */
+        .s-collapsible { padding: 0; }
+        .s-collapsible__trigger {
+          width: 100%; display: flex; align-items: center; justify-content: space-between;
+          padding: 1.1rem 1.5rem; background: none; border: none; cursor: pointer; text-align: left;
+          position: relative; z-index: 1;
+          transition: background 150ms ease;
+        }
+        .s-collapsible__trigger:hover { background: rgba(255,255,255,0.02); }
+        .s-collapsible__title { font-family: var(--font-display); font-size: 1.1rem; color: var(--color-accent); margin: 0; }
+        .s-collapsible__body { padding: 0 1.5rem 1.5rem; border-top: 1px solid var(--color-border); position: relative; z-index: 1; }
+
+        /* ── Save button — full width on small screens ── */
+        .s-save-btn { margin-top: 1.25rem; }
+
+        /* ── Hint text ── */
+        .s-hint { font-size: 0.825rem; color: var(--color-text-muted); margin: 0 0 1.25rem; line-height: 1.6; }
+
+        /* ── Theme cards — dframe style ── */
+        .themes { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0; }
+        .theme-card {
+          position: relative;
+          display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+          padding: 1rem; min-width: 80px;
+          background: var(--color-bg);
+          border: 1px solid var(--color-border);
+          cursor: pointer; color: var(--color-text); font-size: 0.875rem;
           transition: border-color 0.2s;
         }
-        .dashboard__card:hover { border-color: var(--color-accent); }
-        .dashboard__card-icon { font-size: 1.75rem; color: var(--color-accent); }
-        .dashboard__card-body { display: flex; flex-direction: column; }
-        .dashboard__card-value {
-          font-size: 1.75rem;
-          font-weight: 700;
-          font-family: var(--font-mono);
-          color: var(--color-text);
-          line-height: 1;
+        .theme-card::before {
+          content: ''; position: absolute; inset: 3px;
+          border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; pointer-events: none;
         }
-        .dashboard__card-label {
-          font-size: 0.8rem;
-          color: var(--color-text-muted);
-          margin-top: 0.25rem;
+        .theme-card::after {
+          content: ''; position: absolute; inset: -1px;
+          background:
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 10px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 1.5px 10px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 10px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 1.5px 10px no-repeat;
+          pointer-events: none; transition: opacity 250ms ease;
         }
-        .dashboard__quick h2 {
-          font-family: var(--font-display);
-          font-size: 1.25rem;
-          color: var(--color-text);
-          margin: 0 0 1rem;
+        .theme-card:hover::after  { opacity: 0; }
+        .theme-card.active::after { opacity: 0; }
+        .theme-card:hover  { border-color: var(--color-text-muted); }
+        .theme-card.active { border-color: var(--color-accent); }
+        .theme-card > * { position: relative; z-index: 1; }
+        .theme-card__swatch { width: 40px; height: 40px; border-radius: 50%; }
+        .theme-card__label  { font-family: var(--font-body); font-size: 0.8rem; }
+
+        /* ── Section visibility rows ── */
+        .sections-grid { display: flex; flex-direction: column; border: 1px solid var(--color-border); overflow: hidden; margin-bottom: 0; }
+        .section-row { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; border-bottom: 1px solid var(--color-border); transition: background 0.15s; }
+        .section-row:last-child { border-bottom: none; }
+        .section-row:hover { background: var(--color-bg); }
+        .section-row__info { display: flex; flex-direction: column; gap: 2px; }
+        .section-row__label { font-size: 0.9rem; color: var(--color-text); font-weight: 600; }
+        .section-row__desc  { font-size: 0.78rem; color: var(--color-text-muted); font-family: var(--font-mono); }
+
+        /* ── Pattern cards — dframe style ── */
+        .pattern-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+        .pattern-card {
+          position: relative;
+          display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+          padding: 0.75rem; background: var(--color-bg); border: 1px solid var(--color-border);
+          cursor: pointer; transition: border-color 0.2s;
         }
-        .dashboard__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-        .dashboard__action {
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: 0;
-          padding: 0.625rem 1.25rem;
-          text-decoration: none;
-          color: var(--color-text-muted);
-          font-size: 0.875rem;
-          transition: all 0.15s;
+        .pattern-card::before {
+          content: ''; position: absolute; inset: 3px;
+          border: 1px solid rgba(255,255,255,0.04); border-radius: 4px; pointer-events: none;
         }
-        .dashboard__action:hover {
-          border-color: var(--color-accent);
-          color: var(--color-accent);
+        .pattern-card::after {
+          content: ''; position: absolute; inset: -1px;
+          background:
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 8px 1px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 1px 8px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 8px 1px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 1px 8px no-repeat;
+          pointer-events: none; transition: opacity 250ms ease;
         }
+        .pattern-card:hover::after  { opacity: 0; }
+        .pattern-card.active::after { opacity: 0; }
+        .pattern-card:hover  { border-color: var(--color-text-muted); }
+        .pattern-card.active { border-color: var(--color-accent); }
+        .pattern-card > * { position: relative; z-index: 1; }
+        .pattern-card__preview { width: 100%; height: 52px; opacity: 0.6; }
+        .pattern-card__label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); letter-spacing: 1px; text-transform: uppercase; }
+        .pattern-card.active .pattern-card__label { color: var(--color-accent); }
+        @media (max-width: 600px) { .pattern-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        /* ── Fields ── */
+        .s-field-group { display: flex; flex-direction: column; gap: 1rem; }
+        .s-field { display: flex; flex-direction: column; gap: 0.4rem; }
+        .s-field__label { font-size: 0.8rem; color: var(--color-text-muted); font-family: var(--font-mono); }
+        .s-field__input {
+          background: var(--color-bg); border: 1px solid var(--color-border);
+          padding: 0.625rem 0.75rem; color: var(--color-text); font-size: 0.9rem;
+          outline: none; font-family: var(--font-body); transition: border-color 0.2s;
+          width: 100%;
+        }
+        .s-field__input:focus { border-color: var(--color-accent); }
       `}</style>
     </div>
   );
