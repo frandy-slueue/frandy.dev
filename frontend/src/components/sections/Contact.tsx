@@ -16,13 +16,13 @@ interface ContactInfo { contact_email:string|null; contact_phone:string|null; co
 
 const INITIAL: FormState = { name:"", email:"", subject:"", message:"", phone:"", company:"" };
 const SOCIAL_CONFIG = [
-  { key:"social_linkedin",  icon:<FaLinkedin size={20}/>,  label:"LinkedIn" },
-  { key:"social_github",    icon:<FaGithub size={20}/>,    label:"GitHub" },
-  { key:"social_x",         icon:<FaXTwitter size={20}/>,  label:"X" },
-  { key:"social_facebook",  icon:<FaFacebook size={20}/>,  label:"Facebook" },
-  { key:"social_medium",    icon:<FaMedium size={20}/>,    label:"Medium" },
-  { key:"social_hashnode",  icon:<FaHashnode size={20}/>,  label:"Hashnode" },
-  { key:"social_devto",     icon:<FaDev size={20}/>,       label:"Dev.to" },
+  { key:"social_linkedin",  icon:<FaLinkedin size={20}/>,  label:"LinkedIn", brand:"#0A66C2" },
+  { key:"social_github",    icon:<FaGithub size={20}/>,    label:"GitHub",   brand:"#ffffff" },
+  { key:"social_x",         icon:<FaXTwitter size={20}/>,  label:"X",        brand:"#ffffff" },
+  { key:"social_facebook",  icon:<FaFacebook size={20}/>,  label:"Facebook", brand:"#1877F2" },
+  { key:"social_medium",    icon:<FaMedium size={20}/>,    label:"Medium",   brand:"#ffffff" },
+  { key:"social_hashnode",  icon:<FaHashnode size={20}/>,  label:"Hashnode", brand:"#2962FF" },
+  { key:"social_devto",     icon:<FaDev size={20}/>,       label:"Dev.to",   brand:"#ffffff" },
 ];
 
 function EmailIcon({ size=48 }:{ size?:number }) {
@@ -63,7 +63,7 @@ export default function Contact() {
     return () => { document.removeEventListener("mousedown", outside); document.removeEventListener("touchstart", outside); };
   }, []);
 
-  const activeSocials = SOCIAL_CONFIG.filter(({ key }) => !!social[key as keyof SocialLinks]);
+  const activeSocials = SOCIAL_CONFIG.filter(({ key }) => !!social[key as keyof SocialLinks]) as typeof SOCIAL_CONFIG;
 
   const validate = (): boolean => {
     const e: Partial<FormState> = {};
@@ -202,8 +202,11 @@ export default function Contact() {
               <div className="contact-follow">
                 <p className="contact-follow__label">Follow me on</p>
                 <div className="contact-follow__icons">
-                  {activeSocials.map(({ key, icon, label }) => (
-                    <a key={key} href={social[key as keyof SocialLinks]!} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="contact-follow__icon">{icon}</a>
+                  {activeSocials.map(({ key, icon, label, brand }) => (
+                    <a key={key} href={social[key as keyof SocialLinks]!} target="_blank" rel="noopener noreferrer" aria-label={label} title={label}
+                      className="contact-follow__icon"
+                      style={{ "--brand-color": brand } as React.CSSProperties}
+                    >{icon}</a>
                   ))}
                 </div>
               </div>
@@ -238,22 +241,86 @@ export default function Contact() {
         .contact-right { display:flex; flex-direction:column; gap:48px; overflow:visible; }
         .contact-buttons { display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap; padding:24px 16px 8px; }
         .contact-btn-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; flex:1; min-width:80px; padding:0 8px; }
-        .contact-btn { width:80px; height:80px; border-radius:0; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 300ms ease; }
-        .contact-btn:hover, .contact-btn.active { border-color:var(--accent); color:var(--accent); transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
-        .contact-btn--whatsapp:hover,.contact-btn--whatsapp.active { border-color:#25d366;color:#25d366;box-shadow:0 8px 24px rgba(37,211,102,0.2); }
-        .contact-btn--email:hover,.contact-btn--email.active { border-color:var(--accent);color:var(--accent); }
-        .contact-btn--phone:hover,.contact-btn--phone.active { border-color:#3b82f6;color:#3b82f6;box-shadow:0 8px 24px rgba(59,130,246,0.2); }
-        .contact-btn__icon { display:flex; align-items:center; justify-content:center; }
+
+        /* contact button — dframe: sharp outer, rounded inner (6px), corners fade on hover */
+        .contact-btn {
+          position:relative;
+          width:80px; height:80px;
+          border:1px solid var(--border);
+          background:var(--bg-elevated);
+          color:var(--text-muted);
+          display:flex; align-items:center; justify-content:center;
+          cursor:pointer;
+          transition:color 300ms ease, border-color 300ms ease, transform 300ms ease;
+          overflow:hidden;
+        }
+        .contact-btn::before {
+          content:''; position:absolute; inset:4px;
+          border:1px solid var(--border-subtle); border-radius:6px;
+          pointer-events:none; transition:border-color 250ms ease;
+        }
+        .contact-btn::after {
+          content:''; position:absolute; inset:-1px;
+          background:
+            linear-gradient(var(--accent),var(--accent)) top left / 12px 1.5px no-repeat,
+            linear-gradient(var(--accent),var(--accent)) top left / 1.5px 12px no-repeat,
+            linear-gradient(var(--accent),var(--accent)) bottom right / 12px 1.5px no-repeat,
+            linear-gradient(var(--accent),var(--accent)) bottom right / 1.5px 12px no-repeat;
+          pointer-events:none; transition:opacity 250ms ease; z-index:2;
+        }
+        .contact-btn:hover, .contact-btn.active {
+          border-color:var(--accent); color:var(--accent);
+          transform:translateY(-4px);
+        }
+        .contact-btn:hover::after, .contact-btn.active::after { opacity:0; }
+        .contact-btn--whatsapp:hover,.contact-btn--whatsapp.active { border-color:#25d366;color:#25d366; }
+        .contact-btn--phone:hover,.contact-btn--phone.active { border-color:#3b82f6;color:#3b82f6; }
+
+        .contact-btn__icon { display:flex; align-items:center; justify-content:center; position:relative; z-index:1; }
         .contact-btn__reveal { display:flex; flex-direction:column; align-items:center; gap:8px; opacity:0; transform:translateY(8px); transition:opacity 250ms ease,transform 250ms ease; pointer-events:none; text-align:center; width:100%; }
         .contact-btn__reveal.visible { opacity:1; transform:translateY(0); pointer-events:all; }
         .contact-btn__hint { font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; white-space:nowrap; }
-        .contact-btn__action { background:none; border:1px solid var(--accent); color:var(--accent); font-family:var(--font-body); font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:6px 14px; border-radius:999px; cursor:pointer; transition:background 200ms,color 200ms; white-space:nowrap; }
+        .contact-btn__action { background:none; border:1px solid var(--accent); color:var(--accent); font-family:var(--font-body); font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:6px 14px; border-radius:14px; cursor:pointer; transition:background 200ms,color 200ms; white-space:nowrap; }
         .contact-btn__action:hover { background:var(--accent); color:var(--bg-primary); }
         .contact-follow__label { font-family:var(--font-mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px; }
         .contact-follow__icons { display:flex; flex-wrap:wrap; gap:20px; }
-        .contact-follow__icon { color:var(--text-muted); text-decoration:none; transition:color 0.2s,transform 0.2s; display:flex; align-items:center; }
-        .contact-follow__icon:hover { color:var(--accent); transform:translateY(-2px); }
-        .contact-availability { padding:16px 20px; border:1px solid var(--border); background:var(--bg-elevated); display:flex; align-items:center; gap:12px; }
+        /* Social icons — always brand colored, glow on hover */
+        .contact-follow__icon {
+          color: var(--brand-color, var(--text-muted));
+          text-decoration:none;
+          transition:transform 0.2s, filter 0.2s;
+          display:flex; align-items:center;
+          filter: brightness(0.8);
+        }
+        .contact-follow__icon:hover {
+          transform:translateY(-3px);
+          filter: brightness(1.2) drop-shadow(0 0 6px var(--brand-color, var(--accent)));
+        }
+        /* availability panel — dframe with 4px inner radius */
+        .contact-availability {
+          position:relative;
+          padding:16px 20px;
+          border:1px solid var(--border);
+          background:var(--bg-elevated);
+          display:flex; align-items:center; gap:12px;
+          transition:border-color 250ms ease;
+        }
+        .contact-availability::before {
+          content:''; position:absolute; inset:3px;
+          border:1px solid var(--border-subtle); border-radius:4px;
+          pointer-events:none;
+        }
+        .contact-availability::after {
+          content:''; position:absolute; inset:-1px;
+          background:
+            linear-gradient(#3d9970,#3d9970) top left / 10px 1.5px no-repeat,
+            linear-gradient(#3d9970,#3d9970) top left / 1.5px 10px no-repeat,
+            linear-gradient(#3d9970,#3d9970) bottom right / 10px 1.5px no-repeat,
+            linear-gradient(#3d9970,#3d9970) bottom right / 1.5px 10px no-repeat;
+          pointer-events:none; transition:opacity 250ms ease;
+        }
+        .contact-availability:hover::after { opacity:0; }
+        .contact-availability > * { position:relative; z-index:1; }
         .contact-availability__dot { width:8px; height:8px; border-radius:50%; background:#3d9970; box-shadow:0 0 8px #3d9970; flex-shrink:0; }
         .contact-availability__text { font-family:var(--font-body); font-size:13px; color:var(--text-muted); letter-spacing:0.5px; }
         @keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
