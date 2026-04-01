@@ -258,6 +258,7 @@ export default function Nav() {
 
         /* ── Portrait phone only — show bottom nav ──────── */
         @media (max-width: 767px) and (orientation: portrait) {
+          .nav-hamburger { display: none !important; }
           .bottom-nav-mobile {
             display: flex;
             position: fixed;

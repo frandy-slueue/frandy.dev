@@ -217,7 +217,8 @@ export default function AdminResume() {
         }
         .resume__item {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
+          flex-wrap: wrap;
           gap: 1rem;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
@@ -260,6 +261,8 @@ export default function AdminResume() {
           display: flex;
           gap: 0.5rem;
           align-items: center;
+          flex-wrap: wrap;
+          width: 100%;
         }
         .loading,
         .empty {
@@ -273,6 +276,18 @@ export default function AdminResume() {
           flex-direction: column;
           align-items: center;
           gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+          .resume__header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+          }
+          .resume__filename {
+            font-size: 0.8rem;
+            word-break: break-all;
+          }
         }
       `}</style>
     </div>
