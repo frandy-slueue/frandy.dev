@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/auth";
 
@@ -8,8 +8,12 @@ export default function AdminLogin() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [mounted, setMounted]   = useState(false);
+
+  // Stagger mount animation
+  useEffect(() => { setMounted(true); }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,137 +30,524 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="admin-login">
-      <div className="admin-login__card">
-        <div className="admin-login__header">
-          <h1>frandy.dev</h1>
-          <p>Admin Dashboard</p>
+    <div className="login-page">
+      {/* Ambient grid background */}
+      <div className="login-page__grid" aria-hidden />
+
+      {/* Left — brand panel (desktop only) */}
+      <div className={`login-brand ${mounted ? "visible" : ""}`} aria-hidden>
+        <div className="login-brand__inner">
+          {/* Diamond logo */}
+          <div className="login-brand__diamond">
+            <div className="login-brand__diamond-inner">
+              <div className="login-brand__diamond-border" />
+              <span className="login-brand__diamond-text">FS</span>
+            </div>
+          </div>
+
+          <div className="login-brand__wordmark">
+            <span className="login-brand__name">FRANDY</span>
+            <span className="login-brand__sub">· dev</span>
+          </div>
+
+          <p className="login-brand__tagline">
+            Admin access only.<br />
+            Unauthorized entry is logged.
+          </p>
+
+          {/* Decorative corner lines */}
+          <div className="login-brand__corner login-brand__corner--tl" aria-hidden />
+          <div className="login-brand__corner login-brand__corner--br" aria-hidden />
         </div>
-
-        <form onSubmit={handleSubmit} className="admin-login__form">
-          {error && <div className="admin-login__error">{error}</div>}
-
-          <div className="admin-login__field">
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
-              required
-              autoFocus
-            />
-          </div>
-
-          <div className="admin-login__field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="admin-login__btn"
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
       </div>
 
-      <style jsx>{`
-        .admin-login {
+      {/* Right — form panel */}
+      <div className={`login-form-panel ${mounted ? "visible" : ""}`}>
+        <div className="login-form-wrap">
+
+          {/* Mobile logo — only shows below 768px */}
+          <div className="login-mobile-logo">
+            <div className="login-brand__diamond login-brand__diamond--sm">
+              <div className="login-brand__diamond-inner">
+                <div className="login-brand__diamond-border" />
+                <span className="login-brand__diamond-text">FS</span>
+              </div>
+            </div>
+            <span className="login-brand__name">FRANDY<span className="login-brand__sub"> · dev</span></span>
+          </div>
+
+          <div className="login-form-header">
+            <p className="login-form-eyebrow">Admin Dashboard</p>
+            <h1 className="login-form-title">Sign In</h1>
+          </div>
+
+          <form onSubmit={handleSubmit} className="login-form" noValidate>
+            {error && (
+              <div className="login-error" role="alert">
+                <span className="login-error__icon">!</span>
+                {error}
+              </div>
+            )}
+
+            <div className="login-field">
+              <label className="login-field__label" htmlFor="username">
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                className="login-field__input"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+                required
+                autoFocus
+                autoComplete="username"
+                spellCheck={false}
+              />
+            </div>
+
+            <div className="login-field">
+              <label className="login-field__label" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                className="login-field__input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                required
+                autoComplete="current-password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="login-submit"
+              disabled={loading || !username || !password}
+            >
+              {loading ? (
+                <span className="login-submit__inner">
+                  <span className="login-submit__spinner" aria-hidden />
+                  Authenticating...
+                </span>
+              ) : (
+                <span className="login-submit__inner">
+                  Sign In
+                  <span className="login-submit__arrow" aria-hidden>→</span>
+                </span>
+              )}
+            </button>
+          </form>
+
+          <p className="login-back">
+            <a href="/" className="login-back__link">← Back to site</a>
+          </p>
+        </div>
+      </div>
+
+      <style>{`
+        /* ── Page layout ────────────────────────────────── */
+        .login-page {
           min-height: 100vh;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          background: var(--bg-primary);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .login-page__grid {
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(var(--border-subtle) 1px, transparent 1px),
+            linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+          background-size: 48px 48px;
+          opacity: 0.5;
+          pointer-events: none;
+        }
+
+        /* ── Brand panel ────────────────────────────────── */
+        .login-brand {
+          position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-bg);
-          padding: 1rem;
+          border-right: 1px solid var(--border);
+          background: var(--bg-secondary);
+          opacity: 0;
+          transform: translateX(-16px);
+          transition: opacity 600ms ease, transform 600ms ease;
         }
-        .admin-login__card {
+
+        .login-brand.visible {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        .login-brand__inner {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
+          padding: 48px;
+        }
+
+        /* Diamond logo */
+        .login-brand__diamond {
+          width: 64px;
+          height: 64px;
+          transform: rotate(45deg);
+          border: 1.5px solid var(--accent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          position: relative;
+        }
+
+        .login-brand__diamond--sm {
+          width: 32px;
+          height: 32px;
+        }
+
+        .login-brand__diamond-inner {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           width: 100%;
-          max-width: 400px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: 8px;
-          padding: 2.5rem;
+          height: 100%;
         }
-        .admin-login__header {
-          text-align: center;
-          margin-bottom: 2rem;
+
+        .login-brand__diamond-border {
+          position: absolute;
+          inset: 5px;
+          border: 0.5px solid var(--border);
         }
-        .admin-login__header h1 {
+
+        .login-brand__diamond--sm .login-brand__diamond-border {
+          inset: 3px;
+        }
+
+        .login-brand__diamond-text {
+          transform: rotate(-45deg);
           font-family: var(--font-display);
-          font-size: 2rem;
-          color: var(--color-accent);
+          font-size: 18px;
+          color: var(--accent);
+          letter-spacing: 1px;
+          line-height: 1;
+          position: relative;
+          z-index: 1;
+        }
+
+        .login-brand__diamond--sm .login-brand__diamond-text {
+          font-size: 10px;
+        }
+
+        .login-brand__wordmark {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+        }
+
+        .login-brand__name {
+          font-family: var(--font-display);
+          font-size: 36px;
+          color: var(--text-primary);
+          letter-spacing: 6px;
+          line-height: 1;
+        }
+
+        .login-brand__sub {
+          font-family: var(--font-body);
+          font-size: 11px;
+          letter-spacing: 4px;
+          color: var(--accent-muted);
+          text-transform: uppercase;
+          line-height: 1;
+        }
+
+        .login-brand__tagline {
+          font-family: var(--font-mono);
+          font-size: 12px;
+          color: var(--text-muted);
+          letter-spacing: 1px;
+          text-align: center;
+          line-height: 1.8;
+          margin-top: 12px;
+        }
+
+        /* Decorative corner brackets */
+        .login-brand__corner {
+          position: absolute;
+          width: 24px;
+          height: 24px;
+        }
+
+        .login-brand__corner--tl {
+          top: 24px;
+          left: 24px;
+          border-top: 1px solid var(--accent);
+          border-left: 1px solid var(--accent);
+        }
+
+        .login-brand__corner--br {
+          bottom: 24px;
+          right: 24px;
+          border-bottom: 1px solid var(--accent);
+          border-right: 1px solid var(--accent);
+        }
+
+        /* ── Form panel ─────────────────────────────────── */
+        .login-form-panel {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          opacity: 0;
+          transform: translateX(16px);
+          transition: opacity 600ms 150ms ease, transform 600ms 150ms ease;
+        }
+
+        .login-form-panel.visible {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        .login-form-wrap {
+          width: 100%;
+          max-width: 380px;
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+        }
+
+        /* Mobile logo — hidden on desktop */
+        .login-mobile-logo {
+          display: none;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .login-form-header {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .login-form-eyebrow {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+          color: var(--accent-muted);
+        }
+
+        .login-form-title {
+          font-family: var(--font-display);
+          font-size: 3rem;
+          color: var(--text-primary);
+          letter-spacing: 2px;
+          line-height: 1;
           margin: 0;
         }
-        .admin-login__header p {
-          color: var(--color-text-muted);
-          margin: 0.25rem 0 0;
-          font-size: 0.875rem;
+
+        /* ── Form ───────────────────────────────────────── */
+        .login-form {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
         }
-        .admin-login__error {
-          background: rgba(255, 80, 80, 0.1);
+
+        .login-error {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: rgba(255, 80, 80, 0.08);
           border: 1px solid rgba(255, 80, 80, 0.3);
-          color: #ff5050;
-          padding: 0.75rem;
-          border-radius: 4px;
-          font-size: 0.875rem;
-          margin-bottom: 1rem;
+          color: #ff5555;
+          padding: 12px 14px;
+          font-family: var(--font-body);
+          font-size: 13px;
+          letter-spacing: 0.5px;
         }
-        .admin-login__form {
+
+        .login-error__icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 18px;
+          height: 18px;
+          border: 1px solid #ff5555;
+          border-radius: 50%;
+          font-size: 11px;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+
+        .login-field {
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: 8px;
         }
-        .admin-login__field {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-        .admin-login__field label {
-          font-size: 0.875rem;
-          color: var(--color-text-muted);
+
+        .login-field__label {
           font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: var(--text-muted);
         }
-        .admin-login__field input {
-          background: var(--color-bg);
-          border: 1px solid var(--color-border);
-          border-radius: 4px;
-          padding: 0.75rem 1rem;
-          color: var(--color-text);
-          font-size: 1rem;
+
+        .login-field__input {
+          width: 100%;
+          padding: 14px 16px;
+          background: var(--bg-elevated);
+          border: 1px solid var(--border);
+          color: var(--text-primary);
+          font-family: var(--font-body);
+          font-size: 15px;
           outline: none;
-          transition: border-color 0.2s;
+          border-radius: 0;
+          transition: border-color 200ms ease, box-shadow 200ms ease;
+          -webkit-appearance: none;
         }
-        .admin-login__field input:focus {
-          border-color: var(--color-accent);
+
+        .login-field__input:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 1px var(--accent);
         }
-        .admin-login__btn {
-          background: var(--color-accent);
-          color: var(--color-bg);
-          border: none;
-          border-radius: 4px;
-          padding: 0.875rem;
-          font-size: 1rem;
-          font-weight: 600;
+
+        .login-field__input::placeholder {
+          color: var(--text-muted);
+          font-size: 14px;
+        }
+
+        /* ── Submit button ──────────────────────────────── */
+        .login-submit {
+          width: 100%;
+          padding: 15px;
+          background: transparent;
+          border: 1px solid var(--accent);
+          color: var(--accent);
+          font-family: var(--font-body);
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 3px;
+          text-transform: uppercase;
           cursor: pointer;
-          transition: opacity 0.2s;
-          margin-top: 0.5rem;
+          position: relative;
+          overflow: hidden;
+          transition: color 250ms ease;
+          margin-top: 4px;
         }
-        .admin-login__btn:hover {
-          opacity: 0.85;
+
+        /* Slide-in fill on hover */
+        .login-submit::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: var(--accent);
+          transform: translateX(-100%);
+          transition: transform 250ms ease;
+          z-index: 0;
         }
-        .admin-login__btn:disabled {
-          opacity: 0.5;
+
+        .login-submit:hover::before,
+        .login-submit:focus-visible::before {
+          transform: translateX(0);
+        }
+
+        .login-submit:hover,
+        .login-submit:focus-visible {
+          color: var(--bg-primary);
+        }
+
+        .login-submit:disabled {
+          opacity: 0.35;
           cursor: not-allowed;
+        }
+
+        .login-submit:disabled::before {
+          transform: translateX(-100%);
+        }
+
+        .login-submit__inner {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .login-submit__arrow {
+          transition: transform 200ms ease;
+        }
+
+        .login-submit:hover .login-submit__arrow {
+          transform: translateX(4px);
+        }
+
+        /* Loading spinner */
+        .login-submit__spinner {
+          width: 14px;
+          height: 14px;
+          border: 1.5px solid currentColor;
+          border-top-color: transparent;
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+          flex-shrink: 0;
+        }
+
+        /* ── Back link ──────────────────────────────────── */
+        .login-back {
+          margin: 0;
+        }
+
+        .login-back__link {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          text-decoration: none;
+          transition: color 200ms ease;
+        }
+
+        .login-back__link:hover {
+          color: var(--accent);
+        }
+
+        /* ── Responsive — tablet/mobile ─────────────────── */
+        @media (max-width: 768px) {
+          .login-page {
+            grid-template-columns: 1fr;
+          }
+
+          .login-brand {
+            display: none;
+          }
+
+          .login-form-panel {
+            align-items: flex-start;
+            padding: 3rem 1.5rem;
+          }
+
+          .login-mobile-logo {
+            display: flex;
+          }
+
+          .login-form-title {
+            font-size: 2.5rem;
+          }
         }
       `}</style>
     </div>
