@@ -54,3 +54,36 @@ async def logout(
 @router.get("/me")
 async def me(current_admin: AdminUser = Depends(get_current_admin)):
     return {"username": current_admin.username}
+
+
+# ── Change password ────────────────────────────────────────────────────────────
+
+from pydantic import BaseModel, field_validator
+from core.security import hash_password
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_length(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("New password must be at least 8 characters")
+        return v
+
+
+@router.post("/change-password", status_code=204)
+async def change_password(
+    payload: ChangePasswordRequest,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    if not verify_password(payload.current_password, current_admin.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+    current_admin.hashed_password = hash_password(payload.new_password)
+    await db.commit()

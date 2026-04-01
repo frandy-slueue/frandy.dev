@@ -110,6 +110,13 @@ export default function AdminSettings() {
   const [sections, setSections] = useState<SectionVisibility>({ section_about: true, section_skills: true, section_projects: true, section_timeline: true, section_contact: true });
   const [pattern,  setPattern]  = useState("grid");
 
+  const [pwCurrent,    setPwCurrent]    = useState("");
+  const [pwNew,        setPwNew]        = useState("");
+  const [pwConfirm,    setPwConfirm]    = useState("");
+  const [savingPw,     setSavingPw]     = useState(false);
+  const [pwError,      setPwError]      = useState("");
+  const [pwSuccess,    setPwSuccess]    = useState("");
+
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
   const [savingSocial,   setSavingSocial]   = useState(false);
@@ -151,6 +158,27 @@ export default function AdminSettings() {
       notify(msg);
     } catch { notifyError(`Failed to save`); }
     finally  { setFn(false); }
+  }
+
+  async function handleChangePassword() {
+    setPwError(""); setPwSuccess("");
+    if (!pwCurrent || !pwNew || !pwConfirm) { setPwError("All fields are required"); return; }
+    if (pwNew.length < 8) { setPwError("New password must be at least 8 characters"); return; }
+    if (pwNew !== pwConfirm) { setPwError("Passwords do not match"); return; }
+    setSavingPw(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ current_password: pwCurrent, new_password: pwNew }),
+      });
+      if (res.status === 400) { const d = await res.json(); setPwError(d.detail || "Incorrect current password"); return; }
+      if (!res.ok) throw new Error();
+      setPwSuccess("Password changed successfully");
+      setPwCurrent(""); setPwNew(""); setPwConfirm("");
+      setTimeout(() => setPwSuccess(""), 4000);
+    } catch { setPwError("Failed to change password. Try again."); }
+    finally  { setSavingPw(false); }
   }
 
   if (loading) return <SettingsSkeleton />;
@@ -237,6 +265,28 @@ export default function AdminSettings() {
           ))}
         </div>
         <SaveBtn onClick={() => save("/api/settings/contact-info", contact, "Contact info saved", setSavingContact)} disabled={savingContact} label="Save Contact Info" saving={savingContact} />
+      </Collapsible>
+
+      {/* ── Security ── */}
+      <Collapsible title="Security">
+        <p className="s-hint">Change your admin password. You will need your current password to confirm.</p>
+        {pwError   && <div className="s-banner s-banner--error" style={{ marginBottom:"1rem" }}>{pwError}</div>}
+        {pwSuccess && <div className="s-banner s-banner--ok"   style={{ marginBottom:"1rem" }}>{pwSuccess}</div>}
+        <div className="s-field-group">
+          <div className="s-field">
+            <label className="s-field__label">Current Password</label>
+            <input type="password" className="s-field__input" value={pwCurrent} onChange={e => setPwCurrent(e.target.value)} placeholder="Enter current password" autoComplete="current-password" />
+          </div>
+          <div className="s-field">
+            <label className="s-field__label">New Password</label>
+            <input type="password" className="s-field__input" value={pwNew} onChange={e => setPwNew(e.target.value)} placeholder="At least 8 characters" autoComplete="new-password" />
+          </div>
+          <div className="s-field">
+            <label className="s-field__label">Confirm New Password</label>
+            <input type="password" className="s-field__input" value={pwConfirm} onChange={e => setPwConfirm(e.target.value)} placeholder="Repeat new password" autoComplete="new-password" />
+          </div>
+        </div>
+        <SaveBtn onClick={handleChangePassword} disabled={savingPw} label="Change Password" saving={savingPw} />
       </Collapsible>
 
       <style jsx>{`
