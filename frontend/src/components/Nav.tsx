@@ -177,7 +177,8 @@ export default function Nav() {
 
         /* Landscape phone / small tablet — hamburger in top bar */
         @media (max-width: 1024px) {
-          .nav-desktop { display: none; }
+          .nav-desktop { display: none !important; }
+
           .nav-hamburger {
             display: flex;
             flex-direction: column;
@@ -191,6 +192,7 @@ export default function Nav() {
             border-radius: 8px;
             cursor: pointer;
             padding: 0;
+            flex-shrink: 0;
           }
           .nav-ham-line {
             display: block;
@@ -201,9 +203,7 @@ export default function Nav() {
             transform-origin: center;
             transition: transform 300ms ease, opacity 300ms ease;
           }
-          .nav-ham-line:not(.open) {
-            animation: navwave 2s ease-in-out infinite;
-          }
+          .nav-ham-line:not(.open) { animation: navwave 2s ease-in-out infinite; }
           .line2:not(.open) { animation-delay: 0.15s; }
           .line3:not(.open) { animation-delay: 0.3s; }
           @keyframes navwave {
@@ -227,17 +227,20 @@ export default function Nav() {
             display: flex;
             flex-direction: column;
             position: fixed;
-            top: 64px;
+            top: 68px;
             right: 0;
             width: min(280px, 80vw);
             background: var(--bg-secondary);
             border-left: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
+            border-radius: 0 0 0 12px;
             z-index: 49;
             padding: 8px 0;
+            max-height: calc(100vh - 68px);
+            overflow-y: auto;
           }
           .nav-mobile-link {
-            padding: 16px 24px;
+            padding: 18px 24px;
             font-family: var(--font-body);
             font-size: 16px;
             font-weight: 600;
@@ -247,15 +250,13 @@ export default function Nav() {
             text-decoration: none;
             border-bottom: 1px solid var(--border-subtle);
             transition: color 200ms ease, padding-left 200ms ease;
+            display: block;
           }
           .nav-mobile-link:last-child { border-bottom: none; }
-          .nav-mobile-link:hover {
-            color: var(--accent);
-            padding-left: 32px;
-          }
+          .nav-mobile-link:hover { color: var(--accent); padding-left: 32px; }
         }
 
-        /* Portrait mobile only — show bottom nav */
+        /* ── Portrait phone only — show bottom nav ──────── */
         @media (max-width: 767px) and (orientation: portrait) {
           .bottom-nav-mobile {
             display: flex;
@@ -268,7 +269,6 @@ export default function Nav() {
             padding: 0 16px;
             box-sizing: border-box;
           }
-
           .bottom-nav-list {
             position: relative;
             display: flex;
@@ -282,7 +282,6 @@ export default function Nav() {
             overflow: visible;
             width: min(350px, calc(100vw - 32px));
           }
-
           .bottom-nav-item {
             position: relative;
             width: 70px;
@@ -290,7 +289,6 @@ export default function Nav() {
             z-index: 1;
             cursor: pointer;
           }
-
           .bottom-nav-link {
             position: relative;
             display: flex;
@@ -302,7 +300,6 @@ export default function Nav() {
             text-decoration: none;
             gap: 2px;
           }
-
           .bottom-nav-icon {
             display: flex;
             align-items: center;
@@ -310,12 +307,10 @@ export default function Nav() {
             color: var(--border);
             transition: transform 500ms cubic-bezier(0.22,1,0.36,1), color 300ms ease;
           }
-
           .bottom-nav-item.active .bottom-nav-icon {
             transform: translateY(-28px);
             color: var(--bg-primary);
           }
-
           .bottom-nav-label {
             position: absolute;
             bottom: 10px;
@@ -330,12 +325,10 @@ export default function Nav() {
             transition: opacity 400ms 100ms ease, transform 400ms 100ms ease;
             white-space: nowrap;
           }
-
           .bottom-nav-item.active .bottom-nav-label {
             opacity: 1;
             transform: translateY(0);
           }
-
           .bottom-nav-indicator {
             position: absolute;
             top: -28px;
@@ -349,7 +342,6 @@ export default function Nav() {
             pointer-events: none;
             z-index: 0;
           }
-
           .bottom-nav-indicator::before {
             content: "";
             position: absolute;
@@ -360,7 +352,6 @@ export default function Nav() {
             border-top-right-radius: 20px;
             box-shadow: 1px -8px 0 0 var(--bg-primary);
           }
-
           .bottom-nav-indicator::after {
             content: "";
             position: absolute;
@@ -371,10 +362,7 @@ export default function Nav() {
             border-top-left-radius: 20px;
             box-shadow: -1px -8px 0 0 var(--bg-primary);
           }
-
-          main {
-            padding-bottom: 100px !important;
-          }
+          main { padding-bottom: 100px !important; }
         }
       `}</style>
     </>

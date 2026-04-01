@@ -265,24 +265,26 @@ export default function AdminLayout({
 
           .admin__fab-menu {
             position: fixed;
-            bottom: 100px;
-            right: 16px;
-            width: 240px;
+            bottom: 0;
+            right: 0;
+            left: 0;
             background: var(--color-surface);
             border: 1px solid var(--color-border);
-            border-radius: 12px;
-            overflow: hidden;
+            border-radius: 16px 16px 0 0;
+            overflow-y: auto;
+            max-height: 70vh;
             z-index: 295;
-            transform: translateY(20px) scale(0.95);
+            transform: translateY(100%);
             opacity: 0;
             pointer-events: none;
-            transition: transform 300ms cubic-bezier(0.22,1,0.36,1),
+            transition: transform 350ms cubic-bezier(0.22,1,0.36,1),
                         opacity 250ms ease;
-            transform-origin: bottom right;
+            transform-origin: bottom center;
+            width: 100%;
           }
 
           .admin__fab-menu.open {
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
             opacity: 1;
             pointer-events: all;
           }

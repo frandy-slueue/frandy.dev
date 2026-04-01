@@ -13,7 +13,7 @@ export default function NavWrapper({ children }: { children: React.ReactNode }) 
   return (
     <ThemeProvider>
       {!isAdmin && <Nav />}
-      <main style={{ paddingTop: isAdmin ? "0" : "64px" }}>{children}</main>
+      <main style={{ paddingTop: isAdmin ? "0" : "68px" }}>{children}</main>
       {!isAdmin && <Footer />}
       {!isAdmin && <BackToTop />}
     </ThemeProvider>
