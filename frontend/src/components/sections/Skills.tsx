@@ -1,261 +1,110 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCode, FaPalette, FaServer, FaDatabase, FaTools } from "react-icons/fa";
+import SectionLabel from "@/components/ui/SectionLabel";
+import TabBar, { TabItem } from "@/components/ui/TabBar";
+import { VIEWPORT } from "@/lib/animations";
 
-const CATEGORIES = [
-  { label: "Languages",     icon: <FaCode size={14} /> },
-  { label: "Frontend",      icon: <FaPalette size={14} /> },
-  { label: "Backend",       icon: <FaServer size={14} /> },
-  { label: "Databases",     icon: <FaDatabase size={14} /> },
-  { label: "DevOps & Tools",icon: <FaTools size={14} /> },
+const TABS: TabItem[] = [
+  { label: "Languages",      icon: <FaCode size={14} /> },
+  { label: "Frontend",       icon: <FaPalette size={14} /> },
+  { label: "Backend",        icon: <FaServer size={14} /> },
+  { label: "Databases",      icon: <FaDatabase size={14} /> },
+  { label: "DevOps & Tools", icon: <FaTools size={14} /> },
 ];
 
 const SKILLS: Record<string, { name: string }[]> = {
-  Languages:       [{ name: "Python" }, { name: "JavaScript" }, { name: "C" }],
-  Frontend:        [{ name: "React" }, { name: "Next.js" }, { name: "HTML" }, { name: "CSS" }, { name: "Tailwind CSS" }],
-  Backend:         [{ name: "Django" }, { name: "FastAPI" }, { name: "GraphQL" }, { name: "RESTful APIs" }],
-  Databases:       [{ name: "PostgreSQL" }, { name: "MongoDB" }, { name: "Redis" }, { name: "SQLAlchemy" }],
-  "DevOps & Tools":[{ name: "Docker" }, { name: "Git" }],
+  Languages:        [{ name: "Python" }, { name: "JavaScript" }, { name: "C" }],
+  Frontend:         [{ name: "React" }, { name: "Next.js" }, { name: "HTML" }, { name: "CSS" }, { name: "Tailwind CSS" }],
+  Backend:          [{ name: "Django" }, { name: "FastAPI" }, { name: "GraphQL" }, { name: "RESTful APIs" }],
+  Databases:        [{ name: "PostgreSQL" }, { name: "MongoDB" }, { name: "Redis" }, { name: "SQLAlchemy" }],
+  "DevOps & Tools": [{ name: "Docker" }, { name: "Git" }],
 };
 
 const SKILL_PROJECTS: Record<string, { title: string; description: string }[]> = {
-  Python:      [{ title: "frandy.dev API", description: "FastAPI backend powering this portfolio" }],
-  FastAPI:     [{ title: "frandy.dev API", description: "Async REST API with PostgreSQL and Docker" }],
-  "Next.js":   [{ title: "frandy.dev", description: "This portfolio — Next.js 16+ with App Router" }],
-  PostgreSQL:  [{ title: "frandy.dev API", description: "Primary database for projects, contacts, cache" }],
-  Docker:      [{ title: "frandy.dev", description: "Five-service Docker Compose orchestration" }],
+  Python:     [{ title: "frandy.dev API",  description: "FastAPI backend powering this portfolio" }],
+  FastAPI:    [{ title: "frandy.dev API",  description: "Async REST API with PostgreSQL and Docker" }],
+  "Next.js":  [{ title: "frandy.dev",      description: "This portfolio — Next.js 16+ with App Router" }],
+  PostgreSQL: [{ title: "frandy.dev API",  description: "Primary database for projects, contacts, cache" }],
+  Docker:     [{ title: "frandy.dev",      description: "Five-service Docker Compose orchestration" }],
 };
 
-function SkillCard({
-  skill,
-  active,
-  onClick,
-}: {
+// ── Skill Card ───────────────────────────────────────────────────────
+// All hover/active styles live in globals.css — no inline style manipulation.
+interface SkillCardProps {
   skill: string;
   active: boolean;
   onClick: () => void;
-}) {
+}
+
+function SkillCard({ skill, active, onClick }: SkillCardProps) {
   return (
     <button
+      className={`skill-card ${active ? "active" : ""}`}
       onClick={onClick}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "10px",
-        width: "90px",
-        height: "90px",
-        border: active ? "1px solid var(--accent)" : "1px solid var(--border)",
-        backgroundColor: active ? "var(--bg-elevated)" : "var(--bg-secondary)",
-        cursor: "pointer",
-        transition: "border-color 250ms ease, background-color 250ms ease, box-shadow 250ms ease",
-        boxShadow: active ? "0 0 16px var(--accent-glow)" : "none",
-        padding: "8px",
-        borderRadius: "0",
-      }}
-      onMouseEnter={(e) => {
-        if (!active) {
-          (e.currentTarget as HTMLElement).style.borderColor = "var(--accent-muted)";
-          (e.currentTarget as HTMLElement).style.boxShadow = "0 0 10px var(--accent-glow)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!active) {
-          (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-          (e.currentTarget as HTMLElement).style.boxShadow = "none";
-        }
-      }}
+      aria-pressed={active}
     >
-      <div
-        style={{
-          width: "36px",
-          height: "36px",
-          backgroundColor: "var(--border)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: active ? "var(--accent)" : "var(--text-muted)",
-          transition: "color 250ms ease",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "10px",
-            color: active ? "var(--accent)" : "var(--text-muted)",
-          }}
-        >
+      <div className="skill-card__badge">
+        <span className="skill-card__abbr">
           {skill.slice(0, 2).toUpperCase()}
         </span>
       </div>
-      <span
-        style={{
-          fontFamily: "var(--font-body)",
-          fontSize: "11px",
-          fontWeight: 600,
-          letterSpacing: "1px",
-          textTransform: "uppercase",
-          color: active ? "var(--accent)" : "var(--text-muted)",
-          textAlign: "center",
-          lineHeight: 1.2,
-          transition: "color 250ms ease",
-        }}
-      >
-        {skill}
-      </span>
+      <span className="skill-card__name">{skill}</span>
     </button>
   );
 }
 
+// ── Main section ─────────────────────────────────────────────────────
 export default function Skills() {
   const [activeCategory, setActiveCategory] = useState("Languages");
-  const [activeSkill, setActiveSkill] = useState<string | null>(null);
-  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0 });
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const tabBarRef = useRef<HTMLDivElement>(null);
+  const [activeSkill, setActiveSkill]       = useState<string | null>(null);
 
-  useEffect(() => {
-    const idx = CATEGORIES.findIndex(c => c.label === activeCategory);
-    const el = tabRefs.current[idx];
-    const bar = tabBarRef.current;
-    if (!el || !bar) return;
-    const barRect = bar.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    setPillStyle({ left: elRect.left - barRect.left, width: elRect.width });
-  }, [activeCategory]);
-
-  const currentSkills = SKILLS[activeCategory] ?? [];
+  const currentSkills  = SKILLS[activeCategory] ?? [];
   const activeProjects = activeSkill ? (SKILL_PROJECTS[activeSkill] ?? []) : [];
+
+  function handleCategoryChange(label: string) {
+    setActiveCategory(label);
+    setActiveSkill(null);
+  }
+
+  function handleSkillClick(name: string) {
+    setActiveSkill((prev) => (prev === name ? null : name));
+  }
 
   return (
     <section
       id="skills"
       className="section-pad"
+      aria-labelledby="skills-heading"
       style={{ backgroundColor: "var(--bg-primary)" }}
     >
       <div className="site-container">
+        <SectionLabel>02 — Skills</SectionLabel>
 
-        <motion.p
-          initial={{ opacity: 0, x: -16 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "12px",
-            letterSpacing: "6px",
-            textTransform: "uppercase",
-            color: "var(--accent-muted)",
-            marginBottom: "48px",
-          }}
-        >
-          02 — Skills
-        </motion.p>
+        <h2 id="skills-heading" className="sr-only">Skills</h2>
 
-        {/* Boxy tab bar — consistent with nav style */}
-        <div
-          style={{
-            position: "relative",
-            marginBottom: "40px",
-            overflowX: "auto",
-            paddingBottom: "4px",
-          }}
-        >
-          <div
-            ref={tabBarRef}
-            style={{
-              position: "relative",
-              display: "inline-flex",
-              border: "1px solid var(--border)",
-              padding: "4px",
-              whiteSpace: "nowrap",
-              borderRadius: "0",
-            }}
-          >
-            {/* Sliding indicator — boxy, no border radius */}
-            <div
-              style={{
-                position: "absolute",
-                top: "4px",
-                bottom: "4px",
-                left: pillStyle.left,
-                width: pillStyle.width,
-                backgroundColor: "var(--bg-elevated)",
-                border: "1px solid var(--accent-muted)",
-                borderRadius: "0",
-                transition:
-                  "left 500ms cubic-bezier(0.22,1,0.36,1), width 500ms cubic-bezier(0.22,1,0.36,1)",
-                pointerEvents: "none",
-              }}
-            />
-
-            {CATEGORIES.map((cat, i) => (
-              <button
-                key={cat.label}
-                ref={(el) => { tabRefs.current[i] = el; }}
-                onClick={() => {
-                  setActiveCategory(cat.label);
-                  setActiveSkill(null);
-                }}
-                style={{
-                  position: "relative",
-                  zIndex: 1,
-                  padding: "10px 20px",
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  letterSpacing: "2px",
-                  textTransform: "uppercase",
-                  color: activeCategory === cat.label ? "var(--accent)" : "var(--text-muted)",
-                  transition: "color 300ms ease",
-                  whiteSpace: "nowrap",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  borderRadius: "0",
-                }}
-              >
-                <span style={{
-                  color: activeCategory === cat.label ? "var(--accent)" : "var(--text-muted)",
-                  transition: "color 300ms ease",
-                  display: "flex",
-                  alignItems: "center",
-                }}>
-                  {cat.icon}
-                </span>
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <TabBar
+          tabs={TABS}
+          active={activeCategory}
+          onChange={handleCategoryChange}
+        />
 
         {/* Icon grid */}
         <motion.div
           key={activeCategory}
+          className="skill-grid"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "12px",
-            marginBottom: "32px",
-          }}
         >
           {currentSkills.map((skill) => (
             <SkillCard
               key={skill.name}
               skill={skill.name}
               active={activeSkill === skill.name}
-              onClick={() =>
-                setActiveSkill(activeSkill === skill.name ? null : skill.name)
-              }
+              onClick={() => handleSkillClick(skill.name)}
             />
           ))}
         </motion.div>
@@ -271,62 +120,18 @@ export default function Skills() {
               transition={{ duration: 0.35, ease: "easeInOut" }}
               style={{ overflow: "hidden" }}
             >
-              <div
-                style={{
-                  border: "1px solid var(--border)",
-                  backgroundColor: "var(--bg-elevated)",
-                  padding: "24px",
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: "12px",
-                    letterSpacing: "3px",
-                    textTransform: "uppercase",
-                    color: "var(--accent-muted)",
-                    marginBottom: "16px",
-                  }}
-                >
+              <div className="skill-preview">
+                <p className="skill-preview__label">
                   Projects using {activeSkill}
                 </p>
 
                 {activeProjects.length > 0 ? (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                  <div className="skill-project-list">
                     {activeProjects.map((project) => (
-                      <div
-                        key={project.title}
-                        style={{
-                          border: "1px solid var(--border)",
-                          backgroundColor: "var(--bg-secondary)",
-                          padding: "16px 20px",
-                          minWidth: "200px",
-                          flex: "1",
-                        }}
-                      >
-                        <p
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            fontSize: "20px",
-                            color: "var(--text-primary)",
-                            marginBottom: "6px",
-                            letterSpacing: "1px",
-                          }}
-                        >
-                          {project.title}
-                        </p>
-                        <p
-                          style={{
-                            fontFamily: "var(--font-body)",
-                            fontSize: "13px",
-                            color: "var(--text-muted)",
-                            lineHeight: 1.6,
-                            marginBottom: "12px",
-                          }}
-                        >
-                          {project.description}
-                        </p>
-                        <div style={{ display: "flex", gap: "8px" }}>
+                      <div key={project.title} className="skill-project">
+                        <p className="skill-project__title">{project.title}</p>
+                        <p className="skill-project__desc">{project.description}</p>
+                        <div className="skill-project__actions">
                           <button className="btn-ghost" style={{ padding: "6px 14px", fontSize: "11px" }}>
                             Demo
                           </button>
@@ -338,7 +143,7 @@ export default function Skills() {
                     ))}
                   </div>
                 ) : (
-                  <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                  <p className="skill-preview__empty">
                     Used as a supporting tool in infrastructure work.
                   </p>
                 )}
@@ -347,6 +152,20 @@ export default function Skills() {
           )}
         </AnimatePresence>
       </div>
+
+      <style>{`
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0,0,0,0);
+          white-space: nowrap;
+          border: 0;
+        }
+      `}</style>
     </section>
   );
 }
