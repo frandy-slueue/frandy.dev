@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Skel } from "@/components/ui/Skeleton";
 
 interface ContactList {
   id: string;
@@ -178,17 +177,7 @@ export default function AdminContact() {
         {/* Message list */}
         <div className="contact__list">
           {loading ? (
-            <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: 12 }}>
-              {[0,1,2,3,4].map((i) => (
-                <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0.75rem 1rem", borderBottom: "1px solid var(--color-border)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <Skel.Text width="third" />
-                    <Skel.Text width="quarter" size="sm" />
-                  </div>
-                  <Skel.Text width="half" size="sm" />
-                </div>
-              ))}
-            </div>
+            <p className="loading">Loading...</p>
           ) : contacts.length === 0 ? (
             <p className="empty">No messages here.</p>
           ) : (

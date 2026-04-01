@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Skel } from "@/components/ui/Skeleton";
 
 interface Stats {
   projects: number;
@@ -9,55 +8,12 @@ interface Stats {
   views: number;
 }
 
-const CARDS = [
-  { label: "Projects",   icon: "◈", href: "/admin/projects" },
-  { label: "Messages",   icon: "◎", href: "/admin/contact" },
-  { label: "Page Views", icon: "◐", href: "/admin/analytics" },
-];
-
-const QUICK_ACTIONS = [
-  { label: "+ Add Project",    href: "/admin/projects" },
-  { label: "+ Update Resume",  href: "/admin/resume" },
-  { label: "⚙ Site Settings",  href: "/admin/settings" },
-  { label: "↗ View Site",      href: "/", target: "_blank" },
-];
-
-function DashboardSkeleton() {
-  return (
-    <div className="dashboard">
-      <div className="dashboard__header">
-        <Skel.Title width="quarter" />
-        <Skel.Text width="half" />
-      </div>
-
-      {/* Stat cards */}
-      <div className="dashboard__grid">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="dashboard__card" style={{ pointerEvents: "none" }}>
-            <Skel.Circle size={36} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-              <Skel.Box height={32} className="skel--w-quarter" />
-              <Skel.Text width="third" size="sm" />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Quick actions */}
-      <div className="dashboard__quick">
-        <Skel.Heading width="quarter" />
-        <div className="dashboard__actions" style={{ marginTop: "1rem" }}>
-          {[0, 1, 2, 3].map((i) => (
-            <Skel.Box key={i} height={38} className="skel--w-quarter" />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function AdminDashboard() {
-  const [stats, setStats]   = useState<Stats | null>(null);
+  const [stats, setStats] = useState<Stats>({
+    projects: 0,
+    messages: 0,
+    views: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,7 +21,7 @@ export default function AdminDashboard() {
       try {
         const [projectsRes, messagesRes] = await Promise.all([
           fetch("/api/projects", { credentials: "include" }),
-          fetch("/api/contact",  { credentials: "include" }),
+          fetch("/api/contact", { credentials: "include" }),
         ]);
         const projects = await projectsRes.json();
         const messages = await messagesRes.json();
@@ -75,7 +31,7 @@ export default function AdminDashboard() {
           views: 0,
         });
       } catch {
-        setStats({ projects: 0, messages: 0, views: 0 });
+        console.error("Failed to fetch stats");
       } finally {
         setLoading(false);
       }
@@ -83,9 +39,26 @@ export default function AdminDashboard() {
     fetchStats();
   }, []);
 
-  if (loading) return <DashboardSkeleton />;
-
-  const cardValues = [stats!.projects, stats!.messages, stats!.views];
+  const cards = [
+    {
+      label: "Projects",
+      value: stats.projects,
+      icon: "◈",
+      href: "/admin/projects",
+    },
+    {
+      label: "Messages",
+      value: stats.messages,
+      icon: "◎",
+      href: "/admin/contact",
+    },
+    {
+      label: "Page Views",
+      value: stats.views,
+      icon: "◐",
+      href: "/admin/analytics",
+    },
+  ];
 
   return (
     <div className="dashboard">
@@ -95,11 +68,13 @@ export default function AdminDashboard() {
       </div>
 
       <div className="dashboard__grid">
-        {CARDS.map((card, i) => (
+        {cards.map((card) => (
           <a key={card.label} href={card.href} className="dashboard__card">
             <div className="dashboard__card-icon">{card.icon}</div>
             <div className="dashboard__card-body">
-              <span className="dashboard__card-value">{cardValues[i]}</span>
+              <span className="dashboard__card-value">
+                {loading ? "—" : card.value}
+              </span>
               <span className="dashboard__card-label">{card.label}</span>
             </div>
           </a>
@@ -109,21 +84,25 @@ export default function AdminDashboard() {
       <div className="dashboard__quick">
         <h2>Quick Actions</h2>
         <div className="dashboard__actions">
-          {QUICK_ACTIONS.map((a) => (
-            <a
-              key={a.label}
-              href={a.href}
-              target={(a as { target?: string }).target}
-              className="dashboard__action"
-            >
-              {a.label}
-            </a>
-          ))}
+          <a href="/admin/projects" className="dashboard__action">
+            + Add Project
+          </a>
+          <a href="/admin/resume" className="dashboard__action">
+            + Update Resume
+          </a>
+          <a href="/admin/settings" className="dashboard__action">
+            ⚙ Site Settings
+          </a>
+          <a href="/" target="_blank" className="dashboard__action">
+            ↗ View Site
+          </a>
         </div>
       </div>
 
       <style jsx>{`
-        .dashboard__header { margin-bottom: 2rem; }
+        .dashboard__header {
+          margin-bottom: 2rem;
+        }
         .dashboard__header h1 {
           font-family: var(--font-display);
           font-size: 2rem;
@@ -153,9 +132,17 @@ export default function AdminDashboard() {
           color: var(--color-text);
           transition: border-color 0.2s;
         }
-        .dashboard__card:hover { border-color: var(--color-accent); }
-        .dashboard__card-icon { font-size: 1.75rem; color: var(--color-accent); }
-        .dashboard__card-body { display: flex; flex-direction: column; }
+        .dashboard__card:hover {
+          border-color: var(--color-accent);
+        }
+        .dashboard__card-icon {
+          font-size: 1.75rem;
+          color: var(--color-accent);
+        }
+        .dashboard__card-body {
+          display: flex;
+          flex-direction: column;
+        }
         .dashboard__card-value {
           font-size: 1.75rem;
           font-weight: 700;
@@ -174,7 +161,11 @@ export default function AdminDashboard() {
           color: var(--color-text);
           margin: 0 0 1rem;
         }
-        .dashboard__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .dashboard__actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
         .dashboard__action {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
