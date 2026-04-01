@@ -890,8 +890,8 @@ select option {
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.6;
-  line-clamp: 2;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -1405,4 +1405,86 @@ select option {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* ── Admin Settings — Toggle + Collapsible panels ───────────
+   These are defined globally because the Toggle component is
+   separate from the styled-jsx scope in settings/page.tsx
+   ──────────────────────────────────────────────────────────── */
+
+/* Toggle switch */
+.toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: background 250ms ease;
+  flex-shrink: 0;
+}
+.toggle.on  { background: var(--color-accent); }
+.toggle.off { background: var(--color-border); }
+.toggle__thumb {
+  position: absolute;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  transition: left 250ms ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  pointer-events: none;
+}
+.toggle.on  .toggle__thumb { left: 23px; }
+.toggle.off .toggle__thumb { left: 3px; }
+
+/* Collapsible panel */
+.collapsible {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.collapsible__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 150ms ease;
+}
+
+.collapsible__trigger:hover {
+  background: var(--color-bg);
+}
+
+.collapsible__title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--color-accent);
+  margin: 0;
+}
+
+.collapsible__chevron {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  transition: transform 250ms ease;
+  flex-shrink: 0;
+}
+
+.collapsible__chevron.open {
+  transform: rotate(180deg);
+}
+
+.collapsible__body {
+  padding: 0 1.5rem 1.5rem;
+  border-top: 1px solid var(--color-border);
 }

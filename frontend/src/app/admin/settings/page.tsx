@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Skel } from "@/components/ui/Skeleton";
 
+// ── Constants ─────────────────────────────────────────────────────────
 const THEMES = [
   { value: "silver", label: "Silver", color: "#c0c0c0" },
   { value: "cobalt", label: "Cobalt", color: "#3b82f6" },
@@ -35,8 +36,8 @@ const SECTION_FIELDS = [
 ];
 
 // ── Types ─────────────────────────────────────────────────────────────
-interface SocialLinks    { [key: string]: string | null; }
-interface ContactInfo    { [key: string]: string | null; }
+interface SocialLinks       { [key: string]: string | null; }
+interface ContactInfo       { [key: string]: string | null; }
 interface SectionVisibility { [key: string]: boolean; }
 
 // ── Skeleton ──────────────────────────────────────────────────────────
@@ -47,13 +48,19 @@ function SettingsSkeleton() {
         <Skel.Title width="quarter" />
         <Skel.Text width="half" size="sm" />
       </div>
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="settings__section">
-          <Skel.Heading width="quarter" />
-          <div className="skel-group">
-            <Skel.Text />
-            <Skel.Text width="3-4" />
-            <Skel.Box height={36} style={{ width: 140 }} />
+      {/* Theme — always open, no chevron */}
+      <div className="settings__section">
+        <Skel.Heading width="quarter" />
+        <div className="skel-group" style={{ marginTop: 8 }}>
+          <Skel.Text width="3-4" />
+          <Skel.Box height={36} style={{ width: 140 }} />
+        </div>
+      </div>
+      {/* Collapsible skeletons */}
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="collapsible">
+          <div className="collapsible__trigger" style={{ pointerEvents: "none" }}>
+            <Skel.Heading width="quarter" />
           </div>
         </div>
       ))}
@@ -61,27 +68,55 @@ function SettingsSkeleton() {
   );
 }
 
-// ── Toggle switch ─────────────────────────────────────────────────────
+// ── Toggle — uses global CSS classes (not styled-jsx scoped) ──────────
 function Toggle({
+  id,
   checked,
   onChange,
-  id,
 }: {
+  id: string;
   checked: boolean;
   onChange: (v: boolean) => void;
-  id: string;
 }) {
   return (
     <button
+      type="button"
       role="switch"
       aria-checked={checked}
       id={id}
       className={`toggle ${checked ? "on" : "off"}`}
       onClick={() => onChange(!checked)}
-      type="button"
     >
       <span className="toggle__thumb" />
     </button>
+  );
+}
+
+// ── Collapsible panel — uses global CSS classes ───────────────────────
+function Collapsible({
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="collapsible">
+      <button
+        type="button"
+        className="collapsible__trigger"
+        onClick={() => setOpen((p) => !p)}
+        aria-expanded={open}
+      >
+        <h2 className="collapsible__title">{title}</h2>
+        <span className={`collapsible__chevron ${open ? "open" : ""}`}>▼</span>
+      </button>
+      {open && <div className="collapsible__body">{children}</div>}
+    </div>
   );
 }
 
@@ -112,7 +147,6 @@ export default function AdminSettings() {
           fetch("/api/settings/contact-info", { credentials: "include" }),
           fetch("/api/settings/sections",     { credentials: "include" }),
         ]);
-
         if (themeRes.ok)    { const d = await themeRes.json();    setTheme(d.active_theme); }
         if (socialRes.ok)   { const d = await socialRes.json();   setSocial(d); }
         if (contactRes.ok)  { const d = await contactRes.json();  setContact(d); }
@@ -127,15 +161,10 @@ export default function AdminSettings() {
   }, []);
 
   function notify(msg: string) {
-    setError("");
-    setSuccess(msg);
+    setError(""); setSuccess(msg);
     setTimeout(() => setSuccess(""), 3000);
   }
-
-  function notifyError(msg: string) {
-    setSuccess("");
-    setError(msg);
-  }
+  function notifyError(msg: string) { setSuccess(""); setError(msg); }
 
   async function handleSaveTheme() {
     setSaving(true);
@@ -148,6 +177,19 @@ export default function AdminSettings() {
       if (!res.ok) throw new Error();
       notify("Theme saved");
     } catch { notifyError("Failed to save theme"); } finally { setSaving(false); }
+  }
+
+  async function handleSaveSections() {
+    setSavingSections(true);
+    try {
+      const res = await fetch("/api/settings/sections", {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sections),
+      });
+      if (!res.ok) throw new Error();
+      notify("Section visibility saved");
+    } catch { notifyError("Failed to save visibility"); } finally { setSavingSections(false); }
   }
 
   async function handleSaveSocial() {
@@ -176,19 +218,6 @@ export default function AdminSettings() {
     } catch { notifyError("Failed to save contact info"); } finally { setSavingContact(false); }
   }
 
-  async function handleSaveSections() {
-    setSavingSections(true);
-    try {
-      const res = await fetch("/api/settings/sections", {
-        method: "PUT", credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sections),
-      });
-      if (!res.ok) throw new Error();
-      notify("Section visibility saved");
-    } catch { notifyError("Failed to save section visibility"); } finally { setSavingSections(false); }
-  }
-
   if (loading) return <SettingsSkeleton />;
 
   return (
@@ -196,15 +225,15 @@ export default function AdminSettings() {
       <div className="settings__header">
         <div>
           <h1>Site Settings</h1>
-          <p>Manage theme, social links, and section visibility</p>
+          <p>Manage theme, visibility, social links, and contact info</p>
         </div>
       </div>
 
       {error   && <div className="error-banner">{error}</div>}
       {success && <div className="success-banner">{success}</div>}
 
-      {/* ── Theme ── */}
-      <section className="settings__section">
+      {/* ── Theme — always expanded, no collapse ── */}
+      <div className="settings__section">
         <h2>Theme</h2>
         <div className="themes">
           {THEMES.map((t) => (
@@ -226,14 +255,13 @@ export default function AdminSettings() {
         >
           <span>{saving ? "Saving..." : "Save Theme"}</span>
         </button>
-      </section>
+      </div>
 
-      {/* ── Section visibility ── */}
-      <section className="settings__section">
-        <h2>Section Visibility</h2>
+      {/* ── Section Visibility — collapsible ── */}
+      <Collapsible title="Section Visibility" defaultOpen={true}>
         <p className="settings__hint">
-          Hero is always shown. Toggle the rest on or off — hidden sections
-          are removed from the live site instantly.
+          Hero is always shown. Toggle the rest on or off — changes take
+          effect on the live site after saving.
         </p>
         <div className="sections-grid">
           {SECTION_FIELDS.map(({ key, label, description }) => (
@@ -258,11 +286,10 @@ export default function AdminSettings() {
         >
           <span>{savingSections ? "Saving..." : "Save Visibility"}</span>
         </button>
-      </section>
+      </Collapsible>
 
-      {/* ── Social links ── */}
-      <section className="settings__section">
-        <h2>Social Links</h2>
+      {/* ── Social Links — collapsible ── */}
+      <Collapsible title="Social Links">
         <div className="social-grid">
           {SOCIAL_FIELDS.map(({ key, label, placeholder }) => (
             <div className="field" key={key}>
@@ -284,11 +311,10 @@ export default function AdminSettings() {
         >
           <span>{savingSocial ? "Saving..." : "Save Social Links"}</span>
         </button>
-      </section>
+      </Collapsible>
 
-      {/* ── Contact info ── */}
-      <section className="settings__section">
-        <h2>Contact Info</h2>
+      {/* ── Contact Info — collapsible ── */}
+      <Collapsible title="Contact Info">
         <div className="social-grid">
           {CONTACT_FIELDS.map(({ key, label, placeholder }) => (
             <div className="field" key={key}>
@@ -310,7 +336,7 @@ export default function AdminSettings() {
         >
           <span>{savingContact ? "Saving..." : "Save Contact Info"}</span>
         </button>
-      </section>
+      </Collapsible>
 
       <style jsx>{`
         .settings__header { margin-bottom: 2rem; }
@@ -320,52 +346,25 @@ export default function AdminSettings() {
         .error-banner   { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); color: #ff5050; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
         .success-banner { background: rgba(0,255,128,0.1); border: 1px solid rgba(0,255,128,0.3); color: #00ff80; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
 
+        /* Theme section — always open, no collapsible wrapper */
         .settings__section { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
         .settings__section h2 { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 1.25rem; color: var(--color-accent); }
-        .settings__hint { font-size: 0.825rem; color: var(--color-text-muted); margin: -0.75rem 0 1.25rem; line-height: 1.6; }
+        .settings__hint { font-size: 0.825rem; color: var(--color-text-muted); margin: 0 0 1.25rem; line-height: 1.6; }
 
-        /* Theme swatches */
         .themes { display: flex; gap: 1rem; flex-wrap: wrap; }
         .theme-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; background: var(--color-bg); border: 2px solid var(--color-border); border-radius: 8px; cursor: pointer; transition: border-color 0.2s; min-width: 80px; color: var(--color-text); font-size: 0.875rem; }
         .theme-card:hover  { border-color: var(--color-text-muted); }
         .theme-card.active { border-color: var(--color-accent); }
         .theme-card__swatch { width: 40px; height: 40px; border-radius: 50%; }
 
-        /* Section visibility grid */
-        .sections-grid { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--color-border); border-radius: 6px; overflow: hidden; }
+        /* Section visibility rows */
+        .sections-grid { display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 6px; overflow: hidden; }
         .section-row { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; border-bottom: 1px solid var(--color-border); transition: background 0.15s; }
         .section-row:last-child { border-bottom: none; }
         .section-row:hover { background: var(--color-bg); }
         .section-row__info { display: flex; flex-direction: column; gap: 2px; }
-        .section-row__label { font-size: 0.9rem; color: var(--color-text); font-weight: 600; font-family: var(--font-body); }
+        .section-row__label { font-size: 0.9rem; color: var(--color-text); font-weight: 600; }
         .section-row__desc  { font-size: 0.78rem; color: var(--color-text-muted); font-family: var(--font-mono); }
-
-        /* Toggle switch */
-        .toggle {
-          width: 44px;
-          height: 24px;
-          border-radius: 999px;
-          border: none;
-          cursor: pointer;
-          padding: 0;
-          position: relative;
-          transition: background 250ms ease;
-          flex-shrink: 0;
-        }
-        .toggle.on  { background: var(--color-accent); }
-        .toggle.off { background: var(--color-border); }
-        .toggle__thumb {
-          position: absolute;
-          top: 3px;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: white;
-          transition: left 250ms ease;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-        .toggle.on  .toggle__thumb { left: 23px; }
-        .toggle.off .toggle__thumb { left: 3px; }
 
         /* Social / contact fields */
         .social-grid { display: flex; flex-direction: column; gap: 1rem; }
