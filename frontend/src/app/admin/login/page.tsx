@@ -93,52 +93,48 @@ export default function AdminLogin() {
               <label className="login-field__label" htmlFor="username">
                 Username
               </label>
-              <input
-                id="username"
-                type="text"
-                className="login-field__input"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
-                required
-                autoFocus
-                autoComplete="username"
-                spellCheck={false}
-              />
+              <div className="login-field__frame">
+                <input
+                  id="username"
+                  type="text"
+                  className="login-field__input"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter username"
+                  required
+                  autoFocus
+                  autoComplete="username"
+                  spellCheck={false}
+                />
+              </div>
             </div>
 
             <div className="login-field">
               <label className="login-field__label" htmlFor="password">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                className="login-field__input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                required
-                autoComplete="current-password"
-              />
+              <div className="login-field__frame">
+                <input
+                  id="password"
+                  type="password"
+                  className="login-field__input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
-              className="login-submit"
+              className="admin-btn-primary login-submit"
               disabled={loading || !username || !password}
             >
-              {loading ? (
-                <span className="login-submit__inner">
-                  <span className="login-submit__spinner" aria-hidden />
-                  Authenticating...
-                </span>
-              ) : (
-                <span className="login-submit__inner">
-                  Sign In
-                  <span className="login-submit__arrow" aria-hidden>→</span>
-                </span>
-              )}
+              <span>
+                {loading ? "Authenticating..." : "Sign In →"}
+              </span>
             </button>
           </form>
 
@@ -406,23 +402,50 @@ export default function AdminLogin() {
           color: var(--text-muted);
         }
 
+        /* Field wrapper — dframe style */
+        .login-field__frame {
+          position: relative;
+          border: 1px solid var(--border);
+          transition: border-color 200ms ease;
+        }
+        .login-field__frame::before {
+          content: '';
+          position: absolute;
+          inset: 3px;
+          border: 1px solid rgba(255,255,255,0.04);
+          border-radius: 6px;
+          pointer-events: none;
+          z-index: 0;
+          transition: border-color 200ms ease;
+        }
+        .login-field__frame::after {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          background:
+            linear-gradient(var(--accent), var(--accent)) top left / 12px 1.5px no-repeat,
+            linear-gradient(var(--accent), var(--accent)) top left / 1.5px 12px no-repeat,
+            linear-gradient(var(--accent), var(--accent)) bottom right / 12px 1.5px no-repeat,
+            linear-gradient(var(--accent), var(--accent)) bottom right / 1.5px 12px no-repeat;
+          pointer-events: none;
+          z-index: 2;
+          transition: opacity 200ms ease;
+        }
+        .login-field__frame:focus-within { border-color: var(--accent); }
+        .login-field__frame:focus-within::after { opacity: 0; }
+
         .login-field__input {
+          position: relative;
+          z-index: 1;
           width: 100%;
           padding: 14px 16px;
           background: var(--bg-elevated);
-          border: 1px solid var(--border);
+          border: none;
           color: var(--text-primary);
           font-family: var(--font-body);
           font-size: 15px;
           outline: none;
-          border-radius: 0;
-          transition: border-color 200ms ease, box-shadow 200ms ease;
           -webkit-appearance: none;
-        }
-
-        .login-field__input:focus {
-          border-color: var(--accent);
-          box-shadow: 0 0 0 1px var(--accent);
         }
 
         .login-field__input::placeholder {
@@ -430,81 +453,14 @@ export default function AdminLogin() {
           font-size: 14px;
         }
 
-        /* ── Submit button ──────────────────────────────── */
+        /* Sign-in button — full width override on admin-btn-primary */
         .login-submit {
           width: 100%;
-          padding: 15px;
-          background: transparent;
-          border: 1px solid var(--accent);
-          color: var(--accent);
-          font-family: var(--font-body);
-          font-size: 13px;
-          font-weight: 700;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-          cursor: pointer;
-          position: relative;
-          overflow: hidden;
-          transition: color 250ms ease;
-          margin-top: 4px;
-        }
-
-        /* Slide-in fill on hover */
-        .login-submit::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: var(--accent);
-          transform: translateX(-100%);
-          transition: transform 250ms ease;
-          z-index: 0;
-        }
-
-        .login-submit:hover::before,
-        .login-submit:focus-visible::before {
-          transform: translateX(0);
-        }
-
-        .login-submit:hover,
-        .login-submit:focus-visible {
-          color: var(--bg-primary);
-        }
-
-        .login-submit:disabled {
-          opacity: 0.35;
-          cursor: not-allowed;
-        }
-
-        .login-submit:disabled::before {
-          transform: translateX(-100%);
-        }
-
-        .login-submit__inner {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          align-items: center;
           justify-content: center;
-          gap: 10px;
-        }
-
-        .login-submit__arrow {
-          transition: transform 200ms ease;
-        }
-
-        .login-submit:hover .login-submit__arrow {
-          transform: translateX(4px);
-        }
-
-        /* Loading spinner */
-        .login-submit__spinner {
-          width: 14px;
-          height: 14px;
-          border: 1.5px solid currentColor;
-          border-top-color: transparent;
-          border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-          flex-shrink: 0;
+          padding: 15px 28px;
+          margin-top: 4px;
+          font-size: 13px;
+          letter-spacing: 3px;
         }
 
         /* ── Back link ──────────────────────────────────── */
