@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Skel } from "@/components/ui/Skeleton";
 
-// ── Constants ─────────────────────────────────────────────────────────
 const THEMES = [
   { value: "silver", label: "Silver", color: "#c0c0c0" },
   { value: "cobalt", label: "Cobalt", color: "#3b82f6" },
@@ -28,30 +27,10 @@ const CONTACT_FIELDS = [
 ];
 
 const PATTERNS = [
-  {
-    value: "grid",
-    label: "Grid",
-    preview: "linear-gradient(#333 1px,transparent 1px),linear-gradient(90deg,#333 1px,transparent 1px)",
-    size: "24px 24px",
-  },
-  {
-    value: "dots",
-    label: "Dots",
-    preview: "radial-gradient(circle,#333 1.5px,transparent 1.5px)",
-    size: "12px 12px",
-  },
-  {
-    value: "diagonal",
-    label: "Diagonal",
-    preview: "repeating-linear-gradient(45deg,transparent,transparent 10px,#333 10px,#333 11px)",
-    size: "auto",
-  },
-  {
-    value: "cross",
-    label: "Cross",
-    preview: "linear-gradient(#333 1px,transparent 1px),linear-gradient(90deg,#333 1px,transparent 1px),repeating-linear-gradient(45deg,transparent,transparent 8px,#333 8px,#333 9px)",
-    size: "16px 16px,16px 16px,16px 16px",
-  },
+  { value: "grid",     label: "Grid",     preview: "linear-gradient(#333 1px,transparent 1px),linear-gradient(90deg,#333 1px,transparent 1px)", size: "24px 24px" },
+  { value: "dots",     label: "Dots",     preview: "radial-gradient(circle,#333 1.5px,transparent 1.5px)", size: "12px 12px" },
+  { value: "diagonal", label: "Diagonal", preview: "repeating-linear-gradient(45deg,transparent,transparent 10px,#333 10px,#333 11px)", size: "auto" },
+  { value: "cross",    label: "Cross",    preview: "linear-gradient(#333 1px,transparent 1px),linear-gradient(90deg,#333 1px,transparent 1px),repeating-linear-gradient(45deg,transparent,transparent 8px,#333 8px,#333 9px)", size: "16px 16px,16px 16px,16px 16px" },
 ];
 
 const SECTION_FIELDS = [
@@ -62,7 +41,6 @@ const SECTION_FIELDS = [
   { key: "section_contact",  label: "Contact",  description: "Contact form and links" },
 ];
 
-// ── Types ─────────────────────────────────────────────────────────────
 interface SocialLinks       { [key: string]: string | null; }
 interface ContactInfo       { [key: string]: string | null; }
 interface SectionVisibility { [key: string]: boolean; }
@@ -75,75 +53,52 @@ function SettingsSkeleton() {
         <Skel.Title width="quarter" />
         <Skel.Text width="half" size="sm" />
       </div>
-      {/* Theme — always open, no chevron */}
-      <div className="settings__section">
+      <div className="s-panel">
         <Skel.Heading width="quarter" />
         <div className="skel-group" style={{ marginTop: 8 }}>
           <Skel.Text width="3-4" />
           <Skel.Box height={36} style={{ width: 140 }} />
         </div>
       </div>
-      {/* Collapsible skeletons */}
       {[0, 1, 2].map((i) => (
-        <div key={i} className="collapsible">
-          <div className="collapsible__trigger" style={{ pointerEvents: "none" }}>
-            <Skel.Heading width="quarter" />
-          </div>
+        <div key={i} className="s-panel" style={{ padding: "1.1rem 1.5rem" }}>
+          <Skel.Heading width="quarter" />
         </div>
       ))}
     </div>
   );
 }
 
-// ── Toggle — uses global CSS classes (not styled-jsx scoped) ──────────
-function Toggle({
-  id,
-  checked,
-  onChange,
-}: {
-  id: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
+// ── Toggle ────────────────────────────────────────────────────────────
+function Toggle({ id, checked, onChange }: { id: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      id={id}
-      className={`toggle ${checked ? "on" : "off"}`}
-      onClick={() => onChange(!checked)}
-    >
+    <button type="button" role="switch" aria-checked={checked} id={id}
+      className={`toggle ${checked ? "on" : "off"}`} onClick={() => onChange(!checked)}>
       <span className="toggle__thumb" />
     </button>
   );
 }
 
-// ── Collapsible panel — uses global CSS classes ───────────────────────
-function Collapsible({
-  title,
-  defaultOpen = false,
-  children,
-}: {
-  title: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
+// ── Collapsible ───────────────────────────────────────────────────────
+function Collapsible({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
-
   return (
-    <div className="collapsible">
-      <button
-        type="button"
-        className="collapsible__trigger"
-        onClick={() => setOpen((p) => !p)}
-        aria-expanded={open}
-      >
-        <h2 className="collapsible__title">{title}</h2>
+    <div className="s-panel s-collapsible">
+      <button type="button" className="s-collapsible__trigger" onClick={() => setOpen(p => !p)} aria-expanded={open}>
+        <h2 className="s-collapsible__title">{title}</h2>
         <span className={`collapsible__chevron ${open ? "open" : ""}`}>▼</span>
       </button>
-      {open && <div className="collapsible__body">{children}</div>}
+      {open && <div className="s-collapsible__body">{children}</div>}
     </div>
+  );
+}
+
+// ── Save button helper ────────────────────────────────────────────────
+function SaveBtn({ onClick, disabled, label, saving }: { onClick: () => void; disabled: boolean; label: string; saving: boolean }) {
+  return (
+    <button className="admin-btn-primary s-save-btn" onClick={onClick} disabled={disabled}>
+      <span>{saving ? "Saving..." : label}</span>
+    </button>
   );
 }
 
@@ -152,18 +107,15 @@ export default function AdminSettings() {
   const [theme,    setTheme]    = useState("silver");
   const [social,   setSocial]   = useState<SocialLinks>({});
   const [contact,  setContact]  = useState<ContactInfo>({});
-  const [sections, setSections] = useState<SectionVisibility>({
-    section_about: true, section_skills: true, section_projects: true,
-    section_timeline: true, section_contact: true,
-  });
-
+  const [sections, setSections] = useState<SectionVisibility>({ section_about: true, section_skills: true, section_projects: true, section_timeline: true, section_contact: true });
   const [pattern,  setPattern]  = useState("grid");
-  const [savingPattern, setSavingPattern] = useState(false);
+
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
   const [savingSocial,   setSavingSocial]   = useState(false);
   const [savingContact,  setSavingContact]  = useState(false);
   const [savingSections, setSavingSections] = useState(false);
+  const [savingPattern,  setSavingPattern]  = useState(false);
   const [error,   setError]   = useState("");
   const [success, setSuccess] = useState("");
 
@@ -182,84 +134,23 @@ export default function AdminSettings() {
         if (contactRes.ok)  { const d = await contactRes.json();  setContact(d); }
         if (sectionsRes.ok) { const d = await sectionsRes.json(); setSections(d); }
         if (patternRes.ok)  { const d = await patternRes.json();  setPattern(d.background_pattern ?? "grid"); }
-      } catch {
-        setError("Failed to load settings");
-      } finally {
-        setLoading(false);
-      }
+      } catch { setError("Failed to load settings"); }
+      finally  { setLoading(false); }
     }
     fetchAll();
   }, []);
 
-  function notify(msg: string) {
-    setError(""); setSuccess(msg);
-    setTimeout(() => setSuccess(""), 3000);
-  }
+  function notify(msg: string) { setError(""); setSuccess(msg); setTimeout(() => setSuccess(""), 3000); }
   function notifyError(msg: string) { setSuccess(""); setError(msg); }
 
-  async function handleSaveTheme() {
-    setSaving(true);
+  async function save(url: string, body: object, msg: string, setFn: (v: boolean) => void) {
+    setFn(true);
     try {
-      const res = await fetch("/api/settings/theme", {
-        method: "PUT", credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme }),
-      });
+      const res = await fetch(url, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error();
-      notify("Theme saved");
-    } catch { notifyError("Failed to save theme"); } finally { setSaving(false); }
-  }
-
-  async function handleSaveSections() {
-    setSavingSections(true);
-    try {
-      const res = await fetch("/api/settings/sections", {
-        method: "PUT", credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sections),
-      });
-      if (!res.ok) throw new Error();
-      notify("Section visibility saved");
-    } catch { notifyError("Failed to save visibility"); } finally { setSavingSections(false); }
-  }
-
-  async function handleSavePattern() {
-    setSavingPattern(true);
-    try {
-      const res = await fetch("/api/settings/pattern", {
-        method: "PUT", credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ background_pattern: pattern }),
-      });
-      if (!res.ok) throw new Error();
-      notify("Background pattern saved");
-    } catch { notifyError("Failed to save pattern"); } finally { setSavingPattern(false); }
-  }
-
-  async function handleSaveSocial() {
-    setSavingSocial(true);
-    try {
-      const res = await fetch("/api/settings/social", {
-        method: "PUT", credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(social),
-      });
-      if (!res.ok) throw new Error();
-      notify("Social links saved");
-    } catch { notifyError("Failed to save social links"); } finally { setSavingSocial(false); }
-  }
-
-  async function handleSaveContact() {
-    setSavingContact(true);
-    try {
-      const res = await fetch("/api/settings/contact-info", {
-        method: "PUT", credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(contact),
-      });
-      if (!res.ok) throw new Error();
-      notify("Contact info saved");
-    } catch { notifyError("Failed to save contact info"); } finally { setSavingContact(false); }
+      notify(msg);
+    } catch { notifyError(`Failed to save`); }
+    finally  { setFn(false); }
   }
 
   if (loading) return <SettingsSkeleton />;
@@ -273,40 +164,27 @@ export default function AdminSettings() {
         </div>
       </div>
 
-      {error   && <div className="error-banner">{error}</div>}
-      {success && <div className="success-banner">{success}</div>}
+      {error   && <div className="s-banner s-banner--error">{error}</div>}
+      {success && <div className="s-banner s-banner--ok">{success}</div>}
 
-      {/* ── Theme — always expanded, no collapse ── */}
-      <div className="settings__section">
-        <h2>Theme</h2>
+      {/* ── Theme ── always expanded ── */}
+      <div className="s-panel">
+        <h2 className="s-panel__title">Theme</h2>
         <div className="themes">
           {THEMES.map((t) => (
-            <button
-              key={t.value}
-              className={`theme-card ${theme === t.value ? "active" : ""}`}
-              onClick={() => setTheme(t.value)}
-            >
+            <button key={t.value} className={`theme-card ${theme === t.value ? "active" : ""}`} onClick={() => setTheme(t.value)}>
+              {/* dframe inner frame via ::before / ::after in CSS */}
               <div className="theme-card__swatch" style={{ background: t.color }} />
-              <span>{t.label}</span>
+              <span className="theme-card__label">{t.label}</span>
             </button>
           ))}
         </div>
-        <button
-          className="admin-btn-primary"
-          onClick={handleSaveTheme}
-          disabled={saving}
-          style={{ marginTop: "1rem" }}
-        >
-          <span>{saving ? "Saving..." : "Save Theme"}</span>
-        </button>
+        <SaveBtn onClick={() => save("/api/settings/theme", { theme }, "Theme saved", setSaving)} disabled={saving} label="Save Theme" saving={saving} />
       </div>
 
-      {/* ── Section Visibility — collapsible ── */}
+      {/* ── Section Visibility ── */}
       <Collapsible title="Section Visibility" defaultOpen={true}>
-        <p className="settings__hint">
-          Hero is always shown. Toggle the rest on or off — changes take
-          effect on the live site after saving.
-        </p>
+        <p className="s-hint">Hero is always shown. Toggle sections on or off.</p>
         <div className="sections-grid">
           {SECTION_FIELDS.map(({ key, label, description }) => (
             <div key={key} className="section-row">
@@ -314,128 +192,152 @@ export default function AdminSettings() {
                 <span className="section-row__label">{label}</span>
                 <span className="section-row__desc">{description}</span>
               </div>
-              <Toggle
-                id={`toggle-${key}`}
-                checked={!!sections[key]}
-                onChange={(v) => setSections({ ...sections, [key]: v })}
-              />
+              <Toggle id={`toggle-${key}`} checked={!!sections[key]} onChange={(v) => setSections({ ...sections, [key]: v })} />
             </div>
           ))}
         </div>
-        <button
-          className="admin-btn-primary"
-          onClick={handleSaveSections}
-          disabled={savingSections}
-          style={{ marginTop: "1.25rem" }}
-        >
-          <span>{savingSections ? "Saving..." : "Save Visibility"}</span>
-        </button>
+        <SaveBtn onClick={() => save("/api/settings/sections", sections, "Visibility saved", setSavingSections)} disabled={savingSections} label="Save Visibility" saving={savingSections} />
       </Collapsible>
 
-      {/* ── Background Pattern — collapsible ── */}
+      {/* ── Background Pattern ── */}
       <Collapsible title="Background Pattern">
-        <p className="settings__hint">
-          Choose the hero section background pattern. Changes apply to the live site immediately after saving.
-        </p>
+        <p className="s-hint">Hero section background pattern.</p>
         <div className="pattern-grid">
           {PATTERNS.map((p) => (
-            <button
-              key={p.value}
-              className={`pattern-card ${pattern === p.value ? "active" : ""}`}
-              onClick={() => setPattern(p.value)}
-            >
-              <div
-                className="pattern-card__preview"
-                style={{
-                  backgroundImage: p.preview,
-                  backgroundSize: p.size,
-                }}
-              />
+            <button key={p.value} className={`pattern-card ${pattern === p.value ? "active" : ""}`} onClick={() => setPattern(p.value)}>
+              <div className="pattern-card__preview" style={{ backgroundImage: p.preview, backgroundSize: p.size }} />
               <span className="pattern-card__label">{p.label}</span>
             </button>
           ))}
         </div>
-        <button
-          className="admin-btn-primary"
-          onClick={handleSavePattern}
-          disabled={savingPattern}
-          style={{ marginTop: "1.25rem" }}
-        >
-          <span>{savingPattern ? "Saving..." : "Save Pattern"}</span>
-        </button>
+        <SaveBtn onClick={() => save("/api/settings/pattern", { background_pattern: pattern }, "Pattern saved", setSavingPattern)} disabled={savingPattern} label="Save Pattern" saving={savingPattern} />
       </Collapsible>
 
-      {/* ── Social Links — collapsible ── */}
+      {/* ── Social Links ── */}
       <Collapsible title="Social Links">
-        <div className="social-grid">
+        <div className="s-field-group">
           {SOCIAL_FIELDS.map(({ key, label, placeholder }) => (
-            <div className="field" key={key}>
-              <label>{label}</label>
-              <input
-                type="url"
-                value={(social[key] as string) ?? ""}
-                onChange={(e) => setSocial({ ...social, [key]: e.target.value })}
-                placeholder={placeholder}
-              />
+            <div className="s-field" key={key}>
+              <label className="s-field__label">{label}</label>
+              <input type="url" className="s-field__input" value={(social[key] as string) ?? ""} onChange={(e) => setSocial({ ...social, [key]: e.target.value })} placeholder={placeholder} />
             </div>
           ))}
         </div>
-        <button
-          className="admin-btn-primary"
-          onClick={handleSaveSocial}
-          disabled={savingSocial}
-          style={{ marginTop: "1rem" }}
-        >
-          <span>{savingSocial ? "Saving..." : "Save Social Links"}</span>
-        </button>
+        <SaveBtn onClick={() => save("/api/settings/social", social, "Social links saved", setSavingSocial)} disabled={savingSocial} label="Save Social Links" saving={savingSocial} />
       </Collapsible>
 
-      {/* ── Contact Info — collapsible ── */}
+      {/* ── Contact Info ── */}
       <Collapsible title="Contact Info">
-        <div className="social-grid">
+        <div className="s-field-group">
           {CONTACT_FIELDS.map(({ key, label, placeholder }) => (
-            <div className="field" key={key}>
-              <label>{label}</label>
-              <input
-                type="text"
-                value={(contact[key] as string) ?? ""}
-                onChange={(e) => setContact({ ...contact, [key]: e.target.value })}
-                placeholder={placeholder}
-              />
+            <div className="s-field" key={key}>
+              <label className="s-field__label">{label}</label>
+              <input type="text" className="s-field__input" value={(contact[key] as string) ?? ""} onChange={(e) => setContact({ ...contact, [key]: e.target.value })} placeholder={placeholder} />
             </div>
           ))}
         </div>
-        <button
-          className="admin-btn-primary"
-          onClick={handleSaveContact}
-          disabled={savingContact}
-          style={{ marginTop: "1rem" }}
-        >
-          <span>{savingContact ? "Saving..." : "Save Contact Info"}</span>
-        </button>
+        <SaveBtn onClick={() => save("/api/settings/contact-info", contact, "Contact info saved", setSavingContact)} disabled={savingContact} label="Save Contact Info" saving={savingContact} />
       </Collapsible>
 
       <style jsx>{`
+        /* ── Page header ── */
         .settings__header { margin-bottom: 2rem; }
         .settings__header h1 { font-family: var(--font-display); font-size: 2rem; margin: 0; }
         .settings__header p  { color: var(--color-text-muted); margin: 0.25rem 0 0; font-size: 0.875rem; }
 
-        .error-banner   { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); color: #ff5050; padding: 0.75rem 1rem; border-radius: 0; margin-bottom: 1rem; }
-        .success-banner { background: rgba(0,255,128,0.1); border: 1px solid rgba(0,255,128,0.3); color: #00ff80; padding: 0.75rem 1rem; border-radius: 0; margin-bottom: 1rem; }
+        /* ── Banners ── */
+        .s-banner { padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
+        .s-banner--error { background: rgba(255,80,80,0.08); border: 1px solid rgba(255,80,80,0.3); color: #ff5050; }
+        .s-banner--ok    { background: rgba(0,255,128,0.08); border: 1px solid rgba(0,255,128,0.3); color: #00ff80; }
 
-        /* Theme section — always open, no collapsible wrapper */
-        .settings__section { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 0; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .settings__section h2 { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 1.25rem; color: var(--color-accent); }
-        .settings__hint { font-size: 0.825rem; color: var(--color-text-muted); margin: 0 0 1.25rem; line-height: 1.6; }
+        /* ── Panel — dframe style with admin CSS vars ── */
+        .s-panel {
+          position: relative;
+          border: 1px solid var(--color-border);
+          background: var(--color-surface);
+          padding: 1.5rem;
+          margin-bottom: 1rem;
+        }
+        /* inner rounded frame */
+        .s-panel::before {
+          content: '';
+          position: absolute;
+          inset: 4px;
+          border: 1px solid rgba(255,255,255,0.04);
+          border-radius: 6px;
+          pointer-events: none;
+          z-index: 0;
+        }
+        /* corner accents TL + BR */
+        .s-panel::after {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          background:
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 14px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 1.5px 14px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 14px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 1.5px 14px no-repeat;
+          pointer-events: none;
+          z-index: 2;
+          transition: opacity 250ms ease;
+        }
+        .s-panel > * { position: relative; z-index: 1; }
 
-        .themes { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .theme-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; background: var(--color-bg); border: 2px solid var(--color-border); border-radius: 0; cursor: pointer; transition: border-color 0.2s; min-width: 80px; color: var(--color-text); font-size: 0.875rem; }
+        .s-panel__title { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 1.25rem; color: var(--color-accent); }
+
+        /* ── Collapsible ── */
+        .s-collapsible { padding: 0; }
+        .s-collapsible__trigger {
+          width: 100%; display: flex; align-items: center; justify-content: space-between;
+          padding: 1.1rem 1.5rem; background: none; border: none; cursor: pointer; text-align: left;
+          position: relative; z-index: 1;
+          transition: background 150ms ease;
+        }
+        .s-collapsible__trigger:hover { background: rgba(255,255,255,0.02); }
+        .s-collapsible__title { font-family: var(--font-display); font-size: 1.1rem; color: var(--color-accent); margin: 0; }
+        .s-collapsible__body { padding: 0 1.5rem 1.5rem; border-top: 1px solid var(--color-border); position: relative; z-index: 1; }
+
+        /* ── Save button — full width on small screens ── */
+        .s-save-btn { margin-top: 1.25rem; }
+
+        /* ── Hint text ── */
+        .s-hint { font-size: 0.825rem; color: var(--color-text-muted); margin: 0 0 1.25rem; line-height: 1.6; }
+
+        /* ── Theme cards — dframe style ── */
+        .themes { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0; }
+        .theme-card {
+          position: relative;
+          display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+          padding: 1rem; min-width: 80px;
+          background: var(--color-bg);
+          border: 1px solid var(--color-border);
+          cursor: pointer; color: var(--color-text); font-size: 0.875rem;
+          transition: border-color 0.2s;
+        }
+        .theme-card::before {
+          content: ''; position: absolute; inset: 3px;
+          border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; pointer-events: none;
+        }
+        .theme-card::after {
+          content: ''; position: absolute; inset: -1px;
+          background:
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 10px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 1.5px 10px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 10px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 1.5px 10px no-repeat;
+          pointer-events: none; transition: opacity 250ms ease;
+        }
+        .theme-card:hover::after  { opacity: 0; }
+        .theme-card.active::after { opacity: 0; }
         .theme-card:hover  { border-color: var(--color-text-muted); }
         .theme-card.active { border-color: var(--color-accent); }
+        .theme-card > * { position: relative; z-index: 1; }
         .theme-card__swatch { width: 40px; height: 40px; border-radius: 50%; }
+        .theme-card__label  { font-family: var(--font-body); font-size: 0.8rem; }
 
-        /* Section visibility rows */
-        .sections-grid { display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; }
+        /* ── Section visibility rows ── */
+        .sections-grid { display: flex; flex-direction: column; border: 1px solid var(--color-border); overflow: hidden; margin-bottom: 0; }
         .section-row { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; border-bottom: 1px solid var(--color-border); transition: background 0.15s; }
         .section-row:last-child { border-bottom: none; }
         .section-row:hover { background: var(--color-bg); }
@@ -443,22 +345,48 @@ export default function AdminSettings() {
         .section-row__label { font-size: 0.9rem; color: var(--color-text); font-weight: 600; }
         .section-row__desc  { font-size: 0.78rem; color: var(--color-text-muted); font-family: var(--font-mono); }
 
-        /* Social / contact fields */
-        .social-grid { display: flex; flex-direction: column; gap: 1rem; }
-        .field { display: flex; flex-direction: column; gap: 0.4rem; }
-        .field label { font-size: 0.8rem; color: var(--color-text-muted); font-family: var(--font-mono); }
-        .field input { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 0; padding: 0.625rem 0.75rem; color: var(--color-text); font-size: 0.9rem; outline: none; font-family: var(--font-body); transition: border-color 0.2s; }
-        .field input:focus { border-color: var(--color-accent); }
-
-        /* Pattern picker */
+        /* ── Pattern cards — dframe style ── */
         .pattern-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
-        .pattern-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.75rem; background: var(--color-bg); border: 1px solid var(--color-border); cursor: pointer; transition: border-color 0.2s; }
+        .pattern-card {
+          position: relative;
+          display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+          padding: 0.75rem; background: var(--color-bg); border: 1px solid var(--color-border);
+          cursor: pointer; transition: border-color 0.2s;
+        }
+        .pattern-card::before {
+          content: ''; position: absolute; inset: 3px;
+          border: 1px solid rgba(255,255,255,0.04); border-radius: 4px; pointer-events: none;
+        }
+        .pattern-card::after {
+          content: ''; position: absolute; inset: -1px;
+          background:
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 8px 1px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 1px 8px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 8px 1px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 1px 8px no-repeat;
+          pointer-events: none; transition: opacity 250ms ease;
+        }
+        .pattern-card:hover::after  { opacity: 0; }
+        .pattern-card.active::after { opacity: 0; }
         .pattern-card:hover  { border-color: var(--color-text-muted); }
         .pattern-card.active { border-color: var(--color-accent); }
+        .pattern-card > * { position: relative; z-index: 1; }
         .pattern-card__preview { width: 100%; height: 52px; opacity: 0.6; }
-        .pattern-card__label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-text-muted); letter-spacing: 1px; text-transform: uppercase; }
+        .pattern-card__label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); letter-spacing: 1px; text-transform: uppercase; }
         .pattern-card.active .pattern-card__label { color: var(--color-accent); }
         @media (max-width: 600px) { .pattern-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        /* ── Fields ── */
+        .s-field-group { display: flex; flex-direction: column; gap: 1rem; }
+        .s-field { display: flex; flex-direction: column; gap: 0.4rem; }
+        .s-field__label { font-size: 0.8rem; color: var(--color-text-muted); font-family: var(--font-mono); }
+        .s-field__input {
+          background: var(--color-bg); border: 1px solid var(--color-border);
+          padding: 0.625rem 0.75rem; color: var(--color-text); font-size: 0.9rem;
+          outline: none; font-family: var(--font-body); transition: border-color 0.2s;
+          width: 100%;
+        }
+        .s-field__input:focus { border-color: var(--color-accent); }
       `}</style>
     </div>
   );
