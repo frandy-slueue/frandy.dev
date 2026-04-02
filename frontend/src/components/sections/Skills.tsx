@@ -61,46 +61,32 @@ const SKILL_PROJECTS: Record<string, { title: string; description: string }[]> =
   "Docker":     [{ title: "frandy.dev",      description: "Five-service Docker Compose orchestration" }],
 };
 
-// ── Shape clip-path sequence ──────────────────────────────────────────────────
-// Triangles excluded — only zero-gap-compatible shapes kept.
+// Shapes — only zero-gap-compatible clip-paths
 const CLIP_SHAPES = [
-  "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",          // diamond
-  "inset(0% 0% 0% 0% round 4px)",                          // square
-  "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)", // hexagon
-  "inset(15% 0% 15% 0% round 3px)",                        // rectangle (tall crop)
-  "circle(50% at 50% 50%)",                                // circle
+  "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",                               // diamond
+  "inset(0% 0% 0% 0% round 4px)",                                               // square
+  "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",             // hexagon
+  "inset(15% 0% 15% 0% round 3px)",                                             // tall rect
+  "circle(50% at 50% 50%)",                                                     // circle
 ] as const;
 
-const TRANSITION_SPEED = "0.75s";
 const MORPH_INTERVAL_MS = 2000;
 
-// ── Skill card — dframe + brand icon + shapeshifting badge ────────────────────
-function SkillCard({
-  skill,
-  active,
-  onClick,
-  clipIndex,
-}: {
-  skill: string;
-  active: boolean;
-  onClick: () => void;
-  clipIndex: number;
+// ── Skill card ────────────────────────────────────────────────────────
+function SkillCard({ skill, active, onClick, clipIndex }: {
+  skill: string; active: boolean; onClick: () => void; clipIndex: number;
 }) {
-  const meta = SKILL_META[skill] ?? { icon: null, color: "var(--accent)" };
+  const meta    = SKILL_META[skill] ?? { icon: null, color: "var(--accent)" };
   const clipPath = CLIP_SHAPES[clipIndex % CLIP_SHAPES.length];
 
   return (
-    <button
-      className={`skill-card dframe ${active ? "active" : ""}`}
-      onClick={onClick}
-      aria-pressed={active}
-    >
+    <button className={`skill-card dframe ${active ? "active" : ""}`} onClick={onClick} aria-pressed={active}>
       <div
         className="skill-card__badge"
         style={{
           color: meta.color,
           clipPath,
-          transition: `clip-path ${TRANSITION_SPEED} cubic-bezier(0.4, 0, 0.2, 1)`,
+          transition: "clip-path 0.75s cubic-bezier(0.4,0,0.2,1)",
           willChange: "clip-path",
         }}
       >
@@ -114,26 +100,18 @@ function SkillCard({
 export default function Skills() {
   const [activeCategory, setActiveCategory] = useState("Languages");
   const [activeSkill, setActiveSkill]       = useState<string | null>(null);
-
-  // ── Shapeshifting tick — increments every MORPH_INTERVAL_MS ────────────────
-  const [tick, setTick] = useState(0);
+  const [tick, setTick]                     = useState(0);
   const tickRef = useRef(0);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      tickRef.current += 1;
-      setTick(tickRef.current);
-    }, MORPH_INTERVAL_MS);
+    const id = setInterval(() => { tickRef.current += 1; setTick(tickRef.current); }, MORPH_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);
 
   const currentSkills  = SKILLS[activeCategory] ?? [];
   const activeProjects = activeSkill ? (SKILL_PROJECTS[activeSkill] ?? []) : [];
 
-  function handleCategoryChange(label: string) {
-    setActiveCategory(label);
-    setActiveSkill(null);
-  }
+  function handleCategoryChange(label: string) { setActiveCategory(label); setActiveSkill(null); }
 
   return (
     <section id="skills" className="section-pad" aria-labelledby="skills-heading" style={{ backgroundColor: "var(--bg-primary)" }}>
@@ -143,20 +121,13 @@ export default function Skills() {
 
         <TabBar tabs={TABS} active={activeCategory} onChange={handleCategoryChange} />
 
-        <motion.div
-          key={activeCategory}
-          className="skill-grid"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
+        <motion.div key={activeCategory} className="skill-grid" initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.3 }}>
           {currentSkills.map((skill, i) => (
             <SkillCard
               key={skill}
               skill={skill}
               active={activeSkill === skill}
               onClick={() => setActiveSkill(activeSkill === skill ? null : skill)}
-              // Each card is offset by its index so they never all morph in sync
               clipIndex={(tick + i) % CLIP_SHAPES.length}
             />
           ))}
@@ -164,14 +135,7 @@ export default function Skills() {
 
         <AnimatePresence>
           {activeSkill && (
-            <motion.div
-              key={activeSkill}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-              style={{ overflow: "hidden" }}
-            >
+            <motion.div key={activeSkill} initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }} transition={{ duration:0.35, ease:"easeInOut" }} style={{ overflow:"hidden" }}>
               <div className="skill-preview dframe">
                 <p className="skill-preview__label">Projects using {activeSkill}</p>
                 {activeProjects.length > 0 ? (
