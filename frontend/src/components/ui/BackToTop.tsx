@@ -66,7 +66,7 @@ export default function BackToTop() {
           0%, 100% { box-shadow: 0 0 4px var(--accent-glow); }
           50%       { box-shadow: 0 0 12px var(--accent-glow); }
         }
-        @media (min-width: 768px) { .back-to-top { bottom: 32px; right: 32px; } }
+        @media (min-width: 768px) { .back-to-top { bottom: 32px; right: max(32px, calc((100vw - 1100px) / 2 + 20px)); } }
         @media (max-width: 767px) and (orientation: portrait) { .back-to-top { bottom: 90px; } }
       `}</style>
     </>

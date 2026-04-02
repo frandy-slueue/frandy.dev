@@ -416,13 +416,19 @@ export default function Timeline() {
   const [panelNode, setPanelNode]      = useState<TNode|null>(null);
   const [panelIndex, setPanelIndex]    = useState(0);
   const [expandedMobile, setExpandMob] = useState<string|null>(null);
-  const [canRight, setCanRight]        = useState(false);
-  const [focusedIdx, setFocusedIdx]    = useState<number|null>(null);
-  const trackRef  = useRef<HTMLDivElement>(null);
-  const isDragRef = useRef(false);
-  const startXRef = useRef(0);
-  const scrollRef = useRef(0);
-  const movedRef  = useRef(false);
+  const [canRight, setCanRight]           = useState(false);
+  const [canMobileRight, setCanMobileRight] = useState(false);
+  const [focusedIdx, setFocusedIdx]       = useState<number|null>(null);
+  const trackRef      = useRef<HTMLDivElement>(null);
+  const mobilTrackRef = useRef<HTMLDivElement>(null);
+  const isDragRef  = useRef(false);
+  const startXRef  = useRef(0);
+  const scrollRef  = useRef(0);
+  const movedRef   = useRef(false);
+  const isDragMRef = useRef(false);
+  const startXMRef = useRef(0);
+  const scrollMRef = useRef(0);
+  const movedMRef  = useRef(false);
 
   useEffect(()=>{ fetch("/api/timeline").then(r=>r.json()).then((d:TNode[])=>{ if(d?.length) setNodes(d); }).catch(()=>{}); },[]);
 
@@ -432,11 +438,15 @@ export default function Timeline() {
   function navigate(idx:number) { if(idx<0||idx>=filtered.length) return; setPanelNode(filtered[idx]); setPanelIndex(idx); }
 
   function checkScroll() { const el=trackRef.current; if(!el) return; setCanRight(el.scrollLeft<el.scrollWidth-el.clientWidth-4); }
-  useEffect(()=>{ setTimeout(checkScroll,100); },[filtered.length]);
+  function checkMobileScroll() { const el=mobilTrackRef.current; if(!el) return; setCanMobileRight(el.scrollLeft<el.scrollWidth-el.clientWidth-4); }
+  useEffect(()=>{ setTimeout(checkScroll,100); setTimeout(checkMobileScroll,100); },[filtered.length]);
 
-  function onDown(e:React.MouseEvent) { isDragRef.current=true; movedRef.current=false; startXRef.current=e.pageX; scrollRef.current=trackRef.current?.scrollLeft??0; }
-  function onMove(e:React.MouseEvent) { if(!isDragRef.current) return; const dx=e.pageX-startXRef.current; if(Math.abs(dx)>4) movedRef.current=true; if(trackRef.current){ trackRef.current.scrollLeft=Math.max(0,scrollRef.current-dx); checkScroll(); } }
+  function onDown(e:React.PointerEvent) { isDragRef.current=true; movedRef.current=false; startXRef.current=e.pageX; scrollRef.current=trackRef.current?.scrollLeft??0; }
+  function onMove(e:React.PointerEvent) { if(!isDragRef.current) return; const dx=e.pageX-startXRef.current; if(Math.abs(dx)>4) movedRef.current=true; if(trackRef.current){ trackRef.current.scrollLeft=Math.max(0,scrollRef.current-dx); checkScroll(); } }
   function onUp() { isDragRef.current=false; }
+  function onMobileDown(e:React.PointerEvent) { isDragMRef.current=true; movedMRef.current=false; startXMRef.current=e.pageX; scrollMRef.current=mobilTrackRef.current?.scrollLeft??0; }
+  function onMobileMove(e:React.PointerEvent) { if(!isDragMRef.current) return; const dx=e.pageX-startXMRef.current; if(Math.abs(dx)>4) movedMRef.current=true; if(mobilTrackRef.current){ mobilTrackRef.current.scrollLeft=Math.max(0,scrollMRef.current-dx); checkMobileScroll(); } }
+  function onMobileUp() { isDragMRef.current=false; }
 
   useEffect(()=>{
     if(panelNode) return;
@@ -466,9 +476,9 @@ export default function Timeline() {
         <div className="site-container" style={{ padding:0 }}>
           <div style={{ position:"relative" }}>
             <div ref={trackRef}
-              onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
+              onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
               onScroll={checkScroll}
-              style={{ overflowX:"auto", overflowY:"hidden", scrollbarWidth:"none", cursor:"grab", paddingRight:canRight?48:0 }}
+              style={{ overflowX:"auto", overflowY:"hidden", scrollbarWidth:"none", cursor:"grab", paddingRight:canRight?48:0, touchAction:"pan-y" }}
             >
               <div style={{ display:"flex", height:H_TRACK, minWidth:"max-content" }}>
                 <AnimatePresence mode="popLayout">
@@ -498,24 +508,34 @@ export default function Timeline() {
         </div>
       </div>
 
-      {/* Mobile */}
+      {/* Mobile — same fold track, touch-driven via pointer events */}
       <div className="timeline-mobile">
-        <div className="site-container">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((node,i)=>(
-              <MobileCard key={node.id} node={node} index={i} isExpanded={expandedMobile===node.id}
-                onToggle={()=>setExpandMob(expandedMobile===node.id?null:node.id)}
-                onOpen={(n,idx)=>openPanel(n)} />
-            ))}
-          </AnimatePresence>
-          {filter==="All"&&FUTURE.map((label,i)=>(
-            <div key={`fm${i}`} style={{ opacity:Math.max(0.06,0.22-i*0.07), background:"rgba(255,255,255,0.01)", border:"1px solid rgba(255,255,255,0.04)", marginBottom:12, padding:"14px 16px", overflow:"hidden" }}>
-              <div style={{ height:3, background:"rgba(255,255,255,0.05)", marginBottom:12 }} />
-              <div style={{ fontFamily:"var(--font-display)", fontSize:"0.9rem", color:"rgba(255,255,255,0.12)" }}>{label}</div>
-              <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.58rem", letterSpacing:"0.08em", textTransform:"uppercase", color:"rgba(255,255,255,0.08)", marginTop:4 }}>Coming soon</div>
+        <div style={{ position:"relative" }}>
+          <div
+            ref={mobilTrackRef}
+            onPointerDown={onMobileDown} onPointerMove={onMobileMove}
+            onPointerUp={onMobileUp}    onPointerCancel={onMobileUp}
+            onScroll={checkMobileScroll}
+            style={{ overflowX:"auto", overflowY:"hidden", scrollbarWidth:"none", cursor:"grab", touchAction:"pan-y" }}
+          >
+            <div style={{ display:"flex", height:340, minWidth:"max-content", paddingLeft:"1rem" }}>
+              <AnimatePresence mode="popLayout">
+                {filtered.map((node,i)=>(
+                  <FoldPanel key={node.id} node={node} isActive={panelNode?.id===node.id} isFocused={false} onOpenPanel={openPanel} onFocus={()=>{}} />
+                ))}
+              </AnimatePresence>
+              {filter==="All"&&FUTURE.map((label,i)=>(
+                <FutureFold key={`fm${i}`} label={label} opacity={Math.max(0.08,0.5-i*0.18)} />
+              ))}
             </div>
-          ))}
+          </div>
+          {canMobileRight&&(
+            <div style={{ position:"absolute", top:0, right:0, bottom:0, width:60, background:"linear-gradient(to right,transparent,var(--bg-primary))", pointerEvents:"none", zIndex:5 }} />
+          )}
         </div>
+        <p style={{ fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.14)", textAlign:"left", marginTop:10, paddingLeft:"1rem" }}>
+          drag edge → fold · tap folded → expand · tap open → detail
+        </p>
       </div>
 
       <TimelinePanel node={panelNode} allNodes={filtered} index={panelIndex} onClose={()=>setPanelNode(null)} onNavigate={navigate} />
