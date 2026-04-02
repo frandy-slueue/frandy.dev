@@ -15,7 +15,7 @@ interface TNode {
   title: string; category: string; description: string; image_url: string | null;
 }
 
-// ── Fallback data ─────────────────────────────────────────────────────
+// ── Fallback ──────────────────────────────────────────────────────────
 const FALLBACK: TNode[] = [
   { id:"foundation",   sort_order:0, period:"Before", date_label:"",          title:"The Foundation",         category:"Background",     description:"Life before code. A persistent drive to understand how things work and an instinct to build. That mindset was already there — software gave it a direction.", image_url:null },
   { id:"atlas",        sort_order:1, period:"2023",   date_label:"January",   title:"Atlas School of Tulsa",  category:"Education",      description:"Enrolled in an intensive, project-based software engineering program. No lectures — just building, breaking, and figuring it out. The hardest and most formative experience of my engineering life.", image_url:null },
@@ -32,25 +32,60 @@ const FILTER_TABS: TabItem[] = ["All","Education","Work","Milestone","Certificat
 
 // ── Category meta ─────────────────────────────────────────────────────
 const CAT: Record<string,{icon:React.ReactNode;color:string}> = {
-  Education:      { icon:<GraduationCap size={12}/>, color:"#f59e0b" },
-  Work:           { icon:<Briefcase size={12}/>,     color:"#10b981" },
-  Milestone:      { icon:<Star size={12}/>,          color:"#ef4444" },
-  Certifications: { icon:<Award size={12}/>,         color:"#8b5cf6" },
-  Background:     { icon:<Clock size={12}/>,         color:"#94a3b8" },
+  Education:      { icon:<GraduationCap size={11}/>, color:"#f59e0b" },
+  Work:           { icon:<Briefcase size={11}/>,     color:"#10b981" },
+  Milestone:      { icon:<Star size={11}/>,          color:"#ef4444" },
+  Certifications: { icon:<Award size={11}/>,         color:"#8b5cf6" },
+  Background:     { icon:<Clock size={11}/>,         color:"#94a3b8" },
 };
 const getCat = (c:string) => CAT[c] ?? CAT.Background;
 
-// ── Dimensions ────────────────────────────────────────────────────────
-const W_OPEN  = 240;
-const W_STACK = 44;
-const SNAP_AT = 130;
-const H_TRACK = 460;
-const SPRING  = { type:"spring", stiffness:420, damping:36, mass:0.8 } as const;
+// ── Snap stop constants — Option A: peek is the minimum (never fully closes)
+const W_OPEN = 240;   // fully expanded
+const W_PEEK = 68;    // peeking — year + dot visible, body hidden
+// No W_CLOSED — peek is the floor
 
-// ── Fold panel — all 7 design patterns applied ────────────────────────
-function FoldPanel({ node, isActive, isFocused, onExpand, onOpenPanel, onFocus }: {
+const STOPS    = [W_OPEN, W_PEEK] as const;
+const H_TRACK  = 460;
+
+// Physics constants
+const RESIST   = 0.10;  // rubber-band factor past outer stops
+const VEL_THRESH = 0.28; // px/ms — flick detection (lower = more sensitive)
+
+// Spring: lower damping (22) + higher mass (1.1) = real overshoot bounce
+const SPRING = { type:"spring", stiffness:400, damping:22, mass:1.1 } as const;
+// Drag: instant follow, no spring
+const DRAG_T = { duration:0 } as const;
+
+/** Nearest snap stop, with momentum flick override */
+function snapTo(w: number, vel: number): number {
+  // Fast flick: jump one stop in velocity direction regardless of position
+  if (Math.abs(vel) > VEL_THRESH) {
+    if (vel > 0) {
+      // Expanding — find next stop above current width
+      const next = [...STOPS].sort((a,b)=>a-b).find(s=>s>w);
+      return next ?? W_OPEN;
+    } else {
+      // Collapsing — find next stop below current width
+      const next = [...STOPS].sort((a,b)=>b-a).find(s=>s<w);
+      return next ?? W_PEEK;
+    }
+  }
+  // Nearest stop
+  return STOPS.reduce((best,s) => Math.abs(s-w) < Math.abs(best-w) ? s : best, STOPS[0]);
+}
+
+/** Rubber-band resistance past outer stops */
+function resist(raw: number): number {
+  if (raw > W_OPEN) return W_OPEN + (raw - W_OPEN) * RESIST;
+  if (raw < W_PEEK) return W_PEEK + (raw - W_PEEK) * RESIST;
+  return raw;
+}
+
+// ── Fold panel ────────────────────────────────────────────────────────
+function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }: {
   node: TNode; isActive: boolean; isFocused: boolean;
-  onExpand: ()=>void; onOpenPanel: (n:TNode)=>void; onFocus: ()=>void;
+  onOpenPanel: (n:TNode)=>void; onFocus: ()=>void;
 }) {
   const [width, setWidth]     = useState(W_OPEN);
   const [dragging, setDragging] = useState(false);
@@ -59,13 +94,19 @@ function FoldPanel({ node, isActive, isFocused, onExpand, onOpenPanel, onFocus }
   const velRef    = useRef(0); const lastXRef  = useRef(0);
   const lastTRef  = useRef(0); const movedRef  = useRef(false);
 
-  const cat         = getCat(node.category);
-  const isCollapsed = width <= W_STACK + 6;
+  const cat     = getCat(node.category);
+  const isPeek  = width <= W_PEEK + 8;   // at peek stop
+  const isOpen  = width > W_PEEK + 8;    // fully expanded
 
-  // ── #6 Card tilt — rotateY increases as card folds ──────────────────
-  const foldRatio     = 1 - Math.max(0, Math.min(1, (width - W_STACK) / (W_OPEN - W_STACK)));
-  const creaseOpacity = 0.06 + foldRatio * 0.32;
-  const tiltY         = -foldRatio * 5;  // max -5deg when fully collapsed
+  // Fold ratio: 0 = fully open, 1 = fully peeked
+  const foldRatio = 1 - Math.max(0, Math.min(1, (width - W_PEEK) / (W_OPEN - W_PEEK)));
+
+  // Crease: opacity + brightness shift as paper bends
+  const creaseOpacity   = 0.04 + foldRatio * 0.38;
+  const creaseBrightness = 1 - foldRatio * 0.22; // paper darkens as it folds
+
+  // Tilt increases as panel folds
+  const tiltY = -foldRatio * 4;
 
   const onHandleDown = useCallback((e: React.PointerEvent) => {
     e.stopPropagation();
@@ -81,45 +122,40 @@ function FoldPanel({ node, isActive, isFocused, onExpand, onOpenPanel, onFocus }
     const dt = e.timeStamp - lastTRef.current;
     if (dt > 0) velRef.current = (e.clientX - lastXRef.current) / dt;
     lastXRef.current = e.clientX; lastTRef.current = e.timeStamp;
-    const raw = startWRef.current + (e.clientX - startXRef.current);
-    setWidth(raw > W_OPEN ? W_OPEN+(raw-W_OPEN)*0.12 : raw < W_STACK ? W_STACK+(raw-W_STACK)*0.12 : raw);
+    setWidth(resist(startWRef.current + (e.clientX - startXRef.current)));
   }, [dragging]);
 
   const onHandleUp = useCallback(() => {
     if (!dragging) return;
     setDragging(false);
-    setWidth(Math.abs(velRef.current) > 0.5
-      ? velRef.current > 0 ? W_OPEN : W_STACK
-      : width > SNAP_AT ? W_OPEN : W_STACK);
+    setWidth(snapTo(width, velRef.current));
   }, [dragging, width]);
 
   function handleClick() {
     if (movedRef.current) { movedRef.current = false; return; }
     onFocus();
-    if (isCollapsed) { setWidth(W_OPEN); onExpand(); }
-    else             { onOpenPanel(node); }
+    if (isPeek) { setWidth(W_OPEN); }   // peek → expand
+    else        { onOpenPanel(node); }   // open → detail panel
   }
 
-  // ── #1 Persistent shadow (stronger when collapsed, lighter when open)
-  const shadowFilter = isCollapsed
-    ? "drop-shadow(8px 6px 14px rgba(0,0,0,0.75)) drop-shadow(14px 10px 22px rgba(0,0,0,0.4))"
+  // Shadow: always on, heavier at peek (card tucked behind neighbour)
+  const shadowFilter = isPeek
+    ? "drop-shadow(8px 6px 16px rgba(0,0,0,0.78)) drop-shadow(14px 10px 24px rgba(0,0,0,0.42))"
     : hovered
-    ? "drop-shadow(6px 8px 18px rgba(0,0,0,0.55)) drop-shadow(2px 4px 8px rgba(0,0,0,0.3))"  // #3 hover elevation shadow
+    ? "drop-shadow(6px 8px 18px rgba(0,0,0,0.55)) drop-shadow(2px 4px 8px rgba(0,0,0,0.3))"
     : "drop-shadow(4px 4px 10px rgba(0,0,0,0.45)) drop-shadow(6px 6px 14px rgba(0,0,0,0.22))";
 
   return (
     <motion.div
       animate={{ width }}
-      transition={dragging ? { duration:0 } : SPRING}
-      // ── #6 Tilt on fold — perspective applied via CSS on parent track
+      transition={dragging ? DRAG_T : SPRING}
       style={{
-        flexShrink: 0, position:"relative", height:"100%", willChange:"width",
+        flexShrink:0, position:"relative", height:"100%", willChange:"width",
         filter: shadowFilter,
         transition: dragging ? "none" : "filter 0.4s ease",
-        zIndex: isCollapsed ? 1 : hovered ? 3 : 2,
-        // ── #3 Hover elevation — card lifts up when hovered
-        translateY: !isCollapsed && hovered ? -4 : 0,
-        rotateY: tiltY,  // #6 — Framer Motion reads transform values from style
+        zIndex: isPeek ? 1 : hovered ? 3 : 2,
+        translateY: isOpen && hovered ? -4 : 0,
+        rotateY: tiltY,
       }}
       onMouseEnter={()=>setHovered(true)}
       onMouseLeave={()=>setHovered(false)}
@@ -136,20 +172,22 @@ function FoldPanel({ node, isActive, isFocused, onExpand, onOpenPanel, onFocus }
           borderLeft: isActive ? `2px solid ${cat.color}` : "none",
           display:"flex", flexDirection:"column",
           overflow:"hidden",
-          cursor: isCollapsed ? "e-resize" : "pointer",
+          cursor: isPeek ? "e-resize" : "pointer",
           transition:"background 300ms ease",
-          // Keyboard focus ring
           outline: isFocused ? `2px solid ${cat.color}` : "none",
-          outlineOffset: -2,
-          boxShadow: isCollapsed
-            ? "inset -3px 0 10px rgba(0,0,0,0.5), inset 1px 0 0 rgba(255,255,255,0.05)"
+          outlineOffset:-2,
+          // Inset right-edge darkening at peek — reinforces depth behind next card
+          boxShadow: isPeek
+            ? "inset -4px 0 12px rgba(0,0,0,0.55), inset 1px 0 0 rgba(255,255,255,0.05)"
             : "none",
+          // Crease brightness shift — paper darkens as it bends
+          filter: `brightness(${creaseBrightness})`,
         }}
       >
-        {/* ── #2 Top color stripe ── */}
-        <div style={{ height:3, flexShrink:0, background:cat.color, opacity: isCollapsed ? 0.6 : 1, transition:"opacity 0.3s" }} />
+        {/* Top color stripe */}
+        <div style={{ height:3, flexShrink:0, background:cat.color, opacity:isPeek?0.5:1, transition:"opacity 0.3s" }} />
 
-        {/* ── #4 Active glow overlay ── */}
+        {/* Active glow */}
         {isActive && (
           <div className="tl-active-glow" style={{ position:"absolute", inset:-1, pointerEvents:"none", zIndex:4,
             boxShadow:`0 0 0 1px ${cat.color}60, 0 0 20px ${cat.color}20, inset 0 0 30px ${cat.color}08`,
@@ -161,42 +199,38 @@ function FoldPanel({ node, isActive, isFocused, onExpand, onOpenPanel, onFocus }
           }} />
         )}
 
-        {/* ── Year header ── */}
+        {/* Year header */}
         <div style={{ padding:"16px 16px 10px", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0, overflow:"hidden", whiteSpace:"nowrap" }}>
-          {/* ── #7 Year number gradient fill ── */}
           <div style={{
             fontFamily:"var(--font-display)", fontSize:"2rem", fontWeight:700,
             letterSpacing:"-0.02em", lineHeight:1, marginBottom:3,
-            background:`linear-gradient(175deg, ${cat.color} 0%, ${cat.color}70 100%)`,
-            WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-            backgroundClip:"text",
+            background:`linear-gradient(175deg,${cat.color} 0%,${cat.color}70 100%)`,
+            WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text",
           }}>
             {node.period}
           </div>
-          <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.62rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.28)", opacity:isCollapsed?0:1, transition:"opacity 0.12s" }}>
+          <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.62rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.28)", opacity:isPeek?0:1, transition:"opacity 0.12s" }}>
             {node.date_label || node.category}
           </div>
         </div>
 
-        {/* ── Spine row ── */}
+        {/* Spine row */}
         <div style={{ height:38, flexShrink:0, position:"relative", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", alignItems:"center" }}>
           <div style={{ position:"absolute", top:"50%", left:0, right:0, height:1, background:"rgba(255,255,255,0.09)", transform:"translateY(-50%)" }} />
-          {/* ── #5 Spine dot — pulse animation on active/hover ── */}
           <div style={{
             position:"absolute", left:16, top:"50%", transform:"translateY(-50%)",
             width:11, height:11, borderRadius:"50%",
-            background:cat.color,
-            border:"2px solid var(--bg-primary)", zIndex:2,
-            boxShadow: (isActive || hovered)
+            background:cat.color, border:"2px solid var(--bg-primary)", zIndex:2,
+            boxShadow:(isActive||hovered)
               ? `0 0 0 3px ${cat.color}40, 0 0 16px ${cat.color}90`
               : `0 0 0 2px ${cat.color}40`,
             transition:"box-shadow 0.35s",
-            animation: isActive ? "tl-dot-pulse 2.2s ease-in-out infinite" : "none",
+            animation:isActive?"tl-dot-pulse 2.2s ease-in-out infinite":"none",
           }} />
         </div>
 
-        {/* ── Body ── */}
-        <div style={{ flex:1, padding:"12px 16px 0", display:"flex", flexDirection:"column", gap:8, overflow:"hidden", opacity:isCollapsed?0:1, transition:"opacity 0.1s" }}>
+        {/* Body — hidden at peek */}
+        <div style={{ flex:1, padding:"12px 16px 0", display:"flex", flexDirection:"column", gap:8, overflow:"hidden", opacity:isPeek?0:1, transition:"opacity 0.1s" }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:5, color:cat.color, fontFamily:"var(--font-body)", fontSize:"0.58rem", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:700 }}>
             {getCat(node.category).icon}<span>{node.category}</span>
           </div>
@@ -204,7 +238,6 @@ function FoldPanel({ node, isActive, isFocused, onExpand, onOpenPanel, onFocus }
           <div style={{ fontFamily:"var(--font-body)", fontSize:"0.7rem", color:"rgba(200,210,220,0.5)", lineHeight:1.6, flex:1, overflow:"hidden" }}>
             {node.description}
           </div>
-          {/* Image */}
           <div style={{ height:60, flexShrink:0, marginTop:"auto", marginBottom:12, overflow:"hidden", border:"0.5px solid rgba(255,255,255,0.07)", position:"relative", background:"rgba(255,255,255,0.025)", display:"flex", alignItems:"center", justifyContent:"center" }}>
             {node.image_url
               ? <img src={node.image_url} alt={node.title} style={{ width:"100%", height:"100%", objectFit:"cover", opacity:0.8 }} />
@@ -213,24 +246,31 @@ function FoldPanel({ node, isActive, isFocused, onExpand, onOpenPanel, onFocus }
           </div>
         </div>
 
-        {/* ── Collapsed tab — vertical year + dot ── */}
-        {isCollapsed && (
-          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10, paddingTop:3 }}>
+        {/* Peek state — vertical year label, improved readability */}
+        {isPeek && (
+          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:12, paddingTop:3 }}>
             <div style={{ width:7, height:7, borderRadius:"50%", background:cat.color, boxShadow:`0 0 8px ${cat.color}`, flexShrink:0 }} />
+            {/* Fixed: more letter-spacing, lower opacity, smaller font — readable not squeezed */}
             <div style={{
-              fontFamily:"var(--font-display)", fontSize:"0.7rem", fontWeight:700,
-              background:`linear-gradient(175deg,${cat.color} 0%,${cat.color}70 100%)`,
-              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text",
-              writingMode:"vertical-rl", transform:"rotate(180deg)", whiteSpace:"nowrap", letterSpacing:"0.06em",
+              fontFamily:"var(--font-display)", fontSize:"0.65rem", fontWeight:400,
+              color:cat.color, opacity:0.7,
+              writingMode:"vertical-rl", transform:"rotate(180deg)",
+              whiteSpace:"nowrap", letterSpacing:"0.18em",
             }}>
               {node.period}
             </div>
           </div>
         )}
 
-        {/* Crease shadow */}
-        {!isCollapsed && (
-          <div style={{ position:"absolute", top:0, right:0, bottom:0, width:16, background:`linear-gradient(to right,transparent,rgba(0,0,0,${creaseOpacity}))`, pointerEvents:"none", zIndex:3 }} />
+        {/* Crease shadow — scaleX grows with foldRatio for paper-bending illusion */}
+        {!isPeek && (
+          <div style={{
+            position:"absolute", top:0, right:0, bottom:0,
+            width:`${16 + foldRatio * 12}px`,
+            background:`linear-gradient(to right,transparent,rgba(0,0,0,${creaseOpacity}))`,
+            pointerEvents:"none", zIndex:3,
+            transition:dragging?"none":"width 0.2s, opacity 0.2s",
+          }} />
         )}
       </div>
 
@@ -248,11 +288,10 @@ function FoldPanel({ node, isActive, isFocused, onExpand, onOpenPanel, onFocus }
   );
 }
 
-// ── Future ghost ──────────────────────────────────────────────────────
+// ── Future ghost fold ─────────────────────────────────────────────────
 function FutureFold({ label, opacity }: { label:string; opacity:number }) {
   return (
-    <div style={{ flexShrink:0, width:W_OPEN, height:"100%", opacity, position:"relative", borderRight:"1px solid rgba(255,255,255,0.03)", background:"rgba(255,255,255,0.012)", overflow:"hidden", display:"flex", flexDirection:"column",
-      filter:"drop-shadow(4px 4px 10px rgba(0,0,0,0.35))" }}>
+    <div style={{ flexShrink:0, width:W_OPEN, height:"100%", opacity, position:"relative", borderRight:"1px solid rgba(255,255,255,0.03)", background:"rgba(255,255,255,0.012)", overflow:"hidden", display:"flex", flexDirection:"column", filter:"drop-shadow(4px 4px 10px rgba(0,0,0,0.3))" }}>
       <div style={{ height:3, background:"rgba(255,255,255,0.05)", flexShrink:0 }} />
       <div style={{ padding:"16px 16px 10px", borderBottom:"1px solid rgba(255,255,255,0.04)", flexShrink:0 }}>
         <div style={{ fontFamily:"var(--font-display)", fontSize:"2rem", fontWeight:700, color:"rgba(255,255,255,0.08)", marginBottom:3 }}>?</div>
@@ -275,16 +314,15 @@ function FutureFold({ label, opacity }: { label:string; opacity:number }) {
 
 // ── Detail panel — centered modal ─────────────────────────────────────
 function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
-  node: TNode|null; allNodes: TNode[]; index: number;
+  node: TNode|null; allNodes: TNode[]; index:number;
   onClose:()=>void; onNavigate:(i:number)=>void;
 }) {
   const cat = node ? getCat(node.category) : null;
-
-  useEffect(() => {
-    const h = (e:KeyboardEvent) => { if (e.key==="Escape") onClose(); };
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, [onClose]);
+  useEffect(()=>{
+    const h=(e:KeyboardEvent)=>{ if(e.key==="Escape") onClose(); };
+    window.addEventListener("keydown",h);
+    return ()=>window.removeEventListener("keydown",h);
+  },[onClose]);
 
   return (
     <AnimatePresence>
@@ -294,17 +332,12 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
             onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.65)", backdropFilter:"blur(4px)", zIndex:49 }} />
 
           <motion.div key="pn"
-            initial={{ opacity:0, y:28, scale:0.96 }}
-            animate={{ opacity:1, y:0,  scale:1 }}
-            exit={{ opacity:0, y:16, scale:0.97 }}
-            transition={SPRING}
+            initial={{ opacity:0, y:28, scale:0.96 }} animate={{ opacity:1, y:0, scale:1 }}
+            exit={{ opacity:0, y:16, scale:0.97 }} transition={SPRING}
             style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:"min(560px,90vw)", maxHeight:"82vh", background:"var(--bg-elevated)", border:"1px solid var(--border)", zIndex:50, display:"flex", flexDirection:"column", overflow:"hidden" }}
           >
-            {/* Top color stripe on panel too */}
             <div style={{ height:3, flexShrink:0, background:cat?.color }} />
-            {/* dframe inner frame */}
             <div style={{ position:"absolute", inset:4, border:"1px solid rgba(255,255,255,0.05)", borderRadius:6, pointerEvents:"none", zIndex:0 }} />
-            {/* Corner accents */}
             <div style={{ position:"absolute", inset:-1, pointerEvents:"none", zIndex:2, background:`
               linear-gradient(${cat?.color},${cat?.color}) top left/14px 1.5px no-repeat,
               linear-gradient(${cat?.color},${cat?.color}) top left/1.5px 14px no-repeat,
@@ -350,11 +383,11 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
             {/* Footer nav */}
             <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", padding:"12px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, zIndex:3, background:"var(--bg-elevated)" }}>
               {([
-                { dir:-1, icon:<ChevronLeft size={12} style={{ pointerEvents:"none" }}/>,  label:index>0?allNodes[index-1].title:"—", ok:index>0, justify:"flex-start" },
-                { dir:+1, icon:<ChevronRight size={12} style={{ pointerEvents:"none" }}/>, label:index<allNodes.length-1?allNodes[index+1].title:"—", ok:index<allNodes.length-1, justify:"flex-end" },
-              ] as const).map(({dir,icon,label,ok,justify},ki)=>(
+                { dir:-1 as const, icon:<ChevronLeft size={12} style={{ pointerEvents:"none" }}/>, label:index>0?allNodes[index-1].title:"—", ok:index>0, justify:"flex-start" as const },
+                { dir:+1 as const, icon:<ChevronRight size={12} style={{ pointerEvents:"none" }}/>, label:index<allNodes.length-1?allNodes[index+1].title:"—", ok:index<allNodes.length-1, justify:"flex-end" as const },
+              ]).map(({dir,icon,label,ok,justify},ki)=>(
                 <button key={ki} onClick={()=>ok&&onNavigate(index+dir)} disabled={!ok}
-                  style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:"1px solid rgba(255,255,255,0.1)", padding:"6px 12px", cursor:ok?"pointer":"not-allowed", opacity:ok?1:0.3, color:"rgba(255,255,255,0.5)", fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", transition:"border-color 0.2s,color 0.2s", flex:1, justifyContent:justify as "flex-start"|"flex-end" }}
+                  style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:"1px solid rgba(255,255,255,0.1)", padding:"6px 12px", cursor:ok?"pointer":"not-allowed", opacity:ok?1:0.3, color:"rgba(255,255,255,0.5)", fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", transition:"border-color 0.2s,color 0.2s", flex:1, justifyContent:justify }}
                   onMouseEnter={e=>{ if(ok){ e.currentTarget.style.borderColor=cat?.color||""; e.currentTarget.style.color=cat?.color||""; }}}
                   onMouseLeave={e=>{ e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; e.currentTarget.style.color="rgba(255,255,255,0.5)"; }}>
                   {dir===-1&&icon}
@@ -371,32 +404,89 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
   );
 }
 
-// ── Mobile node ───────────────────────────────────────────────────────
-function MobileNode({ node, index, isExpanded, onToggle, onOpen }: {
+// ── Mobile card — matches desktop design language ─────────────────────
+function MobileCard({ node, index, isExpanded, onToggle, onOpen }: {
   node:TNode; index:number; isExpanded:boolean;
   onToggle:()=>void; onOpen:(n:TNode,i:number)=>void;
 }) {
   const cat = getCat(node.category);
   return (
-    <motion.div layout initial={{ opacity:0, x:-12 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-12 }} transition={{ duration:0.25, delay:index*0.04 }}
-      style={{ position:"relative", marginBottom:28, cursor:"pointer" }} onClick={onToggle}>
-      <div style={{ position:"absolute", left:-28, top:4, width:12, height:12, borderRadius:"50%", background:cat.color, boxShadow:`0 0 8px ${cat.color}`, border:"2px solid var(--bg-primary)", transition:"transform 0.2s", transform:isExpanded?"scale(1.35)":"scale(1)" }} />
-      <p className="timeline-node-mobile__period">{node.period}{node.date_label?` · ${node.date_label}`:""}</p>
-      <div className="timeline-node-mobile__badge" style={{ color:cat.color }}>
-        <span aria-hidden>{cat.icon}</span>
-        <span className="timeline-node__badge-text">{node.category}</span>
+    <motion.div
+      layout
+      initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:8 }}
+      transition={{ duration:0.3, delay:index*0.04 }}
+      onClick={onToggle}
+      style={{
+        position:"relative", marginBottom:12, cursor:"pointer",
+        background:"var(--bg-secondary)",
+        border:"1px solid rgba(255,255,255,0.06)",
+        filter:"drop-shadow(3px 4px 10px rgba(0,0,0,0.4))",
+        overflow:"hidden",
+      }}
+    >
+      {/* Top color stripe */}
+      <div style={{ height:3, background:cat.color }} />
+
+      {/* Card header — always visible */}
+      <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 16px" }}>
+        {/* Spine dot */}
+        <div style={{ width:10, height:10, borderRadius:"50%", background:cat.color, boxShadow:`0 0 8px ${cat.color}`, flexShrink:0, border:"2px solid var(--bg-primary)", animation:isExpanded?"tl-dot-pulse 2.2s ease-in-out infinite":"none" }} />
+        <div style={{ flex:1, minWidth:0 }}>
+          {/* Period + category */}
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+            <span style={{
+              fontFamily:"var(--font-display)", fontSize:"1.1rem", fontWeight:700,
+              background:`linear-gradient(175deg,${cat.color} 0%,${cat.color}70 100%)`,
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text",
+              letterSpacing:"0.02em",
+            }}>{node.period}</span>
+            {node.date_label && (
+              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.6rem", letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.28)" }}>{node.date_label}</span>
+            )}
+          </div>
+          {/* Category badge */}
+          <div style={{ display:"inline-flex", alignItems:"center", gap:4, color:cat.color, fontFamily:"var(--font-body)", fontSize:"0.58rem", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:700 }}>
+            {cat.icon}<span>{node.category}</span>
+          </div>
+        </div>
+        {/* Expand toggle */}
+        <div style={{ fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", color:"rgba(255,255,255,0.3)", flexShrink:0 }}>
+          {isExpanded ? "— less" : "+ more"}
+        </div>
       </div>
-      <p className="timeline-node-mobile__title">{node.title}</p>
-      <span className="timeline-node-mobile__toggle">{isExpanded?"— collapse":"+ expand"}</span>
+
+      {/* Title — always visible */}
+      <div style={{ padding:"0 16px 14px", fontFamily:"var(--font-display)", fontSize:"1rem", fontWeight:600, lineHeight:1.25, color:"var(--text-primary)" }}>
+        {node.title}
+      </div>
+
+      {/* Expanded content */}
       <AnimatePresence>
         {isExpanded && (
-          <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }} transition={{ duration:0.28 }} style={{ overflow:"hidden" }}>
-            <p className="timeline-node-mobile__desc">{node.description}</p>
-            {node.image_url && <div style={{ marginTop:10, height:90, overflow:"hidden" }}><img src={node.image_url} alt={node.title} style={{ width:"100%", height:"100%", objectFit:"cover" }} /></div>}
-            <button onClick={e=>{ e.stopPropagation(); onOpen(node,index); }} style={{ marginTop:8, background:"none", border:"none", padding:0, fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", color:cat.color, cursor:"pointer" }}>+ Full detail</button>
+          <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }} transition={{ duration:0.3, ease:"easeInOut" }} style={{ overflow:"hidden" }}>
+            {/* Image */}
+            <div style={{ height:120, overflow:"hidden", borderTop:"1px solid rgba(255,255,255,0.06)", borderBottom:"1px solid rgba(255,255,255,0.06)", background:"rgba(255,255,255,0.025)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              {node.image_url
+                ? <img src={node.image_url} alt={node.title} style={{ width:"100%", height:"100%", objectFit:"cover", opacity:0.85 }} />
+                : <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.55rem", letterSpacing:"0.08em", textTransform:"uppercase", color:"rgba(255,255,255,0.12)" }}>no image</span>
+              }
+            </div>
+            {/* Description */}
+            <div style={{ padding:"14px 16px" }}>
+              <p style={{ fontFamily:"var(--font-body)", fontSize:"0.82rem", color:"rgba(200,210,220,0.6)", lineHeight:1.7, margin:"0 0 12px" }}>{node.description}</p>
+              <button onClick={e=>{ e.stopPropagation(); onOpen(node,index); }}
+                style={{ background:"none", border:"none", padding:0, fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.12em", textTransform:"uppercase", color:cat.color, cursor:"pointer", opacity:0.8 }}>
+                + Full detail →
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Active glow */}
+      {isExpanded && (
+        <div style={{ position:"absolute", inset:-1, pointerEvents:"none", border:`1px solid ${cat.color}30`, zIndex:2 }} />
+      )}
     </motion.div>
   );
 }
@@ -409,7 +499,6 @@ export default function Timeline() {
   const [panelIndex, setPanelIndex]  = useState(0);
   const [expandedMobile, setExpandMob] = useState<string|null>(null);
   const [canRight, setCanRight]      = useState(false);
-  // ── #8 Keyboard navigation state ──────────────────────────────────────
   const [focusedIdx, setFocusedIdx]  = useState<number|null>(null);
   const trackRef  = useRef<HTMLDivElement>(null);
   const isDragRef = useRef(false);
@@ -417,9 +506,9 @@ export default function Timeline() {
   const scrollRef = useRef(0);
   const movedRef  = useRef(false);
 
-  useEffect(() => {
+  useEffect(()=>{
     fetch("/api/timeline").then(r=>r.json()).then((d:TNode[])=>{ if(d?.length) setNodes(d); }).catch(()=>{});
-  }, []);
+  },[]);
 
   const filtered = filter==="All" ? nodes : nodes.filter(n=>n.category===filter);
 
@@ -428,13 +517,13 @@ export default function Timeline() {
     setPanelNode(node); setPanelIndex(idx);
   }
   function navigate(idx:number) {
-    if (idx<0||idx>=filtered.length) return;
+    if(idx<0||idx>=filtered.length) return;
     setPanelNode(filtered[idx]); setPanelIndex(idx);
   }
 
   function checkScroll() {
-    const el = trackRef.current; if (!el) return;
-    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+    const el=trackRef.current; if(!el) return;
+    setCanRight(el.scrollLeft < el.scrollWidth-el.clientWidth-4);
   }
   useEffect(()=>{ setTimeout(checkScroll,100); },[filtered.length]);
 
@@ -450,32 +539,21 @@ export default function Timeline() {
   }
   function onUp() { isDragRef.current=false; }
 
-  // ── #8 Keyboard navigation ────────────────────────────────────────────
-  useEffect(() => {
-    if (panelNode) return; // panel handles its own keyboard nav
-    function onKey(e: KeyboardEvent) {
-      const tl = document.getElementById("timeline");
-      if (!tl) return;
-      const rect = tl.getBoundingClientRect();
-      const inView = rect.top < window.innerHeight && rect.bottom > 0;
-      if (!inView) return;
-
-      if (e.key === "ArrowRight") {
-        e.preventDefault();
-        setFocusedIdx(prev => prev === null ? 0 : Math.min(prev+1, filtered.length-1));
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        setFocusedIdx(prev => prev === null ? 0 : Math.max(prev-1, 0));
-      } else if (e.key === "Enter" && focusedIdx !== null) {
-        e.preventDefault();
-        openPanel(filtered[focusedIdx]);
-      } else if (e.key === "Escape") {
-        setFocusedIdx(null);
-      }
+  // Keyboard navigation
+  useEffect(()=>{
+    if(panelNode) return;
+    function onKey(e:KeyboardEvent) {
+      const tl=document.getElementById("timeline"); if(!tl) return;
+      const r=tl.getBoundingClientRect();
+      if(r.top>window.innerHeight||r.bottom<0) return;
+      if(e.key==="ArrowRight"){ e.preventDefault(); setFocusedIdx(p=>p===null?0:Math.min(p+1,filtered.length-1)); }
+      else if(e.key==="ArrowLeft"){ e.preventDefault(); setFocusedIdx(p=>p===null?0:Math.max(p-1,0)); }
+      else if(e.key==="Enter"&&focusedIdx!==null){ e.preventDefault(); openPanel(filtered[focusedIdx]); }
+      else if(e.key==="Escape"){ setFocusedIdx(null); }
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [filtered, focusedIdx, panelNode]);
+    window.addEventListener("keydown",onKey);
+    return ()=>window.removeEventListener("keydown",onKey);
+  },[filtered,focusedIdx,panelNode]);
 
   return (
     <section id="timeline" className="section-pad" aria-labelledby="timeline-heading" style={{ backgroundColor:"var(--bg-primary)" }}>
@@ -488,10 +566,7 @@ export default function Timeline() {
       {/* ── Desktop ── */}
       <div className="timeline-desktop">
         <div className="site-container" style={{ padding:0 }}>
-          <div style={{ position:"relative",
-            // ── #6 Perspective container for card tilt ──
-            perspective:"1200px", perspectiveOrigin:"50% 50%",
-          }}>
+          <div style={{ position:"relative", perspective:"1200px", perspectiveOrigin:"50% 50%" }}>
             <div ref={trackRef}
               onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
               onScroll={checkScroll}
@@ -499,13 +574,10 @@ export default function Timeline() {
             >
               <div style={{ display:"flex", height:H_TRACK, minWidth:"max-content" }}>
                 <AnimatePresence mode="popLayout">
-                  {filtered.map((node,i) => (
-                    <FoldPanel
-                      key={node.id}
-                      node={node}
+                  {filtered.map((node,i)=>(
+                    <FoldPanel key={node.id} node={node}
                       isActive={panelNode?.id===node.id}
                       isFocused={focusedIdx===i}
-                      onExpand={()=>{}}
                       onOpenPanel={openPanel}
                       onFocus={()=>setFocusedIdx(i)}
                     />
@@ -532,32 +604,31 @@ export default function Timeline() {
           </div>
 
           <p style={{ fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.14)", textAlign:"left", marginTop:10 }}>
-            drag edge → fold · click folded → expand · click open → detail · ← → keys navigate · enter opens detail
+            drag edge → fold to peek · drag back → expand · click open card → detail · ← → keys navigate
           </p>
         </div>
       </div>
 
-      {/* ── Mobile ── */}
+      {/* ── Mobile — new vertical card design ── */}
       <div className="timeline-mobile">
         <div className="site-container">
-          <div className="timeline-mobile-list">
-            <div className="timeline-mobile-spine" aria-hidden />
-            <AnimatePresence mode="popLayout">
-              {filtered.map((node,i)=>(
-                <MobileNode key={node.id} node={node} index={i}
-                  isExpanded={expandedMobile===node.id}
-                  onToggle={()=>setExpandMob(expandedMobile===node.id?null:node.id)}
-                  onOpen={(n,idx)=>openPanel(n)} />
-              ))}
-            </AnimatePresence>
-            {filter==="All" && FUTURE.map((label,i)=>(
-              <div key={`fm${i}`} className="timeline-future-mobile" style={{ opacity:Math.max(0.06,0.22-i*0.07) }}>
-                <div className="timeline-future-mobile__dot" />
-                <p className="timeline-future-mobile__period">Future</p>
-                <p className="timeline-future-mobile__title">{label}</p>
-              </div>
+          <AnimatePresence mode="popLayout">
+            {filtered.map((node,i)=>(
+              <MobileCard key={node.id} node={node} index={i}
+                isExpanded={expandedMobile===node.id}
+                onToggle={()=>setExpandMob(expandedMobile===node.id?null:node.id)}
+                onOpen={(n,idx)=>openPanel(n)} />
             ))}
-          </div>
+          </AnimatePresence>
+
+          {/* Future ghost cards on mobile */}
+          {filter==="All" && FUTURE.map((label,i)=>(
+            <div key={`fm${i}`} style={{ opacity:Math.max(0.06,0.22-i*0.07), background:"rgba(255,255,255,0.01)", border:"1px solid rgba(255,255,255,0.04)", marginBottom:12, padding:"14px 16px" }}>
+              <div style={{ height:3, background:"rgba(255,255,255,0.05)", marginBottom:12 }} />
+              <div style={{ fontFamily:"var(--font-display)", fontSize:"0.9rem", color:"rgba(255,255,255,0.12)" }}>{label}</div>
+              <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.58rem", letterSpacing:"0.08em", textTransform:"uppercase", color:"rgba(255,255,255,0.08)", marginTop:4 }}>Coming soon</div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -566,18 +637,14 @@ export default function Timeline() {
       <style>{`
         .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
         .timeline-desktop ::-webkit-scrollbar{display:none;}
-
-        /* ── #4 Active glow pulse on card border ── */
-        @keyframes tl-glow-pulse {
-          0%,100% { box-shadow: 0 0 0 1px var(--tl-col,#fff)40, 0 0 16px var(--tl-col,#fff)18, inset 0 0 28px var(--tl-col,#fff)06; }
-          50%      { box-shadow: 0 0 0 1px var(--tl-col,#fff)80, 0 0 28px var(--tl-col,#fff)30, inset 0 0 40px var(--tl-col,#fff)10; }
+        @keyframes tl-glow-pulse{
+          0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,0.25),0 0 16px rgba(255,255,255,0.12),inset 0 0 28px rgba(255,255,255,0.04);}
+          50%     {box-shadow:0 0 0 1px rgba(255,255,255,0.5), 0 0 28px rgba(255,255,255,0.22),inset 0 0 40px rgba(255,255,255,0.08);}
         }
-        .tl-active-glow { animation: tl-glow-pulse 2.8s ease-in-out infinite; }
-
-        /* ── #5 Spine dot pulse ── */
-        @keyframes tl-dot-pulse {
-          0%,100% { box-shadow: 0 0 0 2px currentColor20, 0 0 10px currentColor60; }
-          50%      { box-shadow: 0 0 0 5px currentColor10, 0 0 20px currentColor90; }
+        .tl-active-glow{animation:tl-glow-pulse 2.8s ease-in-out infinite;}
+        @keyframes tl-dot-pulse{
+          0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,0.15),0 0 10px rgba(255,255,255,0.4);}
+          50%     {box-shadow:0 0 0 5px rgba(255,255,255,0.08),0 0 20px rgba(255,255,255,0.7);}
         }
       `}</style>
     </section>
