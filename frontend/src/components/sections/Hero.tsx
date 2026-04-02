@@ -51,9 +51,9 @@ export default function Hero() {
           <BtnPrimary href="#projects">View My Work</BtnPrimary>
 
           {resumeUrl ? (
-            <BtnSecondary href={resumeUrl} target="_blank" rel="noopener noreferrer">
+            <BtnPrimary href={resumeUrl} target="_blank" rel="noopener noreferrer">
               Download Resume
-            </BtnSecondary>
+            </BtnPrimary>
           ) : (
             <BtnSecondary href="#contact">Get In Touch</BtnSecondary>
           )}

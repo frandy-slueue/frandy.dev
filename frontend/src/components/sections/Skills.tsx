@@ -70,7 +70,7 @@ const CLIP_SHAPES = [
   "circle(50% at 50% 50%)",                                                     // circle
 ] as const;
 
-const MORPH_INTERVAL_MS = 2000;
+const MORPH_INTERVAL_MS = 4000;
 
 // ── Skill card ────────────────────────────────────────────────────────
 function SkillCard({ skill, active, onClick, clipIndex }: {

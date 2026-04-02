@@ -191,7 +191,12 @@ export default function Contact() {
                     </button>
                     <div className={`contact-btn__reveal ${(activeReveal===key||lockedReveal===key)?"visible":""}`}>
                       <p className="contact-btn__hint">{hint}</p>
-                      <button className="contact-btn__action" onClick={() => handleContactClick(key, value!)}>{label} →</button>
+                      <button className="btn-secondary contact-btn__action" onClick={() => handleContactClick(key, value!)}>
+                        <span className="btn-tl" aria-hidden />
+                        <span className="btn-br" aria-hidden />
+                        <span className="btn-inner" aria-hidden />
+                        <span className="btn-txt">{label} →</span>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -214,9 +219,9 @@ export default function Contact() {
 
             {/* Resume download — secondary button */}
             {resumeUrl && (
-              <BtnSecondary href={resumeUrl} target="_blank" rel="noopener noreferrer">
+              <BtnPrimary href={resumeUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={14} /> Download Resume
-              </BtnSecondary>
+              </BtnPrimary>
             )}
 
             <div className="contact-availability">
@@ -280,8 +285,8 @@ export default function Contact() {
         .contact-btn__reveal { display:flex; flex-direction:column; align-items:center; gap:8px; opacity:0; transform:translateY(8px); transition:opacity 250ms ease,transform 250ms ease; pointer-events:none; text-align:center; width:100%; }
         .contact-btn__reveal.visible { opacity:1; transform:translateY(0); pointer-events:all; }
         .contact-btn__hint { font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; white-space:nowrap; }
-        .contact-btn__action { background:none; border:1px solid var(--accent); color:var(--accent); font-family:var(--font-body); font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:6px 14px; border-radius:14px; cursor:pointer; transition:background 200ms,color 200ms; white-space:nowrap; }
-        .contact-btn__action:hover { background:var(--accent); color:var(--bg-primary); }
+        /* .contact-btn__action now uses .btn-secondary from globals.css */
+        .contact-btn__action { font-size:11px; padding:8px 20px; }
         .contact-follow__label { font-family:var(--font-mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px; }
         .contact-follow__icons { display:flex; flex-wrap:wrap; gap:20px; }
         /* Social icons — always brand colored, glow on hover */

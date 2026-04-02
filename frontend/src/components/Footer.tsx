@@ -125,13 +125,13 @@ export default function Footer() {
   }, []);
 
   const socialLinks = [
-    { key: "social_github", icon: <FaGithub size={18} />, label: "GitHub" },
-    { key: "social_linkedin", icon: <FaLinkedin size={18} />, label: "LinkedIn" },
-    { key: "social_x", icon: <FaXTwitter size={18} />, label: "X" },
-    { key: "social_facebook", icon: <FaFacebook size={18} />, label: "Facebook" },
-    { key: "social_medium", icon: <FaMedium size={18} />, label: "Medium" },
-    { key: "social_hashnode", icon: <FaHashnode size={18} />, label: "Hashnode" },
-    { key: "social_devto", icon: <FaDev size={18} />, label: "Dev.to" },
+    { key: "social_github",   icon: <FaGithub size={18} />,   label: "GitHub",   hoverColor: "#ffffff" },
+    { key: "social_linkedin", icon: <FaLinkedin size={18} />, label: "LinkedIn", hoverColor: "#0A66C2" },
+    { key: "social_x",        icon: <FaXTwitter size={18} />, label: "X",        hoverColor: "#ffffff" },
+    { key: "social_facebook", icon: <FaFacebook size={18} />, label: "Facebook", hoverColor: "#1877F2" },
+    { key: "social_medium",   icon: <FaMedium size={18} />,   label: "Medium",   hoverColor: "#ffffff" },
+    { key: "social_hashnode", icon: <FaHashnode size={18} />, label: "Hashnode", hoverColor: "#2962FF" },
+    { key: "social_devto",    icon: <FaDev size={18} />,      label: "Dev.to",   hoverColor: "#08080A" },
   ];
 
   const activeSocials = socialLinks.filter(
@@ -163,7 +163,7 @@ export default function Footer() {
               <span className="site-footer__follow">Follow me on</span>
             )}
             <div className="site-footer__social">
-              {activeSocials.map(({ key, icon, label }) => (
+              {activeSocials.map(({ key, icon, label, hoverColor }) => (
                 <a
                   key={key}
                   href={social[key as keyof SocialLinks]!}
@@ -172,6 +172,7 @@ export default function Footer() {
                   className="site-footer__social-link"
                   aria-label={label}
                   title={label}
+                  style={{ "--brand-color": hoverColor } as React.CSSProperties}
                 >
                   {icon}
                 </a>
@@ -292,15 +293,16 @@ export default function Footer() {
           gap: 1rem;
         }
         .site-footer__social-link {
-          color: var(--text-muted);
+          color: var(--brand-color, var(--text-muted));
           text-decoration: none;
-          transition: color 0.2s, transform 0.2s;
+          transition: transform 0.2s, filter 0.2s;
           display: flex;
           align-items: center;
+          filter: brightness(0.75);
         }
         .site-footer__social-link:hover {
-          color: var(--accent);
           transform: translateY(-2px);
+          filter: brightness(1.2) drop-shadow(0 0 5px var(--brand-color, var(--accent)));
         }
         .site-footer__right {
           display: flex;

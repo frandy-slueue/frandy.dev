@@ -702,6 +702,10 @@ select option {
   pointer-events: none;
 }
 
+.stack-tag:hover { color: var(--text-primary); }
+.stack-tag:hover::after { opacity: 0; }
+.stack-tag:hover::before { border-color: var(--border); }
+
 .stack-tag--lg {
   font-size: 11px;
   padding: 4px 10px;
@@ -1218,6 +1222,7 @@ select option {
   color: var(--text-muted);
   line-height: 1.6;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -1284,7 +1289,10 @@ select option {
   align-items: center;
   justify-content: center;
   transition: border-color 200ms ease, color 200ms ease;
+  z-index: 10;
 }
+/* Ensure SVG inside close button never blocks clicks */
+.project-detail__close svg { pointer-events: none; }
 
 .project-detail__close:hover {
   border-color: var(--accent);
