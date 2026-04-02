@@ -80,10 +80,11 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
 }) {
   const [width, setWidth]       = useState(W_OPEN);
   const [dragging, setDragging] = useState(false);
-  const [hovered, setHovered]   = useState(false);
-  const startXRef = useRef(0); const startWRef = useRef(W_OPEN);
-  const velRef    = useRef(0); const lastXRef  = useRef(0);
-  const lastTRef  = useRef(0); const movedRef  = useRef(false);
+  // No hovered state — CSS handles visual hover; state-based hover caused auto-hold UX
+  const startXRef    = useRef(0); const startWRef = useRef(W_OPEN);
+  const velRef       = useRef(0); const lastXRef  = useRef(0);
+  const lastTRef     = useRef(0); const movedRef  = useRef(false);
+  const lastClickRef = useRef(0); // timestamp for double-tap detection
 
   const cat    = getCat(node.category);
   const isPeek = width <= W_PEEK + 8;
@@ -123,8 +124,21 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
   function handleClick() {
     if (movedRef.current) { movedRef.current=false; return; }
     onFocus();
-    if (isPeek) setWidth(W_OPEN);
-    else        onOpenPanel(node);
+    if (isPeek) {
+      // Single tap/click on peeked card → expand it
+      setWidth(W_OPEN);
+      return;
+    }
+    // Open card: require double-tap/click to open the detail panel
+    const now = Date.now();
+    const gap  = now - lastClickRef.current;
+    lastClickRef.current = now;
+    if (gap < 350) {
+      // Double-tap detected
+      onOpenPanel(node);
+      lastClickRef.current = 0; // reset so triple-tap doesn't re-fire
+    }
+    // Single tap on open card → do nothing (prevents accidental opens during scroll)
   }
 
   return (
@@ -135,10 +149,8 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
         flexShrink:0, position:"relative", height:"100%",
         // NO willChange, NO filter, NO transform other than width animation
         // All of those force GPU compositing which blurs text
-        zIndex: isPeek ? 1 : hovered ? 3 : 2,
+        zIndex: isPeek ? 1 : 2,
       }}
-      onMouseEnter={()=>setHovered(true)}
-      onMouseLeave={()=>setHovered(false)}
     >
       {/* ── Shadow layer — separate div BEHIND the content so filter never touches text ── */}
       <div style={{
@@ -146,8 +158,6 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
         // Shadow via box-shadow on a background div — never bleeds into text rendering
         boxShadow: isPeek
           ? "8px 0 24px rgba(0,0,0,0.7), 14px 0 36px rgba(0,0,0,0.4)"
-          : hovered
-          ? "6px 0 20px rgba(0,0,0,0.5), 2px 0 8px rgba(0,0,0,0.3)"
           : "4px 0 14px rgba(0,0,0,0.4), 6px 0 20px rgba(0,0,0,0.2)",
         transition:"box-shadow 0.4s ease",
         pointerEvents:"none",
@@ -164,7 +174,7 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
           borderLeft: isActive ? `2px solid ${cat.color}` : "1px solid rgba(255,255,255,0.04)",
           display:"flex", flexDirection:"column",
           overflow:"hidden",
-          cursor: isPeek ? "e-resize" : "pointer",
+          cursor: isPeek ? "e-resize" : dragging ? "grabbing" : "pointer",
           // Hover elevation — margin-top instead of translateY avoids compositing
           transition:"background 300ms ease, border-color 300ms ease",
           outline: isFocused ? `2px solid ${cat.color}` : "none",
@@ -205,7 +215,7 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
             position:"absolute", left:16, top:"50%", transform:"translateY(-50%)",
             width:11, height:11, borderRadius:"50%",
             background:cat.color, border:"2px solid var(--bg-primary)", zIndex:2,
-            boxShadow:(isActive||hovered)?`0 0 0 3px ${cat.color}40, 0 0 14px ${cat.color}80`:`0 0 0 2px ${cat.color}30`,
+            boxShadow:isActive?`0 0 0 3px ${cat.color}40, 0 0 14px ${cat.color}80`:`0 0 0 2px ${cat.color}30`,
             transition:"box-shadow 0.3s",
             animation:isActive?"tl-dot-pulse 2.2s ease-in-out infinite":"none",
           }} />
@@ -453,6 +463,8 @@ export default function Timeline() {
   const [expandedMobile, setExpandMob] = useState<string|null>(null);
   const [canRight, setCanRight]           = useState(false);
   const [canMobileRight, setCanMobileRight] = useState(false);
+  // Option B: rubber-band scroll state
+  const [scrollOverdrag, setScrollOverdrag] = useState(0); // px past left wall (negative = tension)
   const [focusedIdx, setFocusedIdx]       = useState<number|null>(null);
   const trackRef      = useRef<HTMLDivElement>(null);
   const mobilTrackRef = useRef<HTMLDivElement>(null);
@@ -476,9 +488,34 @@ export default function Timeline() {
   function checkMobileScroll() { const el=mobilTrackRef.current; if(!el) return; setCanMobileRight(el.scrollLeft<el.scrollWidth-el.clientWidth-4); }
   useEffect(()=>{ setTimeout(checkScroll,100); setTimeout(checkMobileScroll,100); },[filtered.length]);
 
-  function onDown(e:React.PointerEvent) { isDragRef.current=true; movedRef.current=false; startXRef.current=e.pageX; scrollRef.current=trackRef.current?.scrollLeft??0; }
-  function onMove(e:React.PointerEvent) { if(!isDragRef.current) return; const dx=e.pageX-startXRef.current; if(Math.abs(dx)>4) movedRef.current=true; if(trackRef.current){ trackRef.current.scrollLeft=Math.max(0,scrollRef.current-dx); checkScroll(); } }
-  function onUp() { isDragRef.current=false; }
+  function onDown(e:React.PointerEvent) {
+    isDragRef.current=true; movedRef.current=false;
+    startXRef.current=e.pageX;
+    scrollRef.current=trackRef.current?.scrollLeft??0;
+    setScrollOverdrag(0);
+  }
+  function onMove(e:React.PointerEvent) {
+    if (!isDragRef.current) return;
+    const dx = e.pageX - startXRef.current;
+    if (Math.abs(dx) > 8) movedRef.current = true;
+    if (trackRef.current) {
+      const raw = scrollRef.current - dx;
+      if (raw < 0) {
+        // Past left wall — keep scrollLeft at 0, track overdrag for rubber-band
+        trackRef.current.scrollLeft = 0;
+        setScrollOverdrag(raw * 0.18); // 18% resistance — slight visual pull
+      } else {
+        trackRef.current.scrollLeft = raw;
+        setScrollOverdrag(0);
+      }
+      checkScroll();
+    }
+  }
+  function onUp() {
+    isDragRef.current = false;
+    // Spring back to 0 — setScrollOverdrag to 0 triggers CSS transition bounce
+    setScrollOverdrag(0);
+  }
   function onMobileDown(e:React.PointerEvent) { isDragMRef.current=true; movedMRef.current=false; startXMRef.current=e.pageX; scrollMRef.current=mobilTrackRef.current?.scrollLeft??0; }
   function onMobileMove(e:React.PointerEvent) { if(!isDragMRef.current) return; const dx=e.pageX-startXMRef.current; if(Math.abs(dx)>4) movedMRef.current=true; if(mobilTrackRef.current){ mobilTrackRef.current.scrollLeft=Math.max(0,scrollMRef.current-dx); checkMobileScroll(); } }
   function onMobileUp() { isDragMRef.current=false; }
@@ -499,33 +536,85 @@ export default function Timeline() {
   },[filtered,focusedIdx,panelNode]);
 
   return (
-    <section id="timeline" className="section-pad" aria-labelledby="timeline-heading" style={{ backgroundColor:"var(--bg-primary)" }}>
+    <section id="timeline" className="section-pad" aria-labelledby="timeline-heading" style={{ backgroundColor:"var(--bg-primary)", userSelect:"none", WebkitUserSelect:"none" }}>
       <div className="site-container">
         <SectionLabel>04 — Timeline</SectionLabel>
         <h2 id="timeline-heading" className="sr-only">Timeline</h2>
         <TabBar tabs={FILTER_TABS} active={filter} onChange={label=>{ setFilter(label); setPanelNode(null); setExpandMob(null); setFocusedIdx(null); }} />
       </div>
 
-      {/* Desktop */}
+      {/* Desktop — Option A (sticky first card) + Option B (rubber-band scroll) */}
       <div className="timeline-desktop">
         <div className="site-container" style={{ padding:0 }}>
           <div style={{ position:"relative" }}>
-            <div ref={trackRef}
-              onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
-              onScroll={checkScroll}
-              style={{ overflowX:"auto", overflowY:"hidden", scrollbarWidth:"none", cursor:"grab", paddingRight:canRight?48:0, touchAction:"pan-y" }}
-            >
-              <div style={{ display:"flex", height:H_TRACK, minWidth:"max-content" }}>
-                <AnimatePresence mode="popLayout">
-                  {filtered.map((node,i)=>(
-                    <FoldPanel key={node.id} node={node} isActive={panelNode?.id===node.id} isFocused={focusedIdx===i} onOpenPanel={openPanel} onFocus={()=>setFocusedIdx(i)} />
+
+            {/* ── Outer wrapper: translateX for rubber-band visual pull ── */}
+            <div style={{
+              display:"flex",
+              // Option B: whole strip shifts left slightly under drag tension
+              transform: scrollOverdrag ? `translateX(${scrollOverdrag}px)` : "none",
+              transition: isDragRef.current ? "none" : "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
+            }}>
+
+              {/* ── Option A: Sticky first card — always visible, never scrolls away ── */}
+              {filtered.length > 0 && (
+                <div style={{ flexShrink:0, zIndex:4 }}>
+                  <FoldPanel
+                    key={filtered[0].id}
+                    node={filtered[0]}
+                    isActive={panelNode?.id===filtered[0].id}
+                    isFocused={focusedIdx===0}
+                    onOpenPanel={openPanel}
+                    onFocus={()=>setFocusedIdx(0)}
+                  />
+                </div>
+              )}
+
+              {/* ── Scrollable strip: cards 1-N + future ghosts ── */}
+              <div ref={trackRef}
+                onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+                onScroll={checkScroll}
+                style={{ overflowX:"auto", overflowY:"hidden", scrollbarWidth:"none", cursor:"grab", flex:1, touchAction:"pan-y" }}
+              >
+                <div style={{ display:"flex", height:H_TRACK, minWidth:"max-content", paddingRight:canRight?48:0 }}>
+                  <AnimatePresence mode="popLayout">
+                    {filtered.slice(1).map((node,i)=>(
+                      <FoldPanel key={node.id} node={node} isActive={panelNode?.id===node.id} isFocused={focusedIdx===i+1} onOpenPanel={openPanel} onFocus={()=>setFocusedIdx(i+1)} />
+                    ))}
+                  </AnimatePresence>
+                  {filter==="All"&&FUTURE.map((label,i)=>(
+                    <FutureFold key={`f${i}`} label={label} opacity={Math.max(0.08,0.5-i*0.18)} />
                   ))}
-                </AnimatePresence>
-                {filter==="All"&&FUTURE.map((label,i)=>(
-                  <FutureFold key={`f${i}`} label={label} opacity={Math.max(0.08,0.5-i*0.18)} />
-                ))}
+                </div>
               </div>
             </div>
+
+            {/* ── Option B: Left tension strip — vertical bar showing rubber-band force ── */}
+            {scrollOverdrag < -2 && (
+              <div style={{
+                position:"absolute", left:0, top:0, bottom:0,
+                width:4, zIndex:20, pointerEvents:"none",
+                overflow:"hidden",
+              }}>
+                {/* Track — dark background */}
+                <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.4)" }} />
+                {/* Fill — grows from bottom, color shifts with tension */}
+                <div style={{
+                  position:"absolute", bottom:0, left:0, right:0,
+                  // Height proportional to overdrag (max 60px pull = full height)
+                  height:`${Math.min(100, (Math.abs(scrollOverdrag) / 60) * 100)}%`,
+                  background: Math.abs(scrollOverdrag) < 6
+                    ? "var(--accent)"
+                    : Math.abs(scrollOverdrag) < 12
+                    ? "#f59e0b"
+                    : "#ef4444",
+                  boxShadow: `0 0 8px currentColor`,
+                  transition:"none",
+                }} />
+              </div>
+            )}
+
+            {/* Right fade + scroll arrow */}
             {canRight&&(
               <>
                 <div style={{ position:"absolute", top:0, right:0, bottom:0, width:80, background:"linear-gradient(to right,transparent,var(--bg-primary))", pointerEvents:"none", zIndex:5 }} />
@@ -578,6 +667,14 @@ export default function Timeline() {
       <style>{`
         .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
         .timeline-desktop ::-webkit-scrollbar{display:none;}
+        /* Mobile: prevent callout/highlight on long press */
+        #timeline { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+        /* Hint double-tap on open cards */
+        #timeline .tl-hint { display:none; }
+        @media (hover:none) {
+          /* Touch devices: show subtle double-tap hint below open cards */
+          #timeline .tl-double-tap-hint { display:block; }
+        }
         @keyframes tl-dot-pulse{
           0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,0.1), 0 0 8px rgba(255,255,255,0.3);}
           50%    {box-shadow:0 0 0 4px rgba(255,255,255,0.06),0 0 16px rgba(255,255,255,0.6);}
