@@ -2,25 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  FaGithub,
-  FaLinkedin,
-  FaXTwitter,
-  FaFacebook,
-  FaMedium,
-  FaHashnode,
-  FaDev,
-} from "react-icons/fa6";
-
-interface SocialLinks {
-  social_github: string | null;
-  social_linkedin: string | null;
-  social_x: string | null;
-  social_facebook: string | null;
-  social_medium: string | null;
-  social_hashnode: string | null;
-  social_devto: string | null;
-}
+import { SOCIAL_EMPTY, getActiveSocials, type SocialLinks } from "@/lib/social";
 
 const TOTAL = 100;
 const colBits: string[] = [];
@@ -107,15 +89,7 @@ function CBDiamond({ size = 36 }: { size?: number }) {
 }
 
 export default function Footer() {
-  const [social, setSocial] = useState<SocialLinks>({
-    social_github: null,
-    social_linkedin: null,
-    social_x: null,
-    social_facebook: null,
-    social_medium: null,
-    social_hashnode: null,
-    social_devto: null,
-  });
+  const [social, setSocial] = useState<SocialLinks>(SOCIAL_EMPTY);
 
   useEffect(() => {
     fetch("/api/settings/social")
@@ -124,19 +98,7 @@ export default function Footer() {
       .catch(() => {});
   }, []);
 
-  const socialLinks = [
-    { key: "social_github",   icon: <FaGithub size={18} />,   label: "GitHub",   hoverColor: "#ffffff" },
-    { key: "social_linkedin", icon: <FaLinkedin size={18} />, label: "LinkedIn", hoverColor: "#0A66C2" },
-    { key: "social_x",        icon: <FaXTwitter size={18} />, label: "X",        hoverColor: "#ffffff" },
-    { key: "social_facebook", icon: <FaFacebook size={18} />, label: "Facebook", hoverColor: "#1877F2" },
-    { key: "social_medium",   icon: <FaMedium size={18} />,   label: "Medium",   hoverColor: "#ffffff" },
-    { key: "social_hashnode", icon: <FaHashnode size={18} />, label: "Hashnode", hoverColor: "#2962FF" },
-    { key: "social_devto",    icon: <FaDev size={18} />,      label: "Dev.to",   hoverColor: "#08080A" },
-  ];
-
-  const activeSocials = socialLinks.filter(
-    ({ key }) => !!social[key as keyof SocialLinks]
-  );
+  const activeSocials = getActiveSocials(social);
 
   return (
     <>
@@ -163,7 +125,7 @@ export default function Footer() {
               <span className="site-footer__follow">Follow me on</span>
             )}
             <div className="site-footer__social">
-              {activeSocials.map(({ key, icon, label, hoverColor }) => (
+              {activeSocials.map(({ key, iconSm, label, brand }) => (
                 <a
                   key={key}
                   href={social[key as keyof SocialLinks]!}
@@ -172,9 +134,9 @@ export default function Footer() {
                   className="site-footer__social-link"
                   aria-label={label}
                   title={label}
-                  style={{ "--brand-color": hoverColor } as React.CSSProperties}
+                  style={{ "--brand-color": brand } as React.CSSProperties}
                 >
-                  {icon}
+                  {iconSm}
                 </a>
               ))}
             </div>

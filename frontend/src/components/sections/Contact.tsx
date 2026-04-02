@@ -4,26 +4,17 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Send, Loader2, CheckCircle, ExternalLink } from "lucide-react";
 import { FaPhone, FaWhatsapp } from "react-icons/fa";
-import { FaLinkedin, FaGithub, FaXTwitter, FaFacebook, FaMedium, FaHashnode, FaDev } from "react-icons/fa6";
+import { SOCIAL_PLATFORMS, SOCIAL_EMPTY, getActiveSocials, type SocialLinks } from "@/lib/social";
 import { contactApi, settingsApi } from "@/lib/api";
 import SectionLabel from "@/components/ui/SectionLabel";
 import { BtnPrimary, BtnSecondary } from "@/components/ui/Button";
 import { fadeLeft, fadeRight, fadeUp, VIEWPORT } from "@/lib/animations";
 
 interface FormState { name:string; email:string; subject:string; message:string; phone:string; company:string; }
-interface SocialLinks { social_github:string|null; social_linkedin:string|null; social_x:string|null; social_facebook:string|null; social_medium:string|null; social_hashnode:string|null; social_devto:string|null; }
 interface ContactInfo { contact_email:string|null; contact_phone:string|null; contact_whatsapp:string|null; }
 
 const INITIAL: FormState = { name:"", email:"", subject:"", message:"", phone:"", company:"" };
-const SOCIAL_CONFIG = [
-  { key:"social_linkedin",  icon:<FaLinkedin size={20}/>,  label:"LinkedIn", brand:"#0A66C2" },
-  { key:"social_github",    icon:<FaGithub size={20}/>,    label:"GitHub",   brand:"#ffffff" },
-  { key:"social_x",         icon:<FaXTwitter size={20}/>,  label:"X",        brand:"#ffffff" },
-  { key:"social_facebook",  icon:<FaFacebook size={20}/>,  label:"Facebook", brand:"#1877F2" },
-  { key:"social_medium",    icon:<FaMedium size={20}/>,    label:"Medium",   brand:"#ffffff" },
-  { key:"social_hashnode",  icon:<FaHashnode size={20}/>,  label:"Hashnode", brand:"#2962FF" },
-  { key:"social_devto",     icon:<FaDev size={20}/>,       label:"Dev.to",   brand:"#ffffff" },
-];
+
 
 function EmailIcon({ size=48 }:{ size?:number }) {
   return (
@@ -45,7 +36,7 @@ export default function Contact() {
   const [submitted, setDone]    = useState(false);
   const [submitError, setErr]   = useState<string|null>(null);
   const [resumeUrl, setResume]  = useState<string|null>(null);
-  const [social, setSocial]     = useState<SocialLinks>({ social_github:null,social_linkedin:null,social_x:null,social_facebook:null,social_medium:null,social_hashnode:null,social_devto:null });
+  const [social, setSocial]     = useState<SocialLinks>(SOCIAL_EMPTY);
   const [contactInfo, setInfo]  = useState<ContactInfo>({ contact_email:null,contact_phone:null,contact_whatsapp:null });
   const [activeReveal, setAR]   = useState<string|null>(null);
   const [lockedReveal, setLR]   = useState<string|null>(null);
@@ -63,7 +54,7 @@ export default function Contact() {
     return () => { document.removeEventListener("mousedown", outside); document.removeEventListener("touchstart", outside); };
   }, []);
 
-  const activeSocials = SOCIAL_CONFIG.filter(({ key }) => !!social[key as keyof SocialLinks]) as typeof SOCIAL_CONFIG;
+  const activeSocials = getActiveSocials(social);
 
   const validate = (): boolean => {
     const e: Partial<FormState> = {};
