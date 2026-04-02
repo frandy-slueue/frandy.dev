@@ -210,9 +210,9 @@ export default function Contact() {
 
             {/* Resume download — secondary button */}
             {resumeUrl && (
-              <BtnPrimary href={resumeUrl} target="_blank" rel="noopener noreferrer">
+              <BtnSecondary href={resumeUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={14} /> Download Resume
-              </BtnPrimary>
+              </BtnSecondary>
             )}
 
             <div className="contact-availability">
