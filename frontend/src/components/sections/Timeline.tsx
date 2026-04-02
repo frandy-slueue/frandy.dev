@@ -47,17 +47,31 @@ const VEL_THRESH = 0.28;
 const SPRING = { type:"spring", stiffness:400, damping:22, mass:1.1 } as const;
 
 function snapTo(w:number, vel:number):number {
+  // Always bounce back — cards can never stay past the left wall
+  if (w < W_PEEK) return W_PEEK;
   if (Math.abs(vel) > VEL_THRESH) {
     if (vel > 0) { const n=[...STOPS].sort((a,b)=>a-b).find(s=>s>w); return n??W_OPEN; }
-    else         { const n=[...STOPS].sort((a,b)=>b-a).find(s=>s<w); return n??W_PEEK; }
+    else         { return W_PEEK; }
   }
   return STOPS.reduce((b,s)=>Math.abs(s-w)<Math.abs(b-w)?s:b,STOPS[0]);
 }
+// Minimum a card can actually rest at (snaps back here if dragged past)
+const W_MIN = W_PEEK;
+// How far past W_PEEK a drag can physically reach (hard floor)
+const W_FLOOR = W_PEEK - 60;
+
 function resist(raw:number):number {
-  if (raw>W_OPEN) return W_OPEN+(raw-W_OPEN)*RESIST;
-  if (raw<W_PEEK) return W_PEEK+(raw-W_PEEK)*RESIST;
+  if (raw > W_OPEN) return W_OPEN + (raw - W_OPEN) * RESIST;
+  // Past left wall: rubber-band with increasing resistance the further you go
+  if (raw < W_PEEK) {
+    const overshoot = raw - W_PEEK; // negative number
+    return W_PEEK + overshoot * RESIST;
+  }
   return raw;
 }
+
+// snapTo now always returns W_PEEK as minimum (never stays past left wall)
+// velocity flick toward W_PEEK or below still only snaps to W_PEEK
 
 // ── Fold panel ────────────────────────────────────────────────────────
 function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
@@ -74,8 +88,15 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
   const cat    = getCat(node.category);
   const isPeek = width <= W_PEEK + 8;
   const isOpen = !isPeek;
-  const foldRatio = 1 - Math.max(0, Math.min(1, (width-W_PEEK)/(W_OPEN-W_PEEK)));
+  const foldRatio    = 1 - Math.max(0, Math.min(1, (width-W_PEEK)/(W_OPEN-W_PEEK)));
   const creaseOpacity = 0.04 + foldRatio * 0.36;
+  // Tension: how far past the left wall (0 = at W_PEEK, 1 = at W_FLOOR)
+  const tensionRatio = dragging ? Math.max(0, Math.min(1, (W_PEEK - width) / (W_PEEK - W_FLOOR))) : 0;
+  // Tension color: category color → amber → red
+  const tensionColor = tensionRatio < 0.5
+    ? `rgb(${Math.round(220 + tensionRatio * 2 * 35)}, ${Math.round(180 - tensionRatio * 2 * 80)}, ${Math.round(60 - tensionRatio * 2 * 60)})`
+    : `rgb(${Math.round(255)}, ${Math.round(20 + (1-tensionRatio)*2*80)}, ${Math.round(20)})`;
+  const tensionWidth = tensionRatio * 100; // % of card width the bar fills
 
   const onHandleDown = useCallback((e:React.PointerEvent)=>{
     e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId);
@@ -226,9 +247,23 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
           <div style={{ position:"absolute", top:0, right:0, bottom:0, width:`${14+foldRatio*14}px`, background:`linear-gradient(to right,transparent,rgba(0,0,0,${creaseOpacity}))`, pointerEvents:"none", zIndex:3, transition:dragging?"none":"width 0.2s" }} />
         )}
 
-        {/* Fold darkening overlay — semi-transparent div, never blurs text */}
+        {/* Fold darkening overlay */}
         {foldRatio > 0.04 && (
           <div style={{ position:"absolute", inset:0, background:`rgba(0,0,0,${foldRatio*0.16})`, pointerEvents:"none", zIndex:2, transition:dragging?"none":"background 0.15s" }} />
+        )}
+
+        {/* Tension indicator — bottom bar, only shows when dragged past left wall */}
+        {tensionRatio > 0 && (
+          <div style={{ position:"absolute", bottom:0, left:0, right:0, height:4, zIndex:10, pointerEvents:"none", overflow:"hidden", background:"rgba(0,0,0,0.3)" }}>
+            {/* Bar fills left-to-right proportional to tension */}
+            <div style={{
+              position:"absolute", bottom:0, left:0,
+              width:`${tensionWidth}%`, height:"100%",
+              background: tensionColor,
+              transition: "none",
+              boxShadow:`0 0 8px ${tensionColor}, 0 0 16px ${tensionColor}60`,
+            }} />
+          </div>
         )}
       </div>
 
