@@ -125,7 +125,7 @@ export default function Projects() {
         ) : filtered.length === 0 ? (
           <p className="projects-state">No projects in this category yet.</p>
         ) : (
-          <motion.div layout className="mosaic-grid">
+          <motion.div className="mosaic-grid" style={{ height:"416px", overflow:"hidden" }}>
             <AnimatePresence mode="popLayout">
               {filtered.map((project, i) => (
                 <ProjectCell key={project.id} project={project} shape={shapes[i] ?? { cols: 1, rows: 1 }} onClick={() => setSelected(project)} apiBase={apiBase} />
