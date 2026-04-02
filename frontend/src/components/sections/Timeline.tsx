@@ -218,10 +218,11 @@ function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
         )}
       </div>
 
-      {/* Drag handle */}
+      {/* Drag handle — stop BOTH pointer and mouse events so track scroll doesn't fire */}
       <div
         onPointerDown={onHandleDown} onPointerMove={onHandleMove}
         onPointerUp={onHandleUp}    onPointerCancel={onHandleUp}
+        onMouseDown={e=>e.stopPropagation()}
         onClick={e=>e.stopPropagation()}
         style={{ position:"absolute", top:0, right:0, bottom:0, width:18, cursor:"ew-resize", zIndex:10, display:"flex", alignItems:"center", justifyContent:"center", touchAction:"none" }}
       >
@@ -456,7 +457,11 @@ export default function Timeline() {
     if (!isDragRef.current) return;
     const dx = e.pageX - startXRef.current;
     if (Math.abs(dx) > 4) movedRef.current = true;
-    if (trackRef.current) { trackRef.current.scrollLeft = scrollRef.current - dx; checkScroll(); }
+    if (trackRef.current) {
+      // Clamp to >= 0 so dragging left can never hide the first card
+      trackRef.current.scrollLeft = Math.max(0, scrollRef.current - dx);
+      checkScroll();
+    }
   }
   function onUp() { isDragRef.current = false; }
 
