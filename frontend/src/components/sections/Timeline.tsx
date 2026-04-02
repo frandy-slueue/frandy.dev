@@ -27,10 +27,7 @@ const FALLBACK: TNode[] = [
   { id:"first-role",   sort_order:7, period:"2025",   date_label:"Present",   title:"Seeking First Role",     category:"Work",           description:"Open to full-stack engineering roles and freelance projects. If you are reading this and you have something worth building — I want to hear about it.", image_url:null },
 ];
 
-const FUTURE = [
-  "First Full-Time Role", "Open Source Contribution", "CodeBreeder Launch",
-];
-
+const FUTURE = ["First Full-Time Role","Open Source Contribution","CodeBreeder Launch"];
 const FILTER_TABS: TabItem[] = ["All","Education","Work","Milestone","Certifications"].map(l=>({label:l}));
 
 // ── Category meta ─────────────────────────────────────────────────────
@@ -44,36 +41,31 @@ const CAT: Record<string,{icon:React.ReactNode;color:string}> = {
 const getCat = (c:string) => CAT[c] ?? CAT.Background;
 
 // ── Dimensions ────────────────────────────────────────────────────────
-const W_OPEN   = 240;  // expanded panel width
-const W_STACK  = 44;   // collapsed "tab" width — tight for stacking effect
-const SNAP_AT  = 130;  // snap threshold
-const SPRING   = { type:"spring", stiffness:420, damping:36, mass:0.8 } as const;
-const H_TRACK  = 460;  // fixed track height
+const W_OPEN  = 240;
+const W_STACK = 44;
+const SNAP_AT = 130;
+const H_TRACK = 460;
+const SPRING  = { type:"spring", stiffness:420, damping:36, mass:0.8 } as const;
 
-// ── Fold panel ────────────────────────────────────────────────────────
-function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
-  node: TNode;
-  stackDepth: number;  // how many collapsed panels follow this one (for shadow depth)
-  isActive: boolean;
-  onExpand: () => void;
-  onOpenPanel: (n: TNode) => void;
+// ── Fold panel — all 7 design patterns applied ────────────────────────
+function FoldPanel({ node, isActive, isFocused, onExpand, onOpenPanel, onFocus }: {
+  node: TNode; isActive: boolean; isFocused: boolean;
+  onExpand: ()=>void; onOpenPanel: (n:TNode)=>void; onFocus: ()=>void;
 }) {
-  const [width, setWidth]         = useState(W_OPEN);
-  const [dragging, setDragging]   = useState(false);
-  const startXRef  = useRef(0);
-  const startWRef  = useRef(W_OPEN);
-  const velRef     = useRef(0);
-  const lastXRef   = useRef(0);
-  const lastTRef   = useRef(0);
-  const movedRef   = useRef(false);
+  const [width, setWidth]     = useState(W_OPEN);
+  const [dragging, setDragging] = useState(false);
+  const [hovered, setHovered]   = useState(false);
+  const startXRef = useRef(0); const startWRef = useRef(W_OPEN);
+  const velRef    = useRef(0); const lastXRef  = useRef(0);
+  const lastTRef  = useRef(0); const movedRef  = useRef(false);
 
   const cat         = getCat(node.category);
   const isCollapsed = width <= W_STACK + 6;
 
-  // (stackShadow removed — handled directly on the wrapper)
-
+  // ── #6 Card tilt — rotateY increases as card folds ──────────────────
   const foldRatio     = 1 - Math.max(0, Math.min(1, (width - W_STACK) / (W_OPEN - W_STACK)));
   const creaseOpacity = 0.06 + foldRatio * 0.32;
+  const tiltY         = -foldRatio * 5;  // max -5deg when fully collapsed
 
   const onHandleDown = useCallback((e: React.PointerEvent) => {
     e.stopPropagation();
@@ -90,41 +82,47 @@ function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
     if (dt > 0) velRef.current = (e.clientX - lastXRef.current) / dt;
     lastXRef.current = e.clientX; lastTRef.current = e.timeStamp;
     const raw = startWRef.current + (e.clientX - startXRef.current);
-    setWidth(raw > W_OPEN ? W_OPEN + (raw - W_OPEN) * 0.12 : raw < W_STACK ? W_STACK + (raw - W_STACK) * 0.12 : raw);
+    setWidth(raw > W_OPEN ? W_OPEN+(raw-W_OPEN)*0.12 : raw < W_STACK ? W_STACK+(raw-W_STACK)*0.12 : raw);
   }, [dragging]);
 
   const onHandleUp = useCallback(() => {
     if (!dragging) return;
     setDragging(false);
-    const snap = Math.abs(velRef.current) > 0.5
+    setWidth(Math.abs(velRef.current) > 0.5
       ? velRef.current > 0 ? W_OPEN : W_STACK
-      : width > SNAP_AT ? W_OPEN : W_STACK;
-    setWidth(snap);
+      : width > SNAP_AT ? W_OPEN : W_STACK);
   }, [dragging, width]);
 
   function handleClick() {
     if (movedRef.current) { movedRef.current = false; return; }
+    onFocus();
     if (isCollapsed) { setWidth(W_OPEN); onExpand(); }
     else             { onOpenPanel(node); }
   }
+
+  // ── #1 Persistent shadow (stronger when collapsed, lighter when open)
+  const shadowFilter = isCollapsed
+    ? "drop-shadow(8px 6px 14px rgba(0,0,0,0.75)) drop-shadow(14px 10px 22px rgba(0,0,0,0.4))"
+    : hovered
+    ? "drop-shadow(6px 8px 18px rgba(0,0,0,0.55)) drop-shadow(2px 4px 8px rgba(0,0,0,0.3))"  // #3 hover elevation shadow
+    : "drop-shadow(4px 4px 10px rgba(0,0,0,0.45)) drop-shadow(6px 6px 14px rgba(0,0,0,0.22))";
 
   return (
     <motion.div
       animate={{ width }}
       transition={dragging ? { duration:0 } : SPRING}
+      // ── #6 Tilt on fold — perspective applied via CSS on parent track
       style={{
-        flexShrink: 0,
-        position: "relative",
-        height: "100%",
-        willChange: "width",
-        // Shadow persists while collapsed — gives the visual sense that the
-        // tab is tucked behind the card to its right
-        filter: isCollapsed
-          ? "drop-shadow(6px 4px 8px rgba(0,0,0,0.65)) drop-shadow(10px 6px 14px rgba(0,0,0,0.3))"
-          : "none",
-        zIndex: isCollapsed ? 1 : 2,
-        transition: dragging ? "none" : "filter 0.45s ease",
+        flexShrink: 0, position:"relative", height:"100%", willChange:"width",
+        filter: shadowFilter,
+        transition: dragging ? "none" : "filter 0.4s ease",
+        zIndex: isCollapsed ? 1 : hovered ? 3 : 2,
+        // ── #3 Hover elevation — card lifts up when hovered
+        translateY: !isCollapsed && hovered ? -4 : 0,
+        rotateY: tiltY,  // #6 — Framer Motion reads transform values from style
       }}
+      onMouseEnter={()=>setHovered(true)}
+      onMouseLeave={()=>setHovered(false)}
     >
       {/* Paper face */}
       <div
@@ -132,55 +130,73 @@ function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
         style={{
           position:"absolute", inset:0,
           background: isActive
-            ? "linear-gradient(160deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%)"
+            ? "linear-gradient(160deg,var(--bg-elevated) 0%,var(--bg-secondary) 100%)"
             : "var(--bg-secondary)",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
-          borderLeft:  isActive ? `2px solid ${cat.color}` : "none",
+          borderRight:"1px solid rgba(255,255,255,0.06)",
+          borderLeft: isActive ? `2px solid ${cat.color}` : "none",
           display:"flex", flexDirection:"column",
           overflow:"hidden",
           cursor: isCollapsed ? "e-resize" : "pointer",
-          transition:"background 300ms ease, border-color 300ms ease",
-          // 3-D depth: top-left light, bottom-right dark
-          // Inset right-edge darkening when collapsed — reinforces depth behind next card
+          transition:"background 300ms ease",
+          // Keyboard focus ring
+          outline: isFocused ? `2px solid ${cat.color}` : "none",
+          outlineOffset: -2,
           boxShadow: isCollapsed
-            ? "inset -3px 0 10px rgba(0,0,0,0.5), inset 1px 0 0 rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.04)"
+            ? "inset -3px 0 10px rgba(0,0,0,0.5), inset 1px 0 0 rgba(255,255,255,0.05)"
             : "none",
         }}
       >
-        {/* Active accent corners */}
+        {/* ── #2 Top color stripe ── */}
+        <div style={{ height:3, flexShrink:0, background:cat.color, opacity: isCollapsed ? 0.6 : 1, transition:"opacity 0.3s" }} />
+
+        {/* ── #4 Active glow overlay ── */}
         {isActive && (
-          <div style={{ position:"absolute", inset:-1, pointerEvents:"none", zIndex:4,
+          <div className="tl-active-glow" style={{ position:"absolute", inset:-1, pointerEvents:"none", zIndex:4,
+            boxShadow:`0 0 0 1px ${cat.color}60, 0 0 20px ${cat.color}20, inset 0 0 30px ${cat.color}08`,
             background:`
               linear-gradient(${cat.color},${cat.color}) top left/12px 1.5px no-repeat,
               linear-gradient(${cat.color},${cat.color}) top left/1.5px 12px no-repeat,
               linear-gradient(${cat.color},${cat.color}) bottom right/12px 1.5px no-repeat,
-              linear-gradient(${cat.color},${cat.color}) bottom right/1.5px 12px no-repeat` }} />
+              linear-gradient(${cat.color},${cat.color}) bottom right/1.5px 12px no-repeat`,
+          }} />
         )}
 
         {/* ── Year header ── */}
-        <div style={{ padding:"20px 16px 12px", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0, overflow:"hidden", whiteSpace:"nowrap" }}>
-          <div style={{ fontFamily:"var(--font-display)", fontSize:"2rem", fontWeight:700, letterSpacing:"-0.02em", lineHeight:1, color:cat.color, marginBottom:3 }}>
+        <div style={{ padding:"16px 16px 10px", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0, overflow:"hidden", whiteSpace:"nowrap" }}>
+          {/* ── #7 Year number gradient fill ── */}
+          <div style={{
+            fontFamily:"var(--font-display)", fontSize:"2rem", fontWeight:700,
+            letterSpacing:"-0.02em", lineHeight:1, marginBottom:3,
+            background:`linear-gradient(175deg, ${cat.color} 0%, ${cat.color}70 100%)`,
+            WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+            backgroundClip:"text",
+          }}>
             {node.period}
           </div>
-          <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.65rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", opacity:isCollapsed?0:1, transition:"opacity 0.12s" }}>
+          <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.62rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.28)", opacity:isCollapsed?0:1, transition:"opacity 0.12s" }}>
             {node.date_label || node.category}
           </div>
         </div>
 
         {/* ── Spine row ── */}
-        <div style={{ height:40, flexShrink:0, position:"relative", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", alignItems:"center" }}>
-          <div style={{ position:"absolute", top:"50%", left:0, right:0, height:1, background:"rgba(255,255,255,0.1)", transform:"translateY(-50%)" }} />
+        <div style={{ height:38, flexShrink:0, position:"relative", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", alignItems:"center" }}>
+          <div style={{ position:"absolute", top:"50%", left:0, right:0, height:1, background:"rgba(255,255,255,0.09)", transform:"translateY(-50%)" }} />
+          {/* ── #5 Spine dot — pulse animation on active/hover ── */}
           <div style={{
             position:"absolute", left:16, top:"50%", transform:"translateY(-50%)",
             width:11, height:11, borderRadius:"50%",
             background:cat.color,
-            boxShadow: isActive ? `0 0 0 3px ${cat.color}40, 0 0 14px ${cat.color}80` : `0 0 0 2px ${cat.color}50`,
-            border:"2px solid var(--bg-primary)", zIndex:2, transition:"box-shadow 0.35s",
+            border:"2px solid var(--bg-primary)", zIndex:2,
+            boxShadow: (isActive || hovered)
+              ? `0 0 0 3px ${cat.color}40, 0 0 16px ${cat.color}90`
+              : `0 0 0 2px ${cat.color}40`,
+            transition:"box-shadow 0.35s",
+            animation: isActive ? "tl-dot-pulse 2.2s ease-in-out infinite" : "none",
           }} />
         </div>
 
         {/* ── Body ── */}
-        <div style={{ flex:1, padding:"14px 16px 0", display:"flex", flexDirection:"column", gap:8, overflow:"hidden", opacity:isCollapsed?0:1, transition:"opacity 0.1s" }}>
+        <div style={{ flex:1, padding:"12px 16px 0", display:"flex", flexDirection:"column", gap:8, overflow:"hidden", opacity:isCollapsed?0:1, transition:"opacity 0.1s" }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:5, color:cat.color, fontFamily:"var(--font-body)", fontSize:"0.58rem", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:700 }}>
             {getCat(node.category).icon}<span>{node.category}</span>
           </div>
@@ -189,19 +205,24 @@ function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
             {node.description}
           </div>
           {/* Image */}
-          <div style={{ height:64, flexShrink:0, marginTop:"auto", marginBottom:14, overflow:"hidden", border:"0.5px solid rgba(255,255,255,0.07)", position:"relative", background:"rgba(255,255,255,0.025)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ height:60, flexShrink:0, marginTop:"auto", marginBottom:12, overflow:"hidden", border:"0.5px solid rgba(255,255,255,0.07)", position:"relative", background:"rgba(255,255,255,0.025)", display:"flex", alignItems:"center", justifyContent:"center" }}>
             {node.image_url
               ? <img src={node.image_url} alt={node.title} style={{ width:"100%", height:"100%", objectFit:"cover", opacity:0.8 }} />
-              : <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.55rem", letterSpacing:"0.08em", textTransform:"uppercase", color:"rgba(255,255,255,0.12)" }}>no image</span>
+              : <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.52rem", letterSpacing:"0.08em", textTransform:"uppercase", color:"rgba(255,255,255,0.1)" }}>no image</span>
             }
           </div>
         </div>
 
         {/* ── Collapsed tab — vertical year + dot ── */}
         {isCollapsed && (
-          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10 }}>
-            <div style={{ width:7, height:7, borderRadius:"50%", background:cat.color, boxShadow:`0 0 6px ${cat.color}`, flexShrink:0 }} />
-            <div style={{ fontFamily:"var(--font-display)", fontSize:"0.72rem", fontWeight:700, color:cat.color, writingMode:"vertical-rl", transform:"rotate(180deg)", whiteSpace:"nowrap", letterSpacing:"0.06em" }}>
+          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10, paddingTop:3 }}>
+            <div style={{ width:7, height:7, borderRadius:"50%", background:cat.color, boxShadow:`0 0 8px ${cat.color}`, flexShrink:0 }} />
+            <div style={{
+              fontFamily:"var(--font-display)", fontSize:"0.7rem", fontWeight:700,
+              background:`linear-gradient(175deg,${cat.color} 0%,${cat.color}70 100%)`,
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text",
+              writingMode:"vertical-rl", transform:"rotate(180deg)", whiteSpace:"nowrap", letterSpacing:"0.06em",
+            }}>
               {node.period}
             </div>
           </div>
@@ -213,7 +234,7 @@ function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
         )}
       </div>
 
-      {/* Drag handle — stop BOTH pointer and mouse events so track scroll doesn't fire */}
+      {/* Drag handle */}
       <div
         onPointerDown={onHandleDown} onPointerMove={onHandleMove}
         onPointerUp={onHandleUp}    onPointerCancel={onHandleUp}
@@ -230,35 +251,37 @@ function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
 // ── Future ghost ──────────────────────────────────────────────────────
 function FutureFold({ label, opacity }: { label:string; opacity:number }) {
   return (
-    <div style={{ flexShrink:0, width:W_OPEN, height:"100%", opacity, position:"relative", borderRight:"1px solid rgba(255,255,255,0.03)", background:"rgba(255,255,255,0.012)", overflow:"hidden", display:"flex", flexDirection:"column" }}>
-      <div style={{ padding:"20px 16px 12px", borderBottom:"1px solid rgba(255,255,255,0.04)", flexShrink:0 }}>
+    <div style={{ flexShrink:0, width:W_OPEN, height:"100%", opacity, position:"relative", borderRight:"1px solid rgba(255,255,255,0.03)", background:"rgba(255,255,255,0.012)", overflow:"hidden", display:"flex", flexDirection:"column",
+      filter:"drop-shadow(4px 4px 10px rgba(0,0,0,0.35))" }}>
+      <div style={{ height:3, background:"rgba(255,255,255,0.05)", flexShrink:0 }} />
+      <div style={{ padding:"16px 16px 10px", borderBottom:"1px solid rgba(255,255,255,0.04)", flexShrink:0 }}>
         <div style={{ fontFamily:"var(--font-display)", fontSize:"2rem", fontWeight:700, color:"rgba(255,255,255,0.08)", marginBottom:3 }}>?</div>
-        <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.65rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.06)" }}>Future</div>
+        <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.62rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.06)" }}>Future</div>
       </div>
-      <div style={{ height:40, flexShrink:0, position:"relative", borderBottom:"1px solid rgba(255,255,255,0.03)", display:"flex", alignItems:"center" }}>
-        <div style={{ position:"absolute", top:"50%", left:0, right:0, height:1, background:"rgba(255,255,255,0.05)", transform:"translateY(-50%)" }} />
+      <div style={{ height:38, flexShrink:0, position:"relative", borderBottom:"1px solid rgba(255,255,255,0.03)", display:"flex", alignItems:"center" }}>
+        <div style={{ position:"absolute", top:"50%", left:0, right:0, height:1, background:"rgba(255,255,255,0.04)", transform:"translateY(-50%)" }} />
         <div style={{ position:"absolute", left:16, top:"50%", transform:"translateY(-50%)", width:11, height:11, borderRadius:"50%", border:"1px dashed rgba(255,255,255,0.1)", zIndex:2 }} />
       </div>
-      <div style={{ flex:1, padding:"14px 16px", display:"flex", flexDirection:"column", gap:6 }}>
+      <div style={{ flex:1, padding:"12px 16px", display:"flex", flexDirection:"column", gap:6 }}>
         <div style={{ fontFamily:"var(--font-display)", fontSize:"0.85rem", fontWeight:600, color:"rgba(255,255,255,0.12)" }}>{label}</div>
         <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.58rem", letterSpacing:"0.08em", textTransform:"uppercase", color:"rgba(255,255,255,0.08)" }}>Coming soon</div>
       </div>
-      <div style={{ height:64, flexShrink:0, margin:"0 16px 14px", border:"0.5px dashed rgba(255,255,255,0.05)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ height:60, flexShrink:0, margin:"0 16px 12px", border:"0.5px dashed rgba(255,255,255,0.05)", display:"flex", alignItems:"center", justifyContent:"center" }}>
         <ImageIcon size={12} style={{ color:"rgba(255,255,255,0.08)" }} />
       </div>
     </div>
   );
 }
 
-// ── Side panel — centered modal-ish drawer ────────────────────────────
+// ── Detail panel — centered modal ─────────────────────────────────────
 function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
-  node: TNode | null; allNodes: TNode[]; index: number;
-  onClose: ()=>void; onNavigate: (i:number)=>void;
+  node: TNode|null; allNodes: TNode[]; index: number;
+  onClose:()=>void; onNavigate:(i:number)=>void;
 }) {
   const cat = node ? getCat(node.category) : null;
 
   useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const h = (e:KeyboardEvent) => { if (e.key==="Escape") onClose(); };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
@@ -267,34 +290,18 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
     <AnimatePresence>
       {node && (
         <>
-          {/* Backdrop */}
-          <motion.div key="bd"
-            initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-            transition={{ duration:0.22 }}
-            onClick={onClose}
-            style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.6)", backdropFilter:"blur(3px)", zIndex:49 }}
-          />
+          <motion.div key="bd" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22 }}
+            onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.65)", backdropFilter:"blur(4px)", zIndex:49 }} />
 
-          {/* Panel — fixed width, centered horizontally */}
           <motion.div key="pn"
-            initial={{ opacity:0, y:24, scale:0.97 }}
+            initial={{ opacity:0, y:28, scale:0.96 }}
             animate={{ opacity:1, y:0,  scale:1 }}
-            exit={{ opacity:0, y:16, scale:0.98 }}
+            exit={{ opacity:0, y:16, scale:0.97 }}
             transition={SPRING}
-            style={{
-              position:"fixed",
-              top:"50%", left:"50%",
-              transform:"translate(-50%,-50%)",
-              width:"min(560px,90vw)",
-              maxHeight:"80vh",
-              background:"var(--bg-elevated)",
-              border:"1px solid var(--border)",
-              zIndex:50,
-              display:"flex",
-              flexDirection:"column",
-              overflow:"hidden",
-            }}
+            style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:"min(560px,90vw)", maxHeight:"82vh", background:"var(--bg-elevated)", border:"1px solid var(--border)", zIndex:50, display:"flex", flexDirection:"column", overflow:"hidden" }}
           >
+            {/* Top color stripe on panel too */}
+            <div style={{ height:3, flexShrink:0, background:cat?.color }} />
             {/* dframe inner frame */}
             <div style={{ position:"absolute", inset:4, border:"1px solid rgba(255,255,255,0.05)", borderRadius:6, pointerEvents:"none", zIndex:0 }} />
             {/* Corner accents */}
@@ -304,13 +311,13 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
               linear-gradient(${cat?.color},${cat?.color}) bottom right/14px 1.5px no-repeat,
               linear-gradient(${cat?.color},${cat?.color}) bottom right/1.5px 14px no-repeat` }} />
 
-            {/* Header bar */}
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 20px", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0, position:"relative", zIndex:3 }}>
+            {/* Header */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 20px", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0, position:"relative", zIndex:3 }}>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <div style={{ width:8, height:8, borderRadius:"50%", background:cat?.color, boxShadow:`0 0 8px ${cat?.color}` }} />
                 <span style={{ fontFamily:"var(--font-mono)", fontSize:"10px", letterSpacing:"0.12em", textTransform:"uppercase", color:cat?.color }}>{node.category}</span>
-                <span style={{ fontFamily:"var(--font-mono)", fontSize:"10px", color:"rgba(255,255,255,0.25)" }}>·</span>
-                <span style={{ fontFamily:"var(--font-mono)", fontSize:"10px", letterSpacing:"0.08em", color:"rgba(255,255,255,0.3)" }}>{node.period}{node.date_label ? ` · ${node.date_label}` : ""}</span>
+                <span style={{ color:"rgba(255,255,255,0.2)", fontSize:"10px" }}>·</span>
+                <span style={{ fontFamily:"var(--font-mono)", fontSize:"10px", letterSpacing:"0.08em", color:"rgba(255,255,255,0.28)" }}>{node.period}{node.date_label?` · ${node.date_label}`:""}</span>
               </div>
               <button onClick={onClose} style={{ background:"none", border:"1px solid rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.4)", cursor:"pointer", width:28, height:28, display:"flex", alignItems:"center", justifyContent:"center", transition:"border-color 0.2s,color 0.2s" }}
                 onMouseEnter={e=>{ e.currentTarget.style.borderColor=cat?.color||""; e.currentTarget.style.color=cat?.color||""; }}
@@ -321,7 +328,6 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
 
             {/* Content */}
             <div style={{ flex:1, overflowY:"auto", position:"relative", zIndex:1 }}>
-              {/* Image */}
               <div style={{ height:180, background:"var(--bg-secondary)", borderBottom:"1px solid rgba(255,255,255,0.06)", position:"relative", overflow:"hidden" }}>
                 {node.image_url
                   ? <img src={node.image_url} alt={node.title} style={{ width:"100%", height:"100%", objectFit:"cover", opacity:0.85 }} />
@@ -330,47 +336,33 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
                       <span style={{ fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.18)" }}>No image added yet</span>
                     </div>
                 }
-                {/* Color wash overlay at bottom */}
-                <div style={{ position:"absolute", bottom:0, left:0, right:0, height:60, background:`linear-gradient(transparent, var(--bg-elevated))` }} />
+                <div style={{ position:"absolute", bottom:0, left:0, right:0, height:64, background:`linear-gradient(transparent,var(--bg-elevated))` }} />
               </div>
-
               <div style={{ padding:"20px 24px 24px" }}>
-                {/* Title */}
                 <h3 style={{ fontFamily:"var(--font-display)", fontSize:"clamp(1.4rem,3vw,1.8rem)", letterSpacing:"0.02em", color:"var(--text-primary)", margin:"0 0 12px", lineHeight:1.1 }}>{node.title}</h3>
-
-                {/* Category badge */}
                 <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"4px 12px", background:`${cat?.color}15`, border:`1px solid ${cat?.color}30`, marginBottom:18, fontFamily:"var(--font-body)", fontSize:"10px", letterSpacing:"0.1em", textTransform:"uppercase", color:cat?.color, fontWeight:600 }}>
                   {cat?.icon}{node.category}
                 </div>
-
-                {/* Description */}
-                <p style={{ fontFamily:"var(--font-body)", fontSize:"0.85rem", color:"rgba(200,215,225,0.7)", lineHeight:1.75, margin:0 }}>{node.description}</p>
+                <p style={{ fontFamily:"var(--font-body)", fontSize:"0.85rem", color:"rgba(200,215,225,0.7)", lineHeight:1.78, margin:0 }}>{node.description}</p>
               </div>
             </div>
 
             {/* Footer nav */}
-            <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", padding:"12px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, position:"relative", zIndex:3, background:"var(--bg-elevated)" }}>
-              <button
-                onClick={() => index > 0 && onNavigate(index-1)}
-                disabled={index === 0}
-                style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:"1px solid rgba(255,255,255,0.1)", padding:"6px 12px", cursor:index===0?"not-allowed":"pointer", opacity:index===0?0.3:1, color:"rgba(255,255,255,0.5)", fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", transition:"border-color 0.2s,color 0.2s" }}
-                onMouseEnter={e=>{ if(index>0){ e.currentTarget.style.borderColor=cat?.color||""; e.currentTarget.style.color=cat?.color||""; }}}
-                onMouseLeave={e=>{ e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; e.currentTarget.style.color="rgba(255,255,255,0.5)"; }}>
-                <ChevronLeft size={12} style={{ pointerEvents:"none" }} />
-                <span style={{ maxWidth:100, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{index>0 ? allNodes[index-1].title : "—"}</span>
-              </button>
-
-              <span style={{ fontFamily:"var(--font-mono)", fontSize:"9px", color:"rgba(255,255,255,0.2)", letterSpacing:"0.06em" }}>{index+1} / {allNodes.length}</span>
-
-              <button
-                onClick={() => index < allNodes.length-1 && onNavigate(index+1)}
-                disabled={index === allNodes.length-1}
-                style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:"1px solid rgba(255,255,255,0.1)", padding:"6px 12px", cursor:index===allNodes.length-1?"not-allowed":"pointer", opacity:index===allNodes.length-1?0.3:1, color:"rgba(255,255,255,0.5)", fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", transition:"border-color 0.2s,color 0.2s" }}
-                onMouseEnter={e=>{ if(index<allNodes.length-1){ e.currentTarget.style.borderColor=cat?.color||""; e.currentTarget.style.color=cat?.color||""; }}}
-                onMouseLeave={e=>{ e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; e.currentTarget.style.color="rgba(255,255,255,0.5)"; }}>
-                <span style={{ maxWidth:100, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{index<allNodes.length-1 ? allNodes[index+1].title : "—"}</span>
-                <ChevronRight size={12} style={{ pointerEvents:"none" }} />
-              </button>
+            <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", padding:"12px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, zIndex:3, background:"var(--bg-elevated)" }}>
+              {([
+                { dir:-1, icon:<ChevronLeft size={12} style={{ pointerEvents:"none" }}/>,  label:index>0?allNodes[index-1].title:"—", ok:index>0, justify:"flex-start" },
+                { dir:+1, icon:<ChevronRight size={12} style={{ pointerEvents:"none" }}/>, label:index<allNodes.length-1?allNodes[index+1].title:"—", ok:index<allNodes.length-1, justify:"flex-end" },
+              ] as const).map(({dir,icon,label,ok,justify},ki)=>(
+                <button key={ki} onClick={()=>ok&&onNavigate(index+dir)} disabled={!ok}
+                  style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:"1px solid rgba(255,255,255,0.1)", padding:"6px 12px", cursor:ok?"pointer":"not-allowed", opacity:ok?1:0.3, color:"rgba(255,255,255,0.5)", fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", transition:"border-color 0.2s,color 0.2s", flex:1, justifyContent:justify as "flex-start"|"flex-end" }}
+                  onMouseEnter={e=>{ if(ok){ e.currentTarget.style.borderColor=cat?.color||""; e.currentTarget.style.color=cat?.color||""; }}}
+                  onMouseLeave={e=>{ e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; e.currentTarget.style.color="rgba(255,255,255,0.5)"; }}>
+                  {dir===-1&&icon}
+                  <span style={{ maxWidth:110, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{label}</span>
+                  {dir===+1&&icon}
+                </button>
+              ))}
+              <span style={{ fontFamily:"var(--font-mono)", fontSize:"9px", color:"rgba(255,255,255,0.2)", letterSpacing:"0.06em", flexShrink:0, padding:"0 12px" }}>{index+1} / {allNodes.length}</span>
             </div>
           </motion.div>
         </>
@@ -411,13 +403,15 @@ function MobileNode({ node, index, isExpanded, onToggle, onOpen }: {
 
 // ── Main section ──────────────────────────────────────────────────────
 export default function Timeline() {
-  const [nodes, setNodes]              = useState<TNode[]>(FALLBACK);
-  const [filter, setFilter]            = useState("All");
-  const [panelNode, setPanelNode]      = useState<TNode | null>(null);
-  const [panelIndex, setPanelIndex]    = useState(0);
-  const [expandedMobile, setExpandMob] = useState<string | null>(null);
-  const [canRight, setCanRight]        = useState(false);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const [nodes, setNodes]            = useState<TNode[]>(FALLBACK);
+  const [filter, setFilter]          = useState("All");
+  const [panelNode, setPanelNode]    = useState<TNode|null>(null);
+  const [panelIndex, setPanelIndex]  = useState(0);
+  const [expandedMobile, setExpandMob] = useState<string|null>(null);
+  const [canRight, setCanRight]      = useState(false);
+  // ── #8 Keyboard navigation state ──────────────────────────────────────
+  const [focusedIdx, setFocusedIdx]  = useState<number|null>(null);
+  const trackRef  = useRef<HTMLDivElement>(null);
   const isDragRef = useRef(false);
   const startXRef = useRef(0);
   const scrollRef = useRef(0);
@@ -427,14 +421,14 @@ export default function Timeline() {
     fetch("/api/timeline").then(r=>r.json()).then((d:TNode[])=>{ if(d?.length) setNodes(d); }).catch(()=>{});
   }, []);
 
-  const filtered = filter === "All" ? nodes : nodes.filter(n=>n.category===filter);
+  const filtered = filter==="All" ? nodes : nodes.filter(n=>n.category===filter);
 
-  function openPanel(node: TNode) {
+  function openPanel(node:TNode) {
     const idx = filtered.findIndex(n=>n.id===node.id);
     setPanelNode(node); setPanelIndex(idx);
   }
-  function navigate(idx: number) {
-    if (idx < 0 || idx >= filtered.length) return;
+  function navigate(idx:number) {
+    if (idx<0||idx>=filtered.length) return;
     setPanelNode(filtered[idx]); setPanelIndex(idx);
   }
 
@@ -442,94 +436,103 @@ export default function Timeline() {
     const el = trackRef.current; if (!el) return;
     setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
   }
-  useEffect(() => { setTimeout(checkScroll, 100); }, [filtered.length]);
+  useEffect(()=>{ setTimeout(checkScroll,100); },[filtered.length]);
 
-  function onDown(e: React.MouseEvent) {
-    isDragRef.current = true; movedRef.current = false;
-    startXRef.current = e.pageX; scrollRef.current = trackRef.current?.scrollLeft ?? 0;
+  function onDown(e:React.MouseEvent) {
+    isDragRef.current=true; movedRef.current=false;
+    startXRef.current=e.pageX; scrollRef.current=trackRef.current?.scrollLeft??0;
   }
-  function onMove(e: React.MouseEvent) {
-    if (!isDragRef.current) return;
-    const dx = e.pageX - startXRef.current;
-    if (Math.abs(dx) > 4) movedRef.current = true;
-    if (trackRef.current) {
-      // Clamp to >= 0 so dragging left can never hide the first card
-      trackRef.current.scrollLeft = Math.max(0, scrollRef.current - dx);
-      checkScroll();
+  function onMove(e:React.MouseEvent) {
+    if(!isDragRef.current) return;
+    const dx=e.pageX-startXRef.current;
+    if(Math.abs(dx)>4) movedRef.current=true;
+    if(trackRef.current){ trackRef.current.scrollLeft=Math.max(0,scrollRef.current-dx); checkScroll(); }
+  }
+  function onUp() { isDragRef.current=false; }
+
+  // ── #8 Keyboard navigation ────────────────────────────────────────────
+  useEffect(() => {
+    if (panelNode) return; // panel handles its own keyboard nav
+    function onKey(e: KeyboardEvent) {
+      const tl = document.getElementById("timeline");
+      if (!tl) return;
+      const rect = tl.getBoundingClientRect();
+      const inView = rect.top < window.innerHeight && rect.bottom > 0;
+      if (!inView) return;
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setFocusedIdx(prev => prev === null ? 0 : Math.min(prev+1, filtered.length-1));
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setFocusedIdx(prev => prev === null ? 0 : Math.max(prev-1, 0));
+      } else if (e.key === "Enter" && focusedIdx !== null) {
+        e.preventDefault();
+        openPanel(filtered[focusedIdx]);
+      } else if (e.key === "Escape") {
+        setFocusedIdx(null);
+      }
     }
-  }
-  function onUp() { isDragRef.current = false; }
-
-  // Compute stackDepth for each panel — how many collapsed panels follow it consecutively
-  // (determines shadow depth intensity)
-  function getStackDepths(nodes: TNode[]): number[] {
-    // We can't know which are collapsed from here, so pass 0 — panels compute internally
-    return nodes.map(() => 0);
-  }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filtered, focusedIdx, panelNode]);
 
   return (
     <section id="timeline" className="section-pad" aria-labelledby="timeline-heading" style={{ backgroundColor:"var(--bg-primary)" }}>
-      {/* Label + tabs inside site-container */}
       <div className="site-container">
         <SectionLabel>04 — Timeline</SectionLabel>
         <h2 id="timeline-heading" className="sr-only">Timeline</h2>
-        <TabBar tabs={FILTER_TABS} active={filter} onChange={label=>{ setFilter(label); setPanelNode(null); setExpandMob(null); }} />
+        <TabBar tabs={FILTER_TABS} active={filter} onChange={label=>{ setFilter(label); setPanelNode(null); setExpandMob(null); setFocusedIdx(null); }} />
       </div>
 
-      {/* ── Desktop — contained track ── */}
+      {/* ── Desktop ── */}
       <div className="timeline-desktop">
         <div className="site-container" style={{ padding:0 }}>
-          <div style={{ position:"relative" }}>
-            {/* Scroll track — left-anchored, scrolls only right */}
-            <div
-              ref={trackRef}
+          <div style={{ position:"relative",
+            // ── #6 Perspective container for card tilt ──
+            perspective:"1200px", perspectiveOrigin:"50% 50%",
+          }}>
+            <div ref={trackRef}
               onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
               onScroll={checkScroll}
-              style={{
-                overflowX:"auto", overflowY:"hidden",
-                scrollbarWidth:"none",
-                cursor:"grab",
-                // Left edge is flush, content anchors left
-                paddingRight: canRight ? 48 : 0,
-              }}
+              style={{ overflowX:"auto", overflowY:"hidden", scrollbarWidth:"none", cursor:"grab", paddingRight:canRight?48:0 }}
             >
-              <div style={{ display:"flex", height:H_TRACK, minWidth:"max-content", paddingLeft:0 }}>
+              <div style={{ display:"flex", height:H_TRACK, minWidth:"max-content" }}>
                 <AnimatePresence mode="popLayout">
-                  {filtered.map((node, i) => (
+                  {filtered.map((node,i) => (
                     <FoldPanel
                       key={node.id}
                       node={node}
-                      stackDepth={0}  // simplified — shadow applied via CSS filter
-                      isActive={panelNode?.id === node.id}
-                      onExpand={() => {}}
+                      isActive={panelNode?.id===node.id}
+                      isFocused={focusedIdx===i}
+                      onExpand={()=>{}}
                       onOpenPanel={openPanel}
+                      onFocus={()=>setFocusedIdx(i)}
                     />
                   ))}
                 </AnimatePresence>
-                {filter === "All" && FUTURE.map((label, i) => (
-                  <FutureFold key={`f${i}`} label={label} opacity={Math.max(0.08, 0.5 - i * 0.18)} />
+                {filter==="All" && FUTURE.map((label,i)=>(
+                  <FutureFold key={`f${i}`} label={label} opacity={Math.max(0.08,0.5-i*0.18)} />
                 ))}
               </div>
             </div>
 
-            {/* Right fade + scroll arrow */}
             {canRight && (
               <>
                 <div style={{ position:"absolute", top:0, right:0, bottom:0, width:80, background:"linear-gradient(to right,transparent,var(--bg-primary))", pointerEvents:"none", zIndex:5 }} />
                 <button
-                  onClick={() => { trackRef.current?.scrollBy({ left:W_OPEN, behavior:"smooth" }); setTimeout(checkScroll,350); }}
+                  onClick={()=>{ trackRef.current?.scrollBy({left:W_OPEN,behavior:"smooth"}); setTimeout(checkScroll,350); }}
                   style={{ position:"absolute", top:"50%", right:8, transform:"translateY(-50%)", background:"var(--bg-elevated)", border:"1px solid var(--border)", color:"var(--text-muted)", cursor:"pointer", width:32, height:48, display:"flex", alignItems:"center", justifyContent:"center", zIndex:6, transition:"color 0.2s,border-color 0.2s" }}
                   onMouseEnter={e=>{ e.currentTarget.style.color="var(--text-primary)"; e.currentTarget.style.borderColor="var(--accent-muted)"; }}
                   onMouseLeave={e=>{ e.currentTarget.style.color="var(--text-muted)"; e.currentTarget.style.borderColor="var(--border)"; }}
-                  aria-label="Scroll right">
-                  <ChevronRight size={16} />
+                  aria-label="Scroll right"><ChevronRight size={16} />
                 </button>
               </>
             )}
           </div>
 
-          <p style={{ fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.15)", textAlign:"left", marginTop:10, paddingLeft:0 }}>
-            drag edge → fold · click folded → expand · click open → full detail · drag track → scroll
+          <p style={{ fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.14)", textAlign:"left", marginTop:10 }}>
+            drag edge → fold · click folded → expand · click open → detail · ← → keys navigate · enter opens detail
           </p>
         </div>
       </div>
@@ -540,15 +543,15 @@ export default function Timeline() {
           <div className="timeline-mobile-list">
             <div className="timeline-mobile-spine" aria-hidden />
             <AnimatePresence mode="popLayout">
-              {filtered.map((node, i) => (
+              {filtered.map((node,i)=>(
                 <MobileNode key={node.id} node={node} index={i}
-                  isExpanded={expandedMobile === node.id}
-                  onToggle={() => setExpandMob(expandedMobile === node.id ? null : node.id)}
-                  onOpen={(n,idx) => openPanel(n)} />
+                  isExpanded={expandedMobile===node.id}
+                  onToggle={()=>setExpandMob(expandedMobile===node.id?null:node.id)}
+                  onOpen={(n,idx)=>openPanel(n)} />
               ))}
             </AnimatePresence>
-            {filter === "All" && FUTURE.map((label, i) => (
-              <div key={`fm${i}`} className="timeline-future-mobile" style={{ opacity:Math.max(0.06, 0.22 - i * 0.07) }}>
+            {filter==="All" && FUTURE.map((label,i)=>(
+              <div key={`fm${i}`} className="timeline-future-mobile" style={{ opacity:Math.max(0.06,0.22-i*0.07) }}>
                 <div className="timeline-future-mobile__dot" />
                 <p className="timeline-future-mobile__period">Future</p>
                 <p className="timeline-future-mobile__title">{label}</p>
@@ -558,12 +561,24 @@ export default function Timeline() {
         </div>
       </div>
 
-      {/* Centered modal panel */}
-      <TimelinePanel node={panelNode} allNodes={filtered} index={panelIndex} onClose={() => setPanelNode(null)} onNavigate={navigate} />
+      <TimelinePanel node={panelNode} allNodes={filtered} index={panelIndex} onClose={()=>setPanelNode(null)} onNavigate={navigate} />
 
       <style>{`
         .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
         .timeline-desktop ::-webkit-scrollbar{display:none;}
+
+        /* ── #4 Active glow pulse on card border ── */
+        @keyframes tl-glow-pulse {
+          0%,100% { box-shadow: 0 0 0 1px var(--tl-col,#fff)40, 0 0 16px var(--tl-col,#fff)18, inset 0 0 28px var(--tl-col,#fff)06; }
+          50%      { box-shadow: 0 0 0 1px var(--tl-col,#fff)80, 0 0 28px var(--tl-col,#fff)30, inset 0 0 40px var(--tl-col,#fff)10; }
+        }
+        .tl-active-glow { animation: tl-glow-pulse 2.8s ease-in-out infinite; }
+
+        /* ── #5 Spine dot pulse ── */
+        @keyframes tl-dot-pulse {
+          0%,100% { box-shadow: 0 0 0 2px currentColor20, 0 0 10px currentColor60; }
+          50%      { box-shadow: 0 0 0 5px currentColor10, 0 0 20px currentColor90; }
+        }
       `}</style>
     </section>
   );
