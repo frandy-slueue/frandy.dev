@@ -238,7 +238,7 @@ export default function Contact() {
         .contact-buttons { display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap; padding:24px 16px 8px; }
         .contact-btn-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; flex:1; min-width:80px; padding:0 8px; }
 
-        /* contact button — dframe: sharp outer, rounded inner (6px), corners fade on hover */
+        /* contact button — dframe: sharp outer, rounded inner (6px), corner accents TL+BR */
         .contact-btn {
           position:relative;
           width:80px; height:80px;
@@ -248,21 +248,24 @@ export default function Contact() {
           display:flex; align-items:center; justify-content:center;
           cursor:pointer;
           transition:color 300ms ease, border-color 300ms ease, transform 300ms ease;
-          overflow:hidden;
+          overflow:visible;
         }
+        /* inner rounded frame */
         .contact-btn::before {
           content:''; position:absolute; inset:4px;
           border:1px solid var(--border-subtle); border-radius:6px;
           pointer-events:none; transition:border-color 250ms ease;
+          z-index:0;
         }
+        /* corner accents TL + BR — sit outside the box via negative inset */
         .contact-btn::after {
           content:''; position:absolute; inset:-1px;
           background:
-            linear-gradient(var(--accent),var(--accent)) top left / 12px 1.5px no-repeat,
-            linear-gradient(var(--accent),var(--accent)) top left / 1.5px 12px no-repeat,
+            linear-gradient(var(--accent),var(--accent)) top left  / 12px 1.5px no-repeat,
+            linear-gradient(var(--accent),var(--accent)) top left  / 1.5px 12px no-repeat,
             linear-gradient(var(--accent),var(--accent)) bottom right / 12px 1.5px no-repeat,
             linear-gradient(var(--accent),var(--accent)) bottom right / 1.5px 12px no-repeat;
-          pointer-events:none; transition:opacity 250ms ease; z-index:2;
+          pointer-events:none; transition:opacity 250ms ease; z-index:3;
         }
         .contact-btn:hover, .contact-btn.active {
           border-color:var(--accent); color:var(--accent);
@@ -276,8 +279,13 @@ export default function Contact() {
         .contact-btn__reveal { display:flex; flex-direction:column; align-items:center; gap:8px; opacity:0; transform:translateY(8px); transition:opacity 250ms ease,transform 250ms ease; pointer-events:none; text-align:center; width:100%; }
         .contact-btn__reveal.visible { opacity:1; transform:translateY(0); pointer-events:all; }
         .contact-btn__hint { font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; white-space:nowrap; }
-        /* .contact-btn__action now uses .btn-secondary from globals.css */
-        .contact-btn__action { font-size:11px; padding:8px 20px; }
+        /* action button — tight override of .btn-secondary for small context */
+        .contact-btn__action {
+          font-size: 10px;
+          letter-spacing: 1px;
+          padding: 6px 14px;
+          white-space: nowrap;
+        }
         .contact-follow__label { font-family:var(--font-mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px; }
         .contact-follow__icons { display:flex; flex-wrap:wrap; gap:20px; }
         /* Social icons — always brand colored, glow on hover */
