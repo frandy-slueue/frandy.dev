@@ -1124,12 +1124,33 @@ select option {
 .project-cell {
   position: relative;
   cursor: pointer;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--border);
   min-height: 160px;
   background-color: var(--bg-elevated);
   transition: border-color 300ms ease, box-shadow 300ms ease;
 }
+
+/* corner accents TL + BR — drawn outside so overflow must be visible */
+.project-cell::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background:
+    linear-gradient(var(--accent), var(--accent)) top left  / 14px 1.5px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) top left  / 1.5px 14px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) bottom right / 14px 1.5px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) bottom right / 1.5px 14px no-repeat;
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 250ms ease;
+}
+
+/* fade corners on hover — border brightens instead */
+.project-cell:hover::after { opacity: 0; }
+
+/* clip inner content so it doesn't bleed past the cell border */
+.project-cell > * { overflow: hidden; }
 
 .project-cell:hover {
   border-color: var(--accent-muted);
