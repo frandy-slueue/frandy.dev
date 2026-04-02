@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from core.config import settings
-from routers import analytics, auth, contact, github, projects, resume, settings as settings_router
+from routers import analytics, auth, contact, github, projects, resume, settings as settings_router, timeline
 from services.scheduler import start_scheduler, stop_scheduler
 
 UPLOAD_DIR = Path(settings.upload_dir)
@@ -46,6 +46,7 @@ app.include_router(github.router)
 app.include_router(analytics.router)
 app.include_router(settings_router.router)
 app.include_router(resume.router)
+app.include_router(timeline.router)
 
 
 @app.get("/api/health")
