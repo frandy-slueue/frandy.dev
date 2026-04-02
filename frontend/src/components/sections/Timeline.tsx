@@ -70,14 +70,7 @@ function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
   const cat         = getCat(node.category);
   const isCollapsed = width <= W_STACK + 6;
 
-  // Shadow layers simulate card stack depth behind this collapsed panel
-  const stackShadow = isCollapsed && stackDepth > 0
-    ? Array.from({ length: Math.min(stackDepth, 3) }, (_, i) => {
-        const offset = (i + 1) * 5;
-        const dim    = 1 - (i + 1) * 0.18;
-        return `${offset}px ${offset}px 0 rgba(0,0,0,${0.55 - i * 0.12}), ${offset}px ${offset}px 0 rgba(255,255,255,${0.025 * dim})`;
-      }).join(", ")
-    : "none";
+  // (stackShadow removed — handled directly on the wrapper)
 
   const foldRatio     = 1 - Math.max(0, Math.min(1, (width - W_STACK) / (W_OPEN - W_STACK)));
   const creaseOpacity = 0.06 + foldRatio * 0.32;
@@ -124,12 +117,13 @@ function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
         position: "relative",
         height: "100%",
         willChange: "width",
-        // Stack depth shadow — only on collapsed panels
-        filter: isCollapsed && stackDepth > 0
-          ? `drop-shadow(${Math.min(stackDepth,3)*5}px ${Math.min(stackDepth,3)*5}px 0 rgba(0,0,0,0.5))`
+        // Shadow persists while collapsed — gives the visual sense that the
+        // tab is tucked behind the card to its right
+        filter: isCollapsed
+          ? "drop-shadow(6px 4px 8px rgba(0,0,0,0.65)) drop-shadow(10px 6px 14px rgba(0,0,0,0.3))"
           : "none",
         zIndex: isCollapsed ? 1 : 2,
-        transition: dragging ? "none" : "filter 0.4s ease",
+        transition: dragging ? "none" : "filter 0.45s ease",
       }}
     >
       {/* Paper face */}
@@ -147,8 +141,9 @@ function FoldPanel({ node, stackDepth, isActive, onExpand, onOpenPanel }: {
           cursor: isCollapsed ? "e-resize" : "pointer",
           transition:"background 300ms ease, border-color 300ms ease",
           // 3-D depth: top-left light, bottom-right dark
+          // Inset right-edge darkening when collapsed — reinforces depth behind next card
           boxShadow: isCollapsed
-            ? `inset 1px 0 0 rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.04)`
+            ? "inset -3px 0 10px rgba(0,0,0,0.5), inset 1px 0 0 rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.04)"
             : "none",
         }}
       >
