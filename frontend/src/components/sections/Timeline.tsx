@@ -37,10 +37,10 @@ const CAT: Record<string,{icon:React.ReactNode;color:string}> = {
 };
 const getCat = (c:string) => CAT[c] ?? CAT.Background;
 
-const W_OPEN = 240;
-const W_PEEK = 68;
+const W_OPEN = 320;
+const W_PEEK = 90;
 const STOPS  = [W_OPEN, W_PEEK] as const;
-const H_TRACK = 460;
+const H_TRACK = 692;
 const RESIST  = 0.10;
 const VEL_THRESH = 0.28;
 // Spring with real bounce — damping 22, mass 1.1
@@ -74,8 +74,8 @@ function resist(raw:number):number {
 // velocity flick toward W_PEEK or below still only snaps to W_PEEK
 
 // ── Fold panel ────────────────────────────────────────────────────────
-function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
-  node:TNode; isActive:boolean; isFocused:boolean;
+function FoldPanel({ node, cardIndex, isActive, isFocused, onOpenPanel, onFocus }:{
+  node:TNode; cardIndex:number; isActive:boolean; isFocused:boolean;
   onOpenPanel:(n:TNode)=>void; onFocus:()=>void;
 }) {
   const [width, setWidth]       = useState(W_OPEN);
@@ -198,7 +198,7 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
         )}
 
         {/* Year header */}
-        <div style={{ padding:"16px 16px 10px", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0, overflow:"hidden", whiteSpace:"nowrap" }}>
+        <div style={{ padding:"16px 16px 10px", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0, overflow:"hidden", whiteSpace:"nowrap", position:"relative" }}>
           {/* Plain color — no gradient clip, no WebkitBackgroundClip, no blurring */}
           <div style={{ fontFamily:"var(--font-display)", fontSize:"2rem", fontWeight:700, letterSpacing:"-0.02em", lineHeight:1, color:cat.color, marginBottom:3 }}>
             {node.period}
@@ -206,6 +206,23 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
           <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.62rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", opacity:isPeek?0:1, transition:"opacity 0.12s" }}>
             {node.date_label || node.category}
           </div>
+          {/* Open card: watermark number sits top-right inside year header */}
+          {!isPeek && (
+            <div style={{
+              position:"absolute", top:10, right:12,
+              fontFamily:"var(--font-display)",
+              fontSize:"1.6rem",
+              fontWeight:700,
+              lineHeight:1,
+              color: cat.color,
+              opacity:0.1,
+              pointerEvents:"none",
+              letterSpacing:"-0.02em",
+              mixBlendMode:"screen",
+            }}>
+              {String(cardIndex + 1).padStart(2, "0")}
+            </div>
+          )}
         </div>
 
         {/* Spine */}
@@ -265,7 +282,6 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
         {/* Tension indicator — bottom bar, only shows when dragged past left wall */}
         {tensionRatio > 0 && (
           <div style={{ position:"absolute", bottom:0, left:0, right:0, height:4, zIndex:10, pointerEvents:"none", overflow:"hidden", background:"rgba(0,0,0,0.3)" }}>
-            {/* Bar fills left-to-right proportional to tension */}
             <div style={{
               position:"absolute", bottom:0, left:0,
               width:`${tensionWidth}%`, height:"100%",
@@ -273,6 +289,25 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }:{
               transition: "none",
               boxShadow:`0 0 8px ${tensionColor}, 0 0 16px ${tensionColor}60`,
             }} />
+          </div>
+        )}
+
+        {/* Peek card: watermark number bottom-right — no image visible at peek so always clear */}
+        {isPeek && (
+          <div style={{
+            position:"absolute", bottom:8, right:10,
+            fontFamily:"var(--font-display)",
+            fontSize:"2.4rem",
+            fontWeight:700,
+            lineHeight:1,
+            color: cat.color,
+            opacity:0.14,
+            pointerEvents:"none",
+            zIndex:1,
+            letterSpacing:"-0.02em",
+            mixBlendMode:"screen",
+          }}>
+            {String(cardIndex + 1).padStart(2, "0")}
           </div>
         )}
       </div>
@@ -336,7 +371,7 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }:{
             <motion.div key="pn"
               initial={{ opacity:0, y:24, scale:0.97 }} animate={{ opacity:1, y:0, scale:1 }}
               exit={{ opacity:0, y:16, scale:0.98 }} transition={SPRING}
-              style={{ width:"min(560px,90vw)", maxHeight:"82vh", background:"var(--bg-elevated)", border:"1px solid var(--border)", display:"flex", flexDirection:"column", overflow:"hidden", pointerEvents:"all", position:"relative" }}
+              style={{ width:"min(748px,92vw)", maxHeight:"90vh", background:"var(--bg-elevated)", border:"1px solid var(--border)", display:"flex", flexDirection:"column", overflow:"hidden", pointerEvents:"all", position:"relative" }}
             >
               {/* Top stripe */}
               <div style={{ height:3, flexShrink:0, background:cat?.color }} />
@@ -351,7 +386,11 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }:{
 
               {/* Header */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 20px", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0, position:"relative", zIndex:3 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                {/* Watermark index — right side, between center and close button */}
+                <div style={{ position:"absolute", right:48, top:"50%", transform:"translateY(-50%)", fontFamily:"var(--font-display)", fontSize:"2.2rem", fontWeight:700, lineHeight:1, letterSpacing:"-0.02em", color:cat?.color, opacity:0.1, pointerEvents:"none", zIndex:0, mixBlendMode:"screen" }}>
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:8, position:"relative", zIndex:1 }}>
                   <div style={{ width:8, height:8, borderRadius:"50%", background:cat?.color, boxShadow:`0 0 8px ${cat?.color}` }} />
                   <span style={{ fontFamily:"var(--font-mono)", fontSize:"10px", letterSpacing:"0.12em", textTransform:"uppercase", color:cat?.color }}>{node.category}</span>
                   <span style={{ color:"rgba(255,255,255,0.2)" }}>·</span>
@@ -479,6 +518,25 @@ export default function Timeline() {
 
   useEffect(()=>{ fetch("/api/timeline").then(r=>r.json()).then((d:TNode[])=>{ if(d?.length) setNodes(d); }).catch(()=>{}); },[]);
 
+  // Global pointer-up — resets drag even when released outside the track element
+  useEffect(()=>{
+    function globalUp() {
+      if (isDragRef.current) {
+        isDragRef.current = false;
+        setScrollOverdrag(0);
+      }
+      if (isDragMRef.current) {
+        isDragMRef.current = false;
+      }
+    }
+    window.addEventListener("pointerup", globalUp);
+    window.addEventListener("pointercancel", globalUp);
+    return () => {
+      window.removeEventListener("pointerup", globalUp);
+      window.removeEventListener("pointercancel", globalUp);
+    };
+  }, []);
+
   const filtered = filter==="All"?nodes:nodes.filter(n=>n.category===filter);
 
   function openPanel(node:TNode) { const idx=filtered.findIndex(n=>n.id===node.id); setPanelNode(node); setPanelIndex(idx); }
@@ -562,6 +620,7 @@ export default function Timeline() {
                   <FoldPanel
                     key={filtered[0].id}
                     node={filtered[0]}
+                    cardIndex={0}
                     isActive={panelNode?.id===filtered[0].id}
                     isFocused={focusedIdx===0}
                     onOpenPanel={openPanel}
@@ -579,7 +638,7 @@ export default function Timeline() {
                 <div style={{ display:"flex", height:H_TRACK, minWidth:"max-content", paddingRight:canRight?48:0 }}>
                   <AnimatePresence mode="popLayout">
                     {filtered.slice(1).map((node,i)=>(
-                      <FoldPanel key={node.id} node={node} isActive={panelNode?.id===node.id} isFocused={focusedIdx===i+1} onOpenPanel={openPanel} onFocus={()=>setFocusedIdx(i+1)} />
+                      <FoldPanel key={node.id} node={node} cardIndex={i+1} isActive={panelNode?.id===node.id} isFocused={focusedIdx===i+1} onOpenPanel={openPanel} onFocus={()=>setFocusedIdx(i+1)} />
                     ))}
                   </AnimatePresence>
                   {filter==="All"&&FUTURE.map((label,i)=>(
@@ -627,7 +686,7 @@ export default function Timeline() {
             )}
           </div>
           <p style={{ fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.14)", textAlign:"left", marginTop:10 }}>
-            drag edge → peek · drag back → expand · click open → detail · ← → keys navigate
+            drag edge → peek · drag back → expand · double-tap open card → detail · ← → keys navigate
           </p>
         </div>
       </div>
@@ -642,10 +701,10 @@ export default function Timeline() {
             onScroll={checkMobileScroll}
             style={{ overflowX:"auto", overflowY:"hidden", scrollbarWidth:"none", cursor:"grab", touchAction:"pan-y" }}
           >
-            <div style={{ display:"flex", height:340, minWidth:"max-content", paddingLeft:"1rem" }}>
+            <div style={{ display:"flex", height:532, minWidth:"max-content", paddingLeft:"1rem" }}>
               <AnimatePresence mode="popLayout">
                 {filtered.map((node,i)=>(
-                  <FoldPanel key={node.id} node={node} isActive={panelNode?.id===node.id} isFocused={false} onOpenPanel={openPanel} onFocus={()=>{}} />
+                  <FoldPanel key={node.id} node={node} cardIndex={i} isActive={panelNode?.id===node.id} isFocused={false} onOpenPanel={openPanel} onFocus={()=>{}} />
                 ))}
               </AnimatePresence>
               {filter==="All"&&FUTURE.map((label,i)=>(
@@ -658,7 +717,7 @@ export default function Timeline() {
           )}
         </div>
         <p style={{ fontFamily:"var(--font-mono)", fontSize:"9px", letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.14)", textAlign:"left", marginTop:10, paddingLeft:"1rem" }}>
-          drag edge → fold · tap folded → expand · tap open → detail
+          drag edge → peek · drag back → expand · double-tap open card → detail
         </p>
       </div>
 
