@@ -103,10 +103,7 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }: {
 
   // Crease: opacity + brightness shift as paper bends
   const creaseOpacity   = 0.04 + foldRatio * 0.38;
-  const creaseBrightness = 1 - foldRatio * 0.22; // paper darkens as it folds
 
-  // Tilt increases as panel folds
-  const tiltY = -foldRatio * 4;
 
   const onHandleDown = useCallback((e: React.PointerEvent) => {
     e.stopPropagation();
@@ -155,7 +152,7 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }: {
         transition: dragging ? "none" : "filter 0.4s ease",
         zIndex: isPeek ? 1 : hovered ? 3 : 2,
         translateY: isOpen && hovered ? -4 : 0,
-        rotateY: tiltY,
+        // rotateY removed — 3D transforms blur text via GPU rasterization
       }}
       onMouseEnter={()=>setHovered(true)}
       onMouseLeave={()=>setHovered(false)}
@@ -180,8 +177,8 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }: {
           boxShadow: isPeek
             ? "inset -4px 0 12px rgba(0,0,0,0.55), inset 1px 0 0 rgba(255,255,255,0.05)"
             : "none",
-          // Crease brightness shift — paper darkens as it bends
-          filter: `brightness(${creaseBrightness})`,
+          // No filter here — brightness was blurring all text inside
+          // Crease darkening handled by overlay div below
         }}
       >
         {/* Top color stripe */}
@@ -262,14 +259,23 @@ function FoldPanel({ node, isActive, isFocused, onOpenPanel, onFocus }: {
           </div>
         )}
 
-        {/* Crease shadow — scaleX grows with foldRatio for paper-bending illusion */}
+        {/* Crease shadow — width grows with foldRatio */}
         {!isPeek && (
           <div style={{
             position:"absolute", top:0, right:0, bottom:0,
-            width:`${16 + foldRatio * 12}px`,
+            width:`${16 + foldRatio * 14}px`,
             background:`linear-gradient(to right,transparent,rgba(0,0,0,${creaseOpacity}))`,
             pointerEvents:"none", zIndex:3,
-            transition:dragging?"none":"width 0.2s, opacity 0.2s",
+            transition:dragging?"none":"width 0.2s",
+          }} />
+        )}
+
+        {/* Fold darkening overlay — replaces filter:brightness to avoid blurring text */}
+        {foldRatio > 0.05 && (
+          <div style={{
+            position:"absolute", inset:0, pointerEvents:"none", zIndex:2,
+            background:`rgba(0,0,0,${foldRatio * 0.18})`,
+            transition:dragging?"none":"background 0.15s",
           }} />
         )}
       </div>
@@ -331,10 +337,12 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
           <motion.div key="bd" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.22 }}
             onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.65)", backdropFilter:"blur(4px)", zIndex:49 }} />
 
+          {/* Fixed flex overlay centers the panel — avoids transform conflict with Framer Motion */}
+          <div key="panel-wrap" style={{ position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center", zIndex:50, pointerEvents:"none" }}>
           <motion.div key="pn"
             initial={{ opacity:0, y:28, scale:0.96 }} animate={{ opacity:1, y:0, scale:1 }}
             exit={{ opacity:0, y:16, scale:0.97 }} transition={SPRING}
-            style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:"min(560px,90vw)", maxHeight:"82vh", background:"var(--bg-elevated)", border:"1px solid var(--border)", zIndex:50, display:"flex", flexDirection:"column", overflow:"hidden" }}
+            style={{ width:"min(560px,90vw)", maxHeight:"82vh", background:"var(--bg-elevated)", border:"1px solid var(--border)", display:"flex", flexDirection:"column", overflow:"hidden", pointerEvents:"all" }}
           >
             <div style={{ height:3, flexShrink:0, background:cat?.color }} />
             <div style={{ position:"absolute", inset:4, border:"1px solid rgba(255,255,255,0.05)", borderRadius:6, pointerEvents:"none", zIndex:0 }} />
@@ -398,6 +406,7 @@ function TimelinePanel({ node, allNodes, index, onClose, onNavigate }: {
               <span style={{ fontFamily:"var(--font-mono)", fontSize:"9px", color:"rgba(255,255,255,0.2)", letterSpacing:"0.06em", flexShrink:0, padding:"0 12px" }}>{index+1} / {allNodes.length}</span>
             </div>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
@@ -566,7 +575,7 @@ export default function Timeline() {
       {/* ── Desktop ── */}
       <div className="timeline-desktop">
         <div className="site-container" style={{ padding:0 }}>
-          <div style={{ position:"relative", perspective:"1200px", perspectiveOrigin:"50% 50%" }}>
+          <div style={{ position:"relative" }}>
             <div ref={trackRef}
               onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
               onScroll={checkScroll}
