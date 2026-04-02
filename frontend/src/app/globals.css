@@ -1265,8 +1265,13 @@ select option {
 .mosaic-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  /* Fixed row height — cells can span rows but total container height never grows */
   grid-auto-rows: 200px;
   gap: 8px;
+  /* Contain layout so morph shape changes never push sections below */
+  contain: layout;
+  /* Reserve enough height for the tallest possible layout (2-row span = 408px) */
+  min-height: 416px;
 }
 
 @media (max-width: 768px) {
