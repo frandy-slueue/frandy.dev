@@ -17,6 +17,7 @@ class SiteSettings(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
     active_theme: Mapped[str] = mapped_column(String(20), default="silver")
+    theme_mode:   Mapped[str] = mapped_column(String(10), default="dark")
     last_theme_changed: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

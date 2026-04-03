@@ -113,6 +113,7 @@ export const githubApi = {
 // ── Settings ──────────────────────────────────────────────────────────
 export interface ThemeSettings {
   active_theme: string;
+  theme_mode:   string;
   last_theme_changed: string;
 }
 

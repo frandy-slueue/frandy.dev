@@ -1,30 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
 
-export default function BackToTop() {
-  const [visible, setVisible] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const onScroll = () => {
-      if (window.scrollY > 300) {
-        setVisible(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => setVisible(false), 2500);
-      } else {
-        setVisible(false);
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => { window.removeEventListener("scroll", onScroll); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-
+export default function BackToTop({ visible }: { visible: boolean }) {
   return (
     <>
       <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        onClick={() => window.scrollTo({ top:0, behavior:"smooth" })}
         aria-label="Back to top"
         className={`back-to-top dframe ${visible ? "visible" : ""}`}
       >
@@ -66,8 +48,12 @@ export default function BackToTop() {
           0%, 100% { box-shadow: 0 0 4px var(--accent-glow); }
           50%       { box-shadow: 0 0 12px var(--accent-glow); }
         }
-        @media (min-width: 768px) { .back-to-top { bottom: 32px; right: max(32px, calc((100vw - 1100px) / 2 + 20px)); } }
-        @media (max-width: 767px) and (orientation: portrait) { .back-to-top { bottom: 90px; } }
+        @media (min-width: 768px) {
+          .back-to-top { bottom: 32px; right: max(32px, calc((100vw - 1100px) / 2 + 20px)); }
+        }
+        @media (max-width: 767px) and (orientation: portrait) {
+          .back-to-top { bottom: 90px; }
+        }
       `}</style>
     </>
   );

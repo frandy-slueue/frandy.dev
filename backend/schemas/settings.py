@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 class ThemeResponse(BaseModel):
     active_theme: str
+    theme_mode:   str
     last_theme_changed: datetime
 
     model_config = {"from_attributes": True}
@@ -11,6 +12,7 @@ class ThemeResponse(BaseModel):
 
 class ThemeUpdate(BaseModel):
     theme: str
+    mode:  str = "dark"
 
 
 class ResumeResponse(BaseModel):

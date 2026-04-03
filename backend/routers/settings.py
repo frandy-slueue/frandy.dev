@@ -66,6 +66,7 @@ async def set_theme(
 
     row = await get_or_create_settings(db)
     row.active_theme = payload.theme
+    row.theme_mode    = payload.mode
     row.last_theme_changed = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(row)

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { User, Code2, FolderOpen, Clock, Mail } from "lucide-react";
+import { ThemeToggleDesktop } from "@/components/ui/ThemeToggle";
 
 const ALL_NAV_LINKS = [
   { label: "About",    href: "#about",    sectionKey: "section_about" },
@@ -20,7 +21,7 @@ const ALL_BOTTOM_NAV = [
   { label: "Contact",  href: "#contact",  sectionKey: "section_contact",  icon: Mail },
 ];
 
-const NAV_HEIGHT = 72;
+const NAV_HEIGHT = 92;
 
 interface SectionVisibility { [key: string]: boolean; }
 
@@ -93,6 +94,11 @@ export default function Nav() {
             ))}
           </nav>
 
+          {/* Desktop theme toggle */}
+          <div className="nav-theme-desktop">
+            <ThemeToggleDesktop />
+          </div>
+
           <button
             className="nav-hamburger"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -153,6 +159,7 @@ export default function Nav() {
       <style>{`
         /* ── Top nav ──────────────────────────────────────── */
         .top-nav {
+          --nav-text: rgba(255,255,255,0.85);
           position: fixed;
           top: 0; left: 0; right: 0;
           height: ${NAV_HEIGHT}px;
@@ -192,25 +199,25 @@ export default function Nav() {
           position: relative; z-index: 1;
         }
         .nav-logo__wordmark { display: flex; flex-direction: column; gap: 1px; }
-        .nav-logo__name { font-family: var(--font-display); font-size: 20px; color: var(--text-primary); letter-spacing: 3px; line-height: 1; }
+        .nav-logo__name { font-family: var(--font-display); font-size: 26px; color: var(--text-primary); letter-spacing: 3px; line-height: 1; }
         .nav-logo__sub  { font-family: var(--font-body); font-size: 9px; letter-spacing: 3px; color: var(--accent-muted); text-transform: uppercase; line-height: 1; }
 
         /* Desktop nav links — Option B, sharp edges */
         .nav-desktop { display: flex; gap: 4px; align-items: center; }
         .nav-link {
           font-family: var(--font-body);
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
           letter-spacing: 2px;
           text-transform: uppercase;
-          color: var(--accent-muted);
+          color: rgba(255,255,255,0.75);
           text-decoration: none;
-          padding: 6px 12px;
+          padding: 6px 14px;
           border: 1px solid transparent;
           transition: color 200ms ease, background 200ms ease, border-color 200ms ease;
         }
         .nav-link:hover {
-          color: var(--accent);
+          color: #ffffff;
           border-color: var(--border);
         }
         .nav-link.active {

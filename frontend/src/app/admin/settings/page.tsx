@@ -105,6 +105,7 @@ function SaveBtn({ onClick, disabled, label, saving }: { onClick: () => void; di
 // ── Main page ─────────────────────────────────────────────────────────
 export default function AdminSettings() {
   const [theme,    setTheme]    = useState("silver");
+  const [themeMode, setThemeMode] = useState("dark");
   const [social,   setSocial]   = useState<SocialLinks>({});
   const [contact,  setContact]  = useState<ContactInfo>({});
   const [sections, setSections] = useState<SectionVisibility>({ section_about: true, section_skills: true, section_projects: true, section_timeline: true, section_contact: true });
@@ -136,7 +137,7 @@ export default function AdminSettings() {
           fetch("/api/settings/sections",     { credentials: "include" }),
           fetch("/api/settings/pattern",      { credentials: "include" }),
         ]);
-        if (themeRes.ok)    { const d = await themeRes.json();    setTheme(d.active_theme); }
+        if (themeRes.ok)    { const d = await themeRes.json();    setTheme(d.active_theme); setThemeMode(d.theme_mode ?? "dark"); }
         if (socialRes.ok)   { const d = await socialRes.json();   setSocial(d); }
         if (contactRes.ok)  { const d = await contactRes.json();  setContact(d); }
         if (sectionsRes.ok) { const d = await sectionsRes.json(); setSections(d); }
@@ -207,7 +208,19 @@ export default function AdminSettings() {
             </button>
           ))}
         </div>
-        <SaveBtn onClick={() => save("/api/settings/theme", { theme }, "Theme saved", setSaving)} disabled={saving} label="Save Theme" saving={saving} />
+        {/* Mode toggle */}
+        <div style={{ marginBottom:"1rem" }}>
+          <p style={{ fontFamily:"var(--font-mono)", fontSize:"11px", letterSpacing:"1px", textTransform:"uppercase", color:"var(--color-text-muted)", marginBottom:"0.5rem" }}>Default Mode</p>
+          <div style={{ display:"flex", gap:"0.5rem" }}>
+            {["dark","light"].map(m=>(
+              <button key={m} onClick={()=>setThemeMode(m)}
+                style={{ flex:1, padding:"8px", border:`1px solid ${themeMode===m?"var(--color-accent)":"var(--color-border)"}`, background:themeMode===m?"var(--color-accent)":"transparent", color:themeMode===m?"var(--color-bg)":"var(--color-text-muted)", fontFamily:"var(--font-mono)", fontSize:"11px", letterSpacing:"1px", textTransform:"uppercase", cursor:"pointer", transition:"all 150ms" }}>
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+        <SaveBtn onClick={() => save("/api/settings/theme", { theme, mode: themeMode }, "Theme saved", setSaving)} disabled={saving} label="Save Theme" saving={saving} />
       </div>
 
       {/* ── Section Visibility ── */}
