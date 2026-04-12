@@ -9,7 +9,7 @@ from core.dependencies import get_current_admin
 from models.admin_user import AdminUser
 from models.site_settings import SiteSettings, THEMES
 from schemas.settings import ResumeResponse, ThemeResponse, ThemeUpdate
-from services.resume import save_resume
+from services.resume import save_resume, save_resume_docx
 from schemas.settings import ContactInfo, ContactInfoUpdate, ResumeResponse, SocialLinks, SocialLinksUpdate, ThemeResponse, ThemeUpdate
 
 
@@ -99,6 +99,53 @@ async def delete_resume(
     row.resume_url = None
     row.resume_uploaded_at = None
     await db.commit()
+
+
+# ── DOCX ─────────────────────────────────────────────────────────────────────
+
+@router.post("/resume/docx", response_model=ResumeResponse, status_code=status.HTTP_201_CREATED)
+async def upload_resume_docx(
+    file: UploadFile = File(...),
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    url = await save_resume_docx(file)
+    row = await get_or_create_settings(db)
+    row.resume_url_docx = url
+    await db.commit()
+    await db.refresh(row)
+    return row
+
+
+@router.delete("/resume/docx", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_resume_docx(
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    from services.resume import delete_resume as remove_file
+    row = await get_or_create_settings(db)
+    remove_file(row.resume_url_docx)
+    row.resume_url_docx = None
+    await db.commit()
+
+
+# ── Share link ────────────────────────────────────────────────────────────────
+
+class ShareLinkUpdate(BaseModel):
+    resume_url_share: str | None = None
+
+
+@router.put("/resume/share", response_model=ResumeResponse)
+async def update_share_link(
+    payload: ShareLinkUpdate,
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    row = await get_or_create_settings(db)
+    row.resume_url_share = payload.resume_url_share or None
+    await db.commit()
+    await db.refresh(row)
+    return row
 
 
 @router.get("/social", response_model=SocialLinks)

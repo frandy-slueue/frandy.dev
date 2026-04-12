@@ -14,9 +14,11 @@ interface ResumeModalProps {
   isOpen: boolean;
   onClose: () => void;
   resumeUrl: string | null;
+  docxUrl?: string | null;
+  shareUrl?: string | null;
 }
 
-export default function ResumeModal({ isOpen, onClose, resumeUrl }: ResumeModalProps) {
+export default function ResumeModal({ isOpen, onClose, resumeUrl, docxUrl, shareUrl }: ResumeModalProps) {
 
   // Close on Escape
   const handleKey = useCallback(
@@ -35,12 +37,11 @@ export default function ResumeModal({ isOpen, onClose, resumeUrl }: ResumeModalP
   }, [isOpen, handleKey]);
 
   function handleShare() {
-    const url = `${window.location.origin}/resume`;
+    const url = shareUrl || `${window.location.origin}/resume`;
     if (navigator.share) {
       navigator.share({ title: "Frandy Slueue — Resume", url });
     } else {
       navigator.clipboard.writeText(url).then(() => {
-        // brief toast — handled via CSS class toggle
         const btn = document.getElementById("resume-share-btn");
         if (btn) {
           btn.classList.add("copied");
@@ -51,9 +52,10 @@ export default function ResumeModal({ isOpen, onClose, resumeUrl }: ResumeModalP
   }
 
   function handleDownload(format: "pdf" | "docx") {
-    if (!resumeUrl) return;
+    const url = format === "pdf" ? resumeUrl : (docxUrl || resumeUrl);
+    if (!url) return;
     const a = document.createElement("a");
-    a.href = resumeUrl;
+    a.href = url;
     a.download = `Frandy_Slueue_Resume.${format}`;
     a.click();
   }
@@ -125,7 +127,7 @@ export default function ResumeModal({ isOpen, onClose, resumeUrl }: ResumeModalP
                     onClick={() => handleDownload("docx")}
                     title="Download DOCX"
                     aria-label="Download resume as DOCX"
-                    disabled={!resumeUrl}
+                    disabled={!docxUrl && !resumeUrl}
                   >
                     <FileText size={15} />
                     <span className="resume-modal-btn__label">DOCX</span>

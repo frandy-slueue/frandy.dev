@@ -17,6 +17,8 @@ class ThemeUpdate(BaseModel):
 
 class ResumeResponse(BaseModel):
     resume_url: str | None
+    resume_url_docx: str | None = None
+    resume_url_share: str | None = None
     resume_uploaded_at: datetime | None
 
     model_config = {"from_attributes": True}

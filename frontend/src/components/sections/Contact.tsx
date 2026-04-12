@@ -37,6 +37,8 @@ export default function Contact() {
   const [submitted, setDone]    = useState(false);
   const [submitError, setErr]   = useState<string|null>(null);
   const [resumeUrl, setResume]  = useState<string|null>(null);
+  const [docxUrl, setDocxUrl]   = useState<string|null>(null);
+  const [shareUrl, setShareUrl] = useState<string|null>(null);
   const [social, setSocial]     = useState<SocialLinks>(SOCIAL_EMPTY);
   const [contactInfo, setInfo]  = useState<ContactInfo>({ contact_email:null,contact_phone:null,contact_whatsapp:null });
   const [activeReveal, setAR]   = useState<string|null>(null);
@@ -44,7 +46,11 @@ export default function Contact() {
   const [modalOpen, setModal]   = useState(false);
 
   useEffect(() => {
-    settingsApi.getResume().then((d) => setResume(d.resume_url)).catch(()=>{});
+    settingsApi.getResume().then((d) => {
+      setResume(d.resume_url);
+      setDocxUrl(d.resume_url_docx);
+      setShareUrl(d.resume_url_share);
+    }).catch(()=>{});
     fetch("/api/settings/social").then((r)=>r.json()).then(setSocial).catch(()=>{});
     fetch("/api/settings/contact-info").then((r)=>r.json()).then(setInfo).catch(()=>{});
   }, []);
@@ -229,6 +235,8 @@ export default function Contact() {
         isOpen={modalOpen}
         onClose={() => setModal(false)}
         resumeUrl={resumeUrl}
+        docxUrl={docxUrl}
+        shareUrl={shareUrl}
       />
 
       <style>{`

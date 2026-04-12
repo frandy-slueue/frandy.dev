@@ -119,6 +119,8 @@ export interface ThemeSettings {
 
 export interface ResumeSettings {
   resume_url: string | null;
+  resume_url_docx: string | null;
+  resume_url_share: string | null;
   resume_uploaded_at: string | null;
 }
 

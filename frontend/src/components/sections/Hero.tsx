@@ -9,12 +9,18 @@ import ResumeModal from "@/components/ui/ResumeModal";
 
 export default function Hero() {
   const [resumeUrl, setResumeUrl]   = useState<string | null>(null);
+  const [docxUrl, setDocxUrl]       = useState<string | null>(null);
+  const [shareUrl, setShareUrl]     = useState<string | null>(null);
   const [scrolled, setScrolled]     = useState(false);
   const [pattern, setPattern]       = useState("grid");
   const [modalOpen, setModalOpen]   = useState(false);
 
   useEffect(() => {
-    settingsApi.getResume().then((d) => setResumeUrl(d.resume_url)).catch(() => {});
+    settingsApi.getResume().then((d) => {
+      setResumeUrl(d.resume_url);
+      setDocxUrl(d.resume_url_docx);
+      setShareUrl(d.resume_url_share);
+    }).catch(() => {});
     fetch("/api/settings/pattern")
       .then((r) => r.json())
       .then((d) => setPattern(d.background_pattern ?? "grid"))
@@ -75,6 +81,8 @@ export default function Hero() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         resumeUrl={resumeUrl}
+        docxUrl={docxUrl}
+        shareUrl={shareUrl}
       />
     </>
   );

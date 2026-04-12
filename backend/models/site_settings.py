@@ -22,6 +22,8 @@ class SiteSettings(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     resume_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    resume_url_docx: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    resume_url_share: Mapped[str | None] = mapped_column(String(500), nullable=True)
     resume_uploaded_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

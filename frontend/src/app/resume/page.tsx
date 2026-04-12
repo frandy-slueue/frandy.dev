@@ -183,15 +183,21 @@ function AwardItem({ title, detail }: { title: string; detail: string }) {
 // ── Main page ────────────────────────────────────────────────────────────────
 export default function ResumePage() {
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [docxUrl, setDocxUrl]     = useState<string | null>(null);
+  const [shareUrl, setShareUrl]   = useState<string | null>(null);
   const [shareToast, setShareToast] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    settingsApi.getResume().then(d => setResumeUrl(d.resume_url)).catch(() => {});
+    settingsApi.getResume().then(d => {
+      setResumeUrl(d.resume_url);
+      setDocxUrl(d.resume_url_docx);
+      setShareUrl(d.resume_url_share);
+    }).catch(() => {});
   }, []);
 
   function handleShare() {
-    const url = window.location.href;
+    const url = shareUrl || window.location.href;
     if (navigator.share) {
       navigator.share({ title: "Frandy Slueue — Resume", url });
     } else {
@@ -233,8 +239,8 @@ export default function ResumePage() {
             </button>
             <button
               className="res-action-btn"
-              onClick={() => resumeUrl && window.open(resumeUrl, "_blank")}
-              disabled={!resumeUrl}
+              onClick={() => docxUrl && window.open(docxUrl, "_blank")}
+              disabled={!docxUrl}
               title="Download DOCX"
               aria-label="Download DOCX"
             >
@@ -562,7 +568,7 @@ export default function ResumePage() {
       </button>
 
       {/* ── Download CTA strip ──────────────────────────────────────────── */}
-      {resumeUrl && (
+      {(resumeUrl || docxUrl) && (
         <motion.div
           className="res-cta-strip"
           initial={{ opacity: 0, y: 20 }}
@@ -572,12 +578,16 @@ export default function ResumePage() {
           <div className="site-container res-cta-strip__inner">
             <p className="res-cta-strip__label">Save a copy for your records</p>
             <div className="res-cta-strip__btns">
-              <BtnPrimary href={resumeUrl} target="_blank" rel="noopener noreferrer">
-                <FileDown size={14} /> Download PDF
-              </BtnPrimary>
-              <BtnSecondary href={resumeUrl} target="_blank" rel="noopener noreferrer">
-                <FileDown size={14} /> Download DOCX
-              </BtnSecondary>
+              {resumeUrl && (
+                <BtnPrimary href={resumeUrl} target="_blank" rel="noopener noreferrer">
+                  <FileDown size={14} /> Download PDF
+                </BtnPrimary>
+              )}
+              {docxUrl && (
+                <BtnSecondary href={docxUrl} target="_blank" rel="noopener noreferrer">
+                  <FileDown size={14} /> Download DOCX
+                </BtnSecondary>
+              )}
             </div>
           </div>
         </motion.div>
