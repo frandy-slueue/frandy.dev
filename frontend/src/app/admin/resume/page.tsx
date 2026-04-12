@@ -208,6 +208,9 @@ export default function AdminResume() {
 
   if (loading) return <ResumeSkeleton />;
 
+  // The active PDF resume
+  const activePdf = resumes.find(r => r.is_active) || resumes[0] || null;
+
   return (
     <div className="resume">
 
@@ -215,50 +218,59 @@ export default function AdminResume() {
       <div className="rv-header">
         <div>
           <h1>Resume Manager</h1>
-          <p>{resumes.length} PDF file{resumes.length!==1?"s":""} uploaded</p>
-        </div>
-        <div>
-          <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} style={{ display:"none" }} id="resume-upload" />
-          <label htmlFor="resume-upload" className="admin-btn-primary">
-            <span>{uploading ? "Uploading..." : "+ Upload PDF"}</span>
-          </label>
+          <p>Manage your PDF, DOCX, and share link</p>
         </div>
       </div>
 
       {error   && <div className="rv-banner rv-banner--error">{error}</div>}
       {success && <div className="rv-banner rv-banner--ok">{success}</div>}
 
-      {/* ── PDF list ───────────────────────────────────────────────────── */}
-      {resumes.length === 0 ? (
-        <div className="rv-empty">
-          <p>No resumes uploaded yet.</p>
-          <label htmlFor="resume-upload" className="admin-btn-primary">
-            <span>Upload your first resume</span>
+      {/* ── PDF card ───────────────────────────────────────────────────── */}
+      <div className="rv-section-divider">
+        <span>PDF Version</span>
+      </div>
+
+      <div className={`rv-item ${activePdf ? "active" : ""}`}>
+        <div className="rv-item__icon">📄</div>
+        <div className="rv-item__info">
+          <div className="fn-display">
+            <span className="rv-filename">
+              {activePdf ? activePdf.filename : "No PDF uploaded"}
+            </span>
+          </div>
+          <div className="rv-item__meta">
+            {activePdf ? (
+              <>
+                <span>Uploaded {formatDate(activePdf.uploaded_at)}</span>
+                <span className="rv-badge">Active</span>
+                {resumes.length > 1 && (
+                  <span style={{ color:"var(--color-text-muted)" }}>
+                    +{resumes.length - 1} other version{resumes.length - 1 !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span style={{ color:"var(--color-text-muted)" }}>Upload a .pdf file to enable PDF downloads</span>
+            )}
+          </div>
+        </div>
+        <div className="rv-item__actions">
+          {activePdf && (
+            <>
+              <a href={activePdf.file_url} target="_blank" rel="noopener noreferrer" className="admin-btn-secondary">
+                <span>View</span>
+              </a>
+              <button className="admin-btn-primary" onClick={() => handleDelete(activePdf.id)}>
+                <span>Remove</span>
+              </button>
+            </>
+          )}
+          <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} style={{ display:"none" }} id="resume-upload" />
+          <label htmlFor="resume-upload" className="admin-btn-secondary">
+            <span>{uploading ? "Uploading..." : activePdf ? "Replace" : "+ Upload PDF"}</span>
           </label>
         </div>
-      ) : (
-        <div className="rv-list">
-          {resumes.map(r => (
-            <div key={r.id} className={`rv-item ${r.is_active?"active":""}`}>
-              <div className="rv-item__icon">📄</div>
-              <div className="rv-item__info">
-                <FilenameEditor resume={r} onSaved={handleRenamed} />
-                <div className="rv-item__meta">
-                  Uploaded {formatDate(r.uploaded_at)}
-                  {r.is_active && <span className="rv-badge">Active</span>}
-                </div>
-              </div>
-              <div className="rv-item__actions">
-                <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="admin-btn-secondary"><span>View</span></a>
-                {!r.is_active && (
-                  <button className="admin-btn-secondary" onClick={() => handleActivate(r.id)}><span>Set Active</span></button>
-                )}
-                <button className="admin-btn-primary" onClick={() => handleDelete(r.id)}><span>Delete</span></button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      </div>
 
       {/* ── DOCX card ──────────────────────────────────────────────────── */}
       <div className="rv-section-divider">
