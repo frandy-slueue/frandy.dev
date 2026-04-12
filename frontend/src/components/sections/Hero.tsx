@@ -46,7 +46,7 @@ export default function Hero() {
           </motion.h1>
 
           <motion.p className="hero-title" variants={fadeUp} initial="hidden" animate="visible" transition={{ duration: 0.6, delay: 0.3 }}>
-            IT Operations · Security · Software Engineering
+            Software Engineering · Security · IT Operations
           </motion.p>
 
           <motion.p className="hero-subtitle" variants={fadeUp} initial="hidden" animate="visible" transition={{ duration: 0.6, delay: 0.4 }}>

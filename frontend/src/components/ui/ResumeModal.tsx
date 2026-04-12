@@ -384,39 +384,55 @@ function ResumeDocument() {
         {/* Summary */}
         <ResSection label="Professional Summary" tinted={false}>
           <p style={{ fontSize: 13, lineHeight: 1.82, color: "#374151", margin: 0 }}>
-            Security-focused IT professional with 10+ years of enterprise technology experience, including 4 years as a GS-11 IT Specialist at the US Department of Veterans Affairs within a DevSecOps framework. Proven in vulnerability analysis, risk assessment, network security enforcement, and ServiceNow operations. Currently completing a full-stack software engineering and DevOps program — bridging deep IT security operations with modern development and systems thinking. Holds multiple VA Certificates of Appreciation for leading enterprise-scale projects under pressure.
+            Full-stack software engineer and security-conscious IT professional with 10+ years of combined experience. Builds production-grade web and mobile applications using React, Next.js, FastAPI, React Native, and Docker — and brings rare operational depth from 4 years as a GS-11 IT Specialist within the VA DevSecOps division. Proven in vulnerability analysis, network security, and ServiceNow operations at enterprise scale. Open to software engineering and IT operations roles where technical breadth and security awareness are valued equally.
           </p>
         </ResSection>
 
         {/* Competencies */}
         <ResSection label="Core Competencies" tinted>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
             {[
-              "Vulnerability Analysis & Risk Assessment","ServiceNow Ticketing & Workflows","Network Security (TCP/IP, VPN, DNS)",
-              "AIS Security Planning & DR","Active Directory & Identity Management","VLAN Architecture & Cisco Management",
-              "Compliance Auditing & Security SOPs","Endpoint Security (Intune / Azure MDM)","CI/CD · Docker · Bash · Python",
-            ].map(item => (
-              <div key={item} style={{ background: "#f0fdf4", border: "0.5px solid #bbf7d0", borderRadius: 3, padding: "7px 11px", fontSize: 11, color: "#065f46", fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ color: "#10b981", fontSize: 9 }}>▪</span>{item}
-              </div>
+              ["React · Next.js · React Native · Expo",     "Vulnerability Analysis & Risk Assessment"],
+              ["FastAPI · Django · Node.js · GraphQL",       "ServiceNow Ticketing & Workflows"],
+              ["PostgreSQL · MongoDB · Redis · Docker",      "Network Security (TCP/IP, VPN, VLAN)"],
+              ["CI/CD · GitHub Actions · Linux · Bash",      "AIS Security Planning & Compliance"],
+              ["Python · JavaScript · TypeScript · C",       "Active Directory & Identity Management"],
+              ["Figma · REST APIs · Stripe · Claude AI",     "Endpoint Security (Intune / Azure MDM)"],
+            ].map(([left, right]) => (
+              <>
+                <div key={left} style={{ background: "#eff6ff", border: "0.5px solid #bfdbfe", borderRadius: 3, padding: "7px 11px", fontSize: 11, color: "#1e40af", fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ color: "#3b82f6", fontSize: 9 }}>▪</span>{left}
+                </div>
+                <div key={right} style={{ background: "#f0fdf4", border: "0.5px solid #bbf7d0", borderRadius: 3, padding: "7px 11px", fontSize: 11, color: "#065f46", fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ color: "#10b981", fontSize: 9 }}>▪</span>{right}
+                </div>
+              </>
             ))}
           </div>
         </ResSection>
 
         {/* Experience */}
         <ResSection label="Professional Experience" tinted={false}>
+          <JobBlock title="Freelance Software Engineer — CodeBreeder" org="Tulsa, OK · Independent Engineering Practice" dates="2024 – Present" bullets={[
+            "Architecting and leading full-stack development of HBS Events Studio — a luxury event platform serving Oklahoma and Dallas markets. Stack: Next.js 15+, Django 5+, FastAPI AI microservice, GraphQL (Graphene-Django + Apollo), PostgreSQL, Redis, Docker Compose, Stripe, Square, Cloudinary, Claude AI API with OpenAI fallback, DocuSign, Resend, PostHog. Deployed across Vercel (frontend) and Railway (backend).",
+            "Engineered a FastAPI AI microservice integrating Anthropic Claude API (Haiku/Sonnet) with automatic OpenAI GPT-4o mini fallback — generates structured JSON event decoration quotes with server-side math validation, market-based pricing adjustments, and admin-configurable pricing controls.",
+            "Designed full system architecture including Docker container orchestration (6 services), CI/CD pipeline via GitHub Actions, GraphQL schema, PostgreSQL data models, Redis caching strategy, and Stripe + Square payment flows with webhook verification.",
+            "Built React Native / Expo mobile applications during Atlas curriculum including Lumigram — a photo-sharing platform with Firebase backend, TypeScript, React Navigation, and Expo Image Picker — and a cross-platform music player.",
+            "Implemented local SEO strategy for James' Donut (Tulsa, OK, 2024) — keyword targeting, Google Business Profile optimization, and on-page technical improvements for competitive local food service search.",
+            "Designed and deployed personal portfolio (frandy.dev) — FastAPI backend, Next.js 16+ frontend, five Docker services, four animated CSS themes, JWT auth, PostgreSQL, CI/CD via GitHub Actions on DigitalOcean.",
+          ]} />
           <JobBlock title="IT Specialist GS-11 — US Dept. of Veterans Affairs (DevSecOps)" org="Office of Information & Technology · Muskogee, OK · Full-time" dates="Sep 2019 – Aug 2023" bullets={[
-            "Conducted vulnerability analysis and risk assessments across VA information systems; ensured AIS security plans complied with VA federal statutes and NIST-aligned standards.",
-            "Developed AIS security contingency plans and disaster recovery procedures as part of the focal business continuity team.",
-            "Managed ServiceNow (SNOW) workflows for Tier 2/3 resolution, BioMed activations, and escalation routing across a 400+ staff enterprise.",
-            "Performed Cisco switch management via SecureCRT, PUTTY, TelNet; maintained VLAN architecture, RDP, DNS, DHCP, VPN, and TCP/IP across multi-site VA network.",
-            "Configured Cisco AnyConnect VPN and enforced two-factor authentication policies — applying SSH, RDP, DNS, SSL/TLS protocol expertise directly.",
-            "Deployed endpoints via Microsoft Intune/Azure MDM; led 300+ laptop and 600+ monitor refresh across VISN16 for COVID-19 and Cerner initiatives.",
-            "Served as project lead for VA 91st St Clinic activation and Ernest Childers OPC decommission — managing 1,800+ pieces of sensitive equipment.",
-            "Created cybersecurity threat management training materials; selected within 90 days of hire to train fellow technicians.",
+            "Led security engineering operations within the VA DevSecOps division — conducting vulnerability assessments, architecting AIS security plans, and managing ITSM workflows at enterprise scale across a 400+ staff multi-site network.",
+            "Developed Automated Information Systems (AIS) security contingency plans and disaster recovery procedures as part of the focal business continuity team; ensured compliance with VA federal statutes and NIST-aligned standards.",
+            "Managed ServiceNow (SNOW) workflows for Tier 2/3 resolution, BioMed activations, and escalation routing across the VA enterprise network.",
+            "Administered Cisco switch infrastructure via SecureCRT, PUTTY, TelNet; maintained VLAN architecture, RDP, DNS, DHCP, VPN, and TCP/IP across multi-site VA network.",
+            "Configured Cisco AnyConnect VPN and enforced two-factor authentication policies — applying SSH, RDP, DNS, and SSL/TLS protocol expertise across all remote access endpoints.",
+            "Deployed and managed endpoints via Microsoft Intune/Azure MDM; led 300+ laptop and 600+ monitor refresh across VISN16 for COVID-19 and Cerner EHR initiatives.",
+            "Served as project lead for VA 91st St Clinic activation and Ernest Childers OPC decommission — managing 1,800+ pieces of sensitive equipment under federal compliance requirements.",
+            "Created cybersecurity threat management training materials; selected within 90 days of hire to train fellow technicians on security protocols and procedures.",
           ]} />
           <JobBlock title="IT Support — U.S. Cellular" org="Tulsa, OK · Full-time" dates="Sep 2014 – Apr 2018" bullets={[
-            "Maintained Help Desk tracking, IT asset accuracy, and patch cabling; configured telecom systems for moves, adds, and changes (MAC) in a multi-site environment.",
+            "Managed Help Desk tracking, IT asset accuracy, and telecom system configurations for moves, adds, and changes (MAC) in a multi-site environment.",
             "Developed problem tracking and resolution databases; determined internal service measures and communicated SLAs across support tiers.",
             "Installed and configured workstations on network operating systems; managed device drivers, hardware configurations, and communication networking.",
             "Investigated and recommended tools and technologies to improve responsiveness to customer and security requirements.",
@@ -424,6 +440,7 @@ function ResumeDocument() {
           <JobBlock title="IT Customer Service — DishNetwork (Future Vision)" org="Tulsa, OK · Full-time" dates="Dec 2012 – Aug 2014" bullets={[
             "Served as primary technical specialist for all automated systems; resolved network and system issues via phone, email, and in-person channels.",
             "Provided training on desktops, laptops, and mobile devices; led system upgrade projects involving new software features and structural component changes.",
+            "Performed data backups, system upgrades, and documented technical procedures to ensure operational continuity across all automated systems.",
           ]} />
         </ResSection>
 
@@ -455,7 +472,7 @@ function ResumeDocument() {
               </p>
             </div>
           </JobBlock>
-          <JobBlock title="Bachelor of Science, Computer Science — Lagos State University" org="Lagos, Nigeria" dates="2015 – 2019" bullets={[]} />
+          <JobBlock title="Bachelor of Science, Computer Science — Lagos State University" org="Lagos, Nigeria · Accelerated program" dates="2009 – 2012" bullets={[]} />
           <JobBlock title="Bachelor of Science, Technology Management (incomplete) — Spartan College" org="Tulsa, OK · 2 of 3 years completed" dates="2007 – 2009" bullets={[]} />
           <JobBlock title="Certification — Avionics, Airframe & Powerplant — Spartan College" org="Tulsa, OK · GPA 3.6 / 4.0 · Certified in Aviation Maintenance, Management & Operation" dates="2007 – 2009" bullets={[]} />
         </ResSection>
@@ -470,7 +487,7 @@ function ResumeDocument() {
           </div>
           <p style={{ fontSize: 11, color: "#6b7280", fontWeight: 500, margin: "0 0 6px" }}>Development & DevOps</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {["Python","JavaScript","Bash","C","React","Node.js","FastAPI","PostgreSQL","MongoDB","GraphQL","Docker","Git","GitHub Actions","Linux","Figma"].map(t => (
+            {["React","Next.js","React Native","Expo","TypeScript","JavaScript","Python","Bash","C","Node.js","FastAPI","Django","GraphQL","PostgreSQL","MongoDB","Redis","Docker","Git","GitHub Actions","Linux","Stripe","Cloudinary","Claude AI API","Figma","& more"].map(t => (
               <span key={t} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, background: "#f9fafb", border: "0.5px solid #d1d5db", borderRadius: 2, padding: "4px 9px", color: "#374151" }}>{t}</span>
             ))}
           </div>

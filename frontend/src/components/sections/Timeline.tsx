@@ -175,7 +175,6 @@ function SpinePulse({
   // ── RAF loop ─────────────────────────────────────────────────────────
   const mountedRef = useRef(false);
   useEffect(() => {
-    // Only hard-reset position on first mount — not on re-renders from measureKey
     if (!mountedRef.current) {
       xRef.current = 0;
       flashSet.current.clear();
@@ -776,14 +775,15 @@ export default function Timeline() {
   // Increment measureKey on filter change so SpinePulse hard-resets
   useEffect(()=>{ setMeasureKey(k=>k+1); },[filter]);
 
-  // Trigger initial measure when timeline scrolls into view
+  // Trigger initial measure when timeline scrolls into view —
+  // delay 300ms so all cards are fully painted before SpinePulse reads positions
   useEffect(()=>{
     const el = document.getElementById("timeline");
     if (!el) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setMeasureKey(k => k + 1);
+          setTimeout(() => setMeasureKey(k => k + 1), 300);
           observer.disconnect();
         }
       },
