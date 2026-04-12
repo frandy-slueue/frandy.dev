@@ -134,7 +134,7 @@ export function ThemeToggleMobile({ visible }: { visible: boolean }) {
 
   return (
     <>
-      {/* Floating circle button — top right */}
+      {/* Floating circle button — top right, mobile/tablet only */}
       <button
         onClick={() => setOpen(o => !o)}
         aria-label="Theme settings"
@@ -151,6 +151,7 @@ export function ThemeToggleMobile({ visible }: { visible: boolean }) {
           transition:"background 200ms, color 200ms",
         }}
       >
+        <style>{`@media (min-width: 1025px) { .theme-fab { display: none !important; } }`}</style>
         <Palette size={15} strokeWidth={1.5} />
       </button>
 

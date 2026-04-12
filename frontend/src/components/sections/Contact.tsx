@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Send, Loader2, CheckCircle } from "lucide-react";
-import ResumeModal from "@/components/ui/ResumeModal";
 import { FaPhone, FaWhatsapp } from "react-icons/fa";
 import { SOCIAL_PLATFORMS, SOCIAL_EMPTY, getActiveSocials, type SocialLinks } from "@/lib/social";
 import { contactApi, settingsApi } from "@/lib/api";
@@ -37,20 +36,13 @@ export default function Contact() {
   const [submitted, setDone]    = useState(false);
   const [submitError, setErr]   = useState<string|null>(null);
   const [resumeUrl, setResume]  = useState<string|null>(null);
-  const [docxUrl, setDocxUrl]   = useState<string|null>(null);
-  const [shareUrl, setShareUrl] = useState<string|null>(null);
   const [social, setSocial]     = useState<SocialLinks>(SOCIAL_EMPTY);
   const [contactInfo, setInfo]  = useState<ContactInfo>({ contact_email:null,contact_phone:null,contact_whatsapp:null });
   const [activeReveal, setAR]   = useState<string|null>(null);
   const [lockedReveal, setLR]   = useState<string|null>(null);
-  const [modalOpen, setModal]   = useState(false);
 
   useEffect(() => {
-    settingsApi.getResume().then((d) => {
-      setResume(d.resume_url);
-      setDocxUrl(d.resume_url_docx);
-      setShareUrl(d.resume_url_share);
-    }).catch(()=>{});
+    settingsApi.getResume().then((d) => setResume(d.resume_url)).catch(()=>{});
     fetch("/api/settings/social").then((r)=>r.json()).then(setSocial).catch(()=>{});
     fetch("/api/settings/contact-info").then((r)=>r.json()).then(setInfo).catch(()=>{});
   }, []);
@@ -216,10 +208,10 @@ export default function Contact() {
               </div>
             )}
 
-            {/* Resume — Show Resume button */}
+            {/* Resume — link to resume page */}
             {resumeUrl && (
-              <BtnSecondary onClick={() => setModal(true)}>
-                Show Resume
+              <BtnSecondary href="/resume">
+                Resume
               </BtnSecondary>
             )}
 
@@ -230,14 +222,6 @@ export default function Contact() {
           </motion.div>
         </div>
       </div>
-
-      <ResumeModal
-        isOpen={modalOpen}
-        onClose={() => setModal(false)}
-        resumeUrl={resumeUrl}
-        docxUrl={docxUrl}
-        shareUrl={shareUrl}
-      />
 
       <style>{`
         .contact-heading { font-family:var(--font-display); font-size:clamp(2rem,5vw,3.5rem); color:var(--text-primary); letter-spacing:2px; line-height:1; margin-bottom:12px; }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { User, Code2, FolderOpen, Clock, Mail } from "lucide-react";
 import { ThemeToggleDesktop } from "@/components/ui/ThemeToggle";
 
@@ -42,7 +41,10 @@ export default function Nav() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+      if (window.scrollY < 80) setActive("");
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -70,7 +72,16 @@ export default function Nav() {
       <header className={`top-nav ${scrolled ? "scrolled" : ""}`}>
         <div className="site-container top-nav__inner">
 
-          <Link href="/" className="nav-logo">
+          <a
+            href="/"
+            className="nav-logo"
+            onClick={(e) => {
+              if (window.location.pathname === "/") {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          >
             <div className="nav-logo__diamond">
               <div className="nav-logo__diamond-border" />
               <span className="nav-logo__fs">FS</span>
@@ -79,7 +90,7 @@ export default function Nav() {
               <span className="nav-logo__name">FRANDY</span>
               <span className="nav-logo__sub">· dev</span>
             </div>
-          </Link>
+          </a>
 
           {/* Desktop links — Option B active state, sharp */}
           <nav className="nav-desktop" aria-label="Main navigation">

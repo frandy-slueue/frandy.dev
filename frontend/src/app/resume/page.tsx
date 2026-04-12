@@ -7,6 +7,7 @@ import { fadeUp, fadeLeft, fadeRight, VIEWPORT } from "@/lib/animations";
 import SectionLabel from "@/components/ui/SectionLabel";
 import { BtnPrimary, BtnSecondary } from "@/components/ui/Button";
 import { settingsApi } from "@/lib/api";
+import ResumeModal from "@/components/ui/ResumeModal";
 
 // ── Animated FS Diamond (canvas) ────────────────────────────────────────────
 function FSDiamond({ size = 92 }: { size?: number }) {
@@ -186,6 +187,7 @@ export default function ResumePage() {
   const [docxUrl, setDocxUrl]     = useState<string | null>(null);
   const [shareUrl, setShareUrl]   = useState<string | null>(null);
   const [shareToast, setShareToast] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -218,17 +220,30 @@ export default function ResumePage() {
       <div className="res-topbar">
         <div className="res-topbar__inner site-container">
           <span className="res-topbar__title">
+            <a href="/" className="res-topbar__home">
+              ← frandy.dev
+            </a>
+            <span className="res-topbar__sep" aria-hidden>·</span>
             <span className="res-topbar__dot" aria-hidden />
             Frandy Slueue — Resume
           </span>
           <div className="res-topbar__actions">
-            <a href="/resume" className="res-action-btn" title="Shareable link" aria-label="Shareable link">
-              <ExternalLink size={14} />
-              <span>View</span>
-            </a>
             <button
               className="res-action-btn"
-              onClick={() => resumeUrl && window.open(resumeUrl, "_blank")}
+              onClick={() => setModalOpen(true)}
+              title="View resume"
+              aria-label="View resume"
+            >
+              <ExternalLink size={14} />
+              <span>View</span>
+            </button>
+            <button
+              className="res-action-btn"
+              onClick={() => {
+                if (!resumeUrl) return;
+                const a = document.createElement("a");
+                a.href = resumeUrl; a.download = "Frandy_Slueue_Resume.pdf"; a.click();
+              }}
               disabled={!resumeUrl}
               title="Download PDF"
               aria-label="Download PDF"
@@ -239,8 +254,13 @@ export default function ResumePage() {
             </button>
             <button
               className="res-action-btn"
-              onClick={() => docxUrl && window.open(docxUrl, "_blank")}
-              disabled={!docxUrl}
+              onClick={() => {
+                const url = docxUrl || resumeUrl;
+                if (!url) return;
+                const a = document.createElement("a");
+                a.href = url; a.download = "Frandy_Slueue_Resume.docx"; a.click();
+              }}
+              disabled={!docxUrl && !resumeUrl}
               title="Download DOCX"
               aria-label="Download DOCX"
             >
@@ -444,8 +464,9 @@ export default function ResumePage() {
             <JobBlock
               title="Full-Stack Software Engineering — Atlas School of Tulsa"
               org="Tulsa, OK · Hands-on, project-based curriculum"
-              dates="2023 – Present"
+              dates="2023 – 2025"
               bullets={[
+                "Coursework and projects fully completed. Certification pending final capstone submission.",
                 "Core stack: Python, JavaScript, React, Node.js, C, PostgreSQL, MongoDB, GraphQL, Docker, REST APIs, Git, Figma, system design.",
                 "Production-deployed portfolio: FastAPI + Next.js + Docker on DigitalOcean with CI/CD via GitHub Actions.",
               ]}
@@ -479,7 +500,17 @@ export default function ResumePage() {
               </div>
             </JobBlock>
             <JobBlock
-              title="Certification — Avionics, Airframe & Powerplant · Spartan College"
+              title="Bachelor of Science, Computer Science — Lagos State University"
+              org="Lagos, Nigeria"
+              dates="2015 – 2019"
+            />
+            <JobBlock
+              title="Bachelor of Science, Technology Management (incomplete) — Spartan College"
+              org="Tulsa, OK · 2 of 3 years completed"
+              dates="2007 – 2009"
+            />
+            <JobBlock
+              title="Certification — Avionics, Airframe & Powerplant — Spartan College"
               org="Tulsa, OK · GPA 3.6 / 4.0 · Certified in Aviation Maintenance, Management & Operation"
               dates="2007 – 2009"
             />
@@ -579,12 +610,18 @@ export default function ResumePage() {
             <p className="res-cta-strip__label">Save a copy for your records</p>
             <div className="res-cta-strip__btns">
               {resumeUrl && (
-                <BtnPrimary href={resumeUrl} target="_blank" rel="noopener noreferrer">
+                <BtnPrimary onClick={() => {
+                  const a = document.createElement("a");
+                  a.href = resumeUrl; a.download = "Frandy_Slueue_Resume.pdf"; a.click();
+                }}>
                   <FileDown size={14} /> Download PDF
                 </BtnPrimary>
               )}
               {docxUrl && (
-                <BtnSecondary href={docxUrl} target="_blank" rel="noopener noreferrer">
+                <BtnSecondary onClick={() => {
+                  const a = document.createElement("a");
+                  a.href = docxUrl; a.download = "Frandy_Slueue_Resume.docx"; a.click();
+                }}>
                   <FileDown size={14} /> Download DOCX
                 </BtnSecondary>
               )}
@@ -592,6 +629,15 @@ export default function ResumePage() {
           </div>
         </motion.div>
       )}
+
+      {/* Resume modal — triggered by View button */}
+      <ResumeModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        resumeUrl={resumeUrl}
+        docxUrl={docxUrl}
+        shareUrl={shareUrl}
+      />
 
       {/* Share toast */}
       {shareToast && (
@@ -634,8 +680,21 @@ export default function ResumePage() {
           gap: 8px;
           white-space: nowrap;
         }
-        .res-topbar__dot {
-          width: 6px; height: 6px;
+        .res-topbar__home {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 2px;
+          color: var(--accent);
+          text-decoration: none;
+          text-transform: uppercase;
+          white-space: nowrap;
+          transition: opacity 200ms ease;
+        }
+        .res-topbar__home:hover { opacity: 0.7; }
+        .res-topbar__sep {
+          color: var(--border);
+          margin: 0 4px;
+        }
           border-radius: 50%;
           background: var(--accent);
           box-shadow: 0 0 6px var(--accent);
@@ -818,7 +877,7 @@ export default function ResumePage() {
         .res-sec-label {
           font-family: var(--font-mono);
           font-size: 11px;
-          font-weight: 700;
+          font-weight: 400;
           letter-spacing: 4px;
           color: var(--accent);
           text-transform: uppercase;
@@ -832,10 +891,11 @@ export default function ResumePage() {
         /* Prose */
         .res-prose {
           font-family: var(--font-body);
-          font-size: 15px;
-          line-height: 1.82;
-          color: var(--text-muted);
+          font-size: 16px;
+          line-height: 1.9;
+          color: var(--text-secondary);
           max-width: 760px;
+          font-weight: 400;
         }
 
         /* Competency grid */
@@ -849,8 +909,8 @@ export default function ResumePage() {
           border: 1px solid var(--border);
           padding: 8px 12px;
           font-family: var(--font-body);
-          font-size: 13px;
-          font-weight: 600;
+          font-size: 14px;
+          font-weight: 500;
           color: var(--text-secondary);
           display: flex;
           align-items: center;
@@ -876,14 +936,14 @@ export default function ResumePage() {
         }
         .res-job-title {
           font-family: var(--font-body);
-          font-size: 16px;
-          font-weight: 700;
+          font-size: 17px;
+          font-weight: 600;
           color: var(--text-primary);
-          letter-spacing: 0.5px;
+          letter-spacing: 0.3px;
         }
         .res-job-dates {
           font-family: var(--font-mono);
-          font-size: 11px;
+          font-size: 12px;
           color: var(--accent);
           white-space: nowrap;
           flex-shrink: 0;
@@ -891,27 +951,29 @@ export default function ResumePage() {
         }
         .res-job-org {
           font-family: var(--font-body);
-          font-size: 13px;
+          font-size: 14px;
           color: var(--text-muted);
           margin-bottom: 12px;
           font-style: italic;
+          font-weight: 400;
         }
         .res-bullet {
           display: flex;
           gap: 10px;
           align-items: flex-start;
-          margin-bottom: 6px;
+          margin-bottom: 7px;
           font-family: var(--font-body);
-          font-size: 14px;
-          color: var(--text-muted);
-          line-height: 1.7;
+          font-size: 15px;
+          font-weight: 400;
+          color: var(--text-secondary);
+          line-height: 1.75;
         }
         .res-bullet-gem {
           width: 5px; height: 5px;
           background: var(--accent);
           transform: rotate(45deg);
           flex-shrink: 0;
-          margin-top: 8px;
+          margin-top: 9px;
           display: inline-block;
         }
 
@@ -1146,6 +1208,9 @@ export default function ResumePage() {
           .res-footer-center, .res-footer-right { text-align: left; }
           .res-cta-strip__inner { flex-direction: column; align-items: flex-start; }
           .res-topbar__title { display: none; }
+          .res-topbar__home { display: inline !important; }
+          .res-topbar__sep { display: none; }
+          .res-topbar__dot { display: none; }
           .res-action-btn span:not(.res-action-btn__copied) { display: none; }
           .res-action-btn { padding: 5px 8px; }
           .res-back-top { bottom: 88px; }

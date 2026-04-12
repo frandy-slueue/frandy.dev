@@ -4,7 +4,6 @@ import { useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
-  ExternalLink,
   FileDown,
   Share2,
   FileText,
@@ -94,19 +93,6 @@ export default function ResumeModal({ isOpen, onClose, resumeUrl, docxUrl, share
                   </span>
                 </div>
                 <div className="resume-modal-bar__actions">
-
-                  {/* View full page */}
-                  <a
-                    href="/resume"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="resume-modal-btn"
-                    title="View full page"
-                    aria-label="View resume as full page"
-                  >
-                    <ExternalLink size={15} />
-                    <span className="resume-modal-btn__label">View</span>
-                  </a>
 
                   {/* Download PDF */}
                   <button
@@ -443,7 +429,8 @@ function ResumeDocument() {
 
         {/* Education */}
         <ResSection label="Education" tinted>
-          <JobBlock title="Full-Stack Software Engineering — Atlas School of Tulsa" org="Tulsa, OK · Hands-on, project-based curriculum" dates="2023 – Present" bullets={[
+          <JobBlock title="Full-Stack Software Engineering — Atlas School of Tulsa" org="Tulsa, OK · Hands-on, project-based curriculum" dates="2023 – 2025" bullets={[
+            "Coursework and projects fully completed. Certification pending final capstone submission.",
             "Core stack: Python, JavaScript, React, Node.js, C, PostgreSQL, MongoDB, GraphQL, Docker, REST APIs, Git, Figma, system design.",
             "Production-deployed portfolio: FastAPI + Next.js + Docker on DigitalOcean with CI/CD via GitHub Actions.",
           ]}>
@@ -468,7 +455,9 @@ function ResumeDocument() {
               </p>
             </div>
           </JobBlock>
-          <JobBlock title="Certification — Avionics, Airframe & Powerplant · Spartan College" org="Tulsa, OK · GPA 3.6 / 4.0 · Certified in Aviation Maintenance, Management & Operation" dates="2007 – 2009" bullets={[]} />
+          <JobBlock title="Bachelor of Science, Computer Science — Lagos State University" org="Lagos, Nigeria" dates="2015 – 2019" bullets={[]} />
+          <JobBlock title="Bachelor of Science, Technology Management (incomplete) — Spartan College" org="Tulsa, OK · 2 of 3 years completed" dates="2007 – 2009" bullets={[]} />
+          <JobBlock title="Certification — Avionics, Airframe & Powerplant — Spartan College" org="Tulsa, OK · GPA 3.6 / 4.0 · Certified in Aviation Maintenance, Management & Operation" dates="2007 – 2009" bullets={[]} />
         </ResSection>
 
         {/* Tools */}

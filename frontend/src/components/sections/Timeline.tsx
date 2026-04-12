@@ -16,14 +16,15 @@ interface TNode {
 }
 
 const FALLBACK: TNode[] = [
-  { id:"foundation",   sort_order:0, period:"Before", date_label:"",          title:"The Foundation",         category:"Background",     description:"Life before code. A persistent drive to understand how things work and an instinct to build. That mindset was already there — software gave it a direction.", image_url:null },
-  { id:"atlas",        sort_order:1, period:"2023",   date_label:"January",   title:"Atlas School of Tulsa",  category:"Education",      description:"Enrolled in an intensive, project-based software engineering program. No lectures — just building, breaking, and figuring it out. The hardest and most formative experience of my engineering life.", image_url:null },
-  { id:"first-deploy", sort_order:2, period:"2023",   date_label:"August",    title:"First Deployed Project", category:"Milestone",      description:"First working application shipped to the web. Seeing something I built live on a real URL changed how I thought about what was possible.", image_url:null },
-  { id:"advanced",     sort_order:3, period:"2024",   date_label:"March",     title:"Advanced Curriculum",    category:"Education",      description:"React, Next.js, Python, Django, FastAPI, PostgreSQL, Docker. The stack expanded fast. Started understanding not just how to use tools but why certain tools exist.", image_url:null },
-  { id:"freelance",    sort_order:4, period:"2024",   date_label:"September", title:"First Freelance Project",category:"Work",           description:"First client project delivered. Real deadline, real feedback, real money. A completely different pressure than school projects — in a good way.", image_url:null },
-  { id:"devops",       sort_order:5, period:"2024",   date_label:"November",  title:"DevOps & Docker",        category:"Certifications", description:"Containerisation and deployment workflows. Docker Compose went from intimidating to natural. Started thinking about infrastructure as part of the product.", image_url:null },
-  { id:"portfolio",    sort_order:6, period:"2025",   date_label:"February",  title:"Portfolio Launch",       category:"Milestone",      description:"frandy.dev — this portfolio. FastAPI backend, Next.js frontend, five Docker services, four animated themes, a CodeBreeder identity baked into the work layer.", image_url:null },
-  { id:"first-role",   sort_order:7, period:"2025",   date_label:"Present",   title:"Seeking First Role",     category:"Work",           description:"Open to full-stack engineering roles and freelance projects. If you are reading this and you have something worth building — I want to hear about it.", image_url:null },
+  { id:"foundation",   sort_order:0, period:"Before", date_label:"",           title:"The Foundation",              category:"Background",     description:"Life before code. A persistent drive to understand how things work and an instinct to build. That mindset was already there — software gave it a direction.", image_url:null },
+  { id:"spartan",      sort_order:1, period:"2007",   date_label:"January",    title:"Spartan College",             category:"Education",      description:"Enrolled at Spartan College of Aeronautics and Technology in Tulsa. Earned certifications in Avionics and Airframe & Powerplant with a 3.6 GPA. Also pursued a B.S. in Technology Management — completed 2 of 3 years before pivoting careers.", image_url:null },
+  { id:"dish",         sort_order:2, period:"2012",   date_label:"December",   title:"IT Customer Service",         category:"Work",           description:"First professional IT role at DishNetwork (Future Vision). Resolved network and system issues, led system upgrade projects, and served as technical specialist for all automated systems.", image_url:null },
+  { id:"uscellular",   sort_order:3, period:"2014",   date_label:"September",  title:"U.S. Cellular",               category:"Work",           description:"IT Support at U.S. Cellular. Managed Help Desk tracking, configured telecom systems, developed problem-tracking databases, and communicated SLAs across support tiers.", image_url:null },
+  { id:"lagosu",       sort_order:4, period:"2015",   date_label:"January",    title:"Lagos State University",      category:"Education",      description:"Bachelor of Science in Computer Science at Lagos State University, Lagos, Nigeria. Graduated 2019. Formalized the technical foundation that had been building for years.", image_url:null },
+  { id:"va",           sort_order:5, period:"2019",   date_label:"September",  title:"US Dept. of Veterans Affairs",category:"Work",           description:"IT Specialist GS-11 within the VA DevSecOps division. Four years supporting 400+ staff across the VA Health Care System — vulnerability analysis, network security, ServiceNow, Cisco switch management, and leading enterprise-scale projects. Earned four Certificates of Appreciation.", image_url:null },
+  { id:"atlas",        sort_order:6, period:"2023",   date_label:"January",    title:"Atlas School of Tulsa",       category:"Education",      description:"Enrolled in an intensive, project-based full-stack software engineering program. No lectures — just building, breaking, and figuring it out. Completed all coursework and projects. Certification pending final capstone submission.", image_url:null },
+  { id:"portfolio",    sort_order:7, period:"2025",   date_label:"February",   title:"Portfolio Launch",            category:"Milestone",      description:"frandy.dev — this portfolio. FastAPI backend, Next.js frontend, five Docker services, four animated themes, a CodeBreeder identity baked into the work layer. Shipped to production on DigitalOcean.", image_url:null },
+  { id:"first-role",   sort_order:8, period:"2025",   date_label:"Present",    title:"Seeking First Role",          category:"Work",           description:"Open to full-stack engineering roles and freelance projects. 10+ years of enterprise IT behind me. A full-stack engineering practice in front. If you have something worth building — I want to hear about it.", image_url:null },
 ];
 
 const FUTURE       = ["First Full-Time Role","Open Source Contribution"];
@@ -172,9 +173,14 @@ function SpinePulse({
   }, []);
 
   // ── RAF loop ─────────────────────────────────────────────────────────
+  const mountedRef = useRef(false);
   useEffect(() => {
-    xRef.current = 0;
-    flashSet.current.clear();
+    // Only hard-reset position on first mount — not on re-renders from measureKey
+    if (!mountedRef.current) {
+      xRef.current = 0;
+      flashSet.current.clear();
+      mountedRef.current = true;
+    }
     dirtyRef.current = true;
     lastRef.current = performance.now();
 
@@ -769,6 +775,23 @@ export default function Timeline() {
 
   // Increment measureKey on filter change so SpinePulse hard-resets
   useEffect(()=>{ setMeasureKey(k=>k+1); },[filter]);
+
+  // Trigger initial measure when timeline scrolls into view
+  useEffect(()=>{
+    const el = document.getElementById("timeline");
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setMeasureKey(k => k + 1);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   function openPanel(node:TNode) { const idx=filtered.findIndex(n=>n.id===node.id); setPanelNode(node); setPanelIndex(idx); }
   function navigate(idx:number) { if(idx<0||idx>=filtered.length) return; setPanelNode(filtered[idx]); setPanelIndex(idx); }

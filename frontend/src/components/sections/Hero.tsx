@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { settingsApi } from "@/lib/api";
 import { fadeUp } from "@/lib/animations";
 import { BtnPrimary, BtnSecondary } from "@/components/ui/Button";
-import ResumeModal from "@/components/ui/ResumeModal";
 
 export default function Hero() {
   const [resumeUrl, setResumeUrl]   = useState<string | null>(null);
@@ -13,7 +12,6 @@ export default function Hero() {
   const [shareUrl, setShareUrl]     = useState<string | null>(null);
   const [scrolled, setScrolled]     = useState(false);
   const [pattern, setPattern]       = useState("grid");
-  const [modalOpen, setModalOpen]   = useState(false);
 
   useEffect(() => {
     settingsApi.getResume().then((d) => {
@@ -34,8 +32,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <>
-      <section className="hero-section">
+    <section className="hero-section">
         <div className="hero-grid-bg" data-pattern={pattern} aria-hidden />
         <div className="hero-bloom" aria-hidden />
 
@@ -49,19 +46,19 @@ export default function Hero() {
           </motion.h1>
 
           <motion.p className="hero-title" variants={fadeUp} initial="hidden" animate="visible" transition={{ duration: 0.6, delay: 0.3 }}>
-            Full Stack Software Engineer
+            IT Operations · Security · Software Engineering
           </motion.p>
 
           <motion.p className="hero-subtitle" variants={fadeUp} initial="hidden" animate="visible" transition={{ duration: 0.6, delay: 0.4 }}>
-            I build clean, efficient software — from idea to deployment.
+            From federal IT security operations to full-stack engineering — I understand both sides of the stack.
           </motion.p>
 
           <motion.div className="hero-ctas" variants={fadeUp} initial="hidden" animate="visible" transition={{ duration: 0.6, delay: 0.5 }}>
             <BtnPrimary href="#projects">View My Work</BtnPrimary>
 
-            <BtnSecondary onClick={() => setModalOpen(true)}>
-              Show Resume
-            </BtnSecondary>
+          <BtnSecondary href="/resume">
+            Resume
+          </BtnSecondary>
           </motion.div>
         </div>
 
@@ -76,14 +73,5 @@ export default function Hero() {
           <span className="hero-scroll-label">Scroll</span>
         </motion.div>
       </section>
-
-      <ResumeModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        resumeUrl={resumeUrl}
-        docxUrl={docxUrl}
-        shareUrl={shareUrl}
-      />
-    </>
   );
 }
