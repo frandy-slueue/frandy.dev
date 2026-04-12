@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -570,34 +570,117 @@ function JobBlock({ title, org, dates, bullets, children }: {
 }
 
 function FSDiamond() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+    if (!ctx) return;
+
+    const W = 92, H = 92, CX = W / 2, CY = H / 2, R = 40;
+    const F_SIZE = 11; // large enough for "0"/"1" to be legible
+    const COL_W  = F_SIZE * 1.1;
+    const NUM_COLS = Math.floor(W / COL_W);
+    const TOTAL    = Math.ceil(H / F_SIZE) + 2;
+
+    const cols = Array.from({ length: NUM_COLS }, () => ({
+      offset: Math.random() * TOTAL,
+      speed:  0.28 + Math.random() * 0.38,
+    }));
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      // Clip to diamond shape
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(CX, CY - R); ctx.lineTo(CX + R, CY);
+      ctx.lineTo(CX, CY + R); ctx.lineTo(CX - R, CY);
+      ctx.closePath();
+      ctx.clip();
+
+      // Background
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(0, 0, W, H);
+
+      // Binary rain — 1s and 0s
+      ctx.font = `700 ${F_SIZE}px monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      for (let c = 0; c < NUM_COLS; c++) {
+        const col = cols[c];
+        const x = (c + 0.5) * COL_W;
+        for (let r = 0; r < TOTAL; r++) {
+          const y = ((r - col.offset % TOTAL) * F_SIZE) % (H + F_SIZE) - F_SIZE;
+          const dx = x - CX, dy = y + F_SIZE / 2 - CY;
+          const alpha = Math.max(0, 1 - (Math.sqrt(dx * dx + dy * dy) / R) * 1.35);
+          if (alpha < 0.05) continue;
+          ctx.fillStyle = (c + r) % 3 !== 0
+            ? `rgba(16,185,129,${alpha})`
+            : `rgba(6,182,212,${alpha})`;
+          ctx.fillText(["0", "1"][(c + r) % 2], x, y);
+        }
+      }
+      ctx.restore();
+
+      // Outer border
+      const i2 = 5;
+      ctx.beginPath();
+      ctx.moveTo(CX, CY - R); ctx.lineTo(CX + R, CY);
+      ctx.lineTo(CX, CY + R); ctx.lineTo(CX - R, CY);
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(210,210,210,0.88)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Inner border
+      ctx.beginPath();
+      ctx.moveTo(CX, CY - R + i2); ctx.lineTo(CX + R - i2, CY);
+      ctx.lineTo(CX, CY + R - i2); ctx.lineTo(CX - R + i2, CY);
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(16,185,129,0.45)";
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      // FS knockout text
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(CX, CY - R + i2 + 2); ctx.lineTo(CX + R - i2 - 2, CY);
+      ctx.lineTo(CX, CY + R - i2 - 2); ctx.lineTo(CX - R + i2 + 2, CY);
+      ctx.closePath();
+      ctx.clip();
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.font = "900 28px 'Bebas Neue', 'Space Grotesk', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(0,0,0,0.92)";
+      ctx.fillText("FS", CX, CY + 1);
+      ctx.restore();
+
+      // FS ghost text on top
+      ctx.globalCompositeOperation = "source-over";
+      ctx.font = "900 28px 'Bebas Neue', 'Space Grotesk', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.fillText("FS", CX, CY + 1);
+    }
+
+    let rafId: number;
+    function loop() {
+      cols.forEach(col => { col.offset += col.speed * 0.016; });
+      draw();
+      rafId = requestAnimationFrame(loop);
+    }
+    rafId = requestAnimationFrame(loop);
+
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
   return (
-    <div style={{ flexShrink: 0, width: 92, height: 92, position: "relative" }}>
-      <svg width="92" height="92" viewBox="0 0 92 92" style={{ position: "absolute", inset: 0 }}>
-        <defs>
-          <clipPath id="diamond-clip">
-            <polygon points="46,6 86,46 46,86 6,46" />
-          </clipPath>
-        </defs>
-        {/* Background */}
-        <polygon points="46,6 86,46 46,86 6,46" fill="#0a0a0a" />
-        {/* Binary rain dots (static approximation) */}
-        {[
-          [18,20,"#10b981",0.9],[18,35,"#06b6d4",0.6],[18,50,"#10b981",0.3],
-          [29,14,"#10b981",0.5],[29,29,"#10b981",0.85],[29,44,"#06b6d4",0.7],[29,59,"#10b981",0.4],
-          [40,20,"#06b6d4",0.4],[40,35,"#10b981",0.9],[40,50,"#10b981",0.8],[40,65,"#06b6d4",0.5],
-          [51,26,"#10b981",0.7],[51,41,"#06b6d4",0.5],[51,56,"#10b981",0.9],[51,71,"#10b981",0.3],
-          [62,32,"#10b981",0.4],[62,47,"#10b981",0.8],[62,62,"#06b6d4",0.6],
-          [73,38,"#06b6d4",0.3],[73,53,"#10b981",0.5],
-        ].map(([x, y, color, opacity], i) => (
-          <circle key={i} cx={x as number} cy={y as number} r="2.5" fill={color as string} fillOpacity={opacity as number} clipPath="url(#diamond-clip)" />
-        ))}
-        {/* Outer border */}
-        <polygon points="46,6 86,46 46,86 6,46" fill="none" stroke="rgba(210,210,210,0.85)" strokeWidth="1.5" />
-        {/* Inner border */}
-        <polygon points="46,14 78,46 46,78 14,46" fill="none" stroke="rgba(16,185,129,0.45)" strokeWidth="0.8" />
-        {/* FS text */}
-        <text x="46" y="52" textAnchor="middle" fontFamily="'Bebas Neue', 'Space Grotesk', sans-serif" fontSize="26" fontWeight="900" fill="rgba(255,255,255,0.18)" clipPath="url(#diamond-clip)">FS</text>
-      </svg>
+    <div style={{ flexShrink: 0, width: 92, height: 92 }}>
+      <canvas ref={canvasRef} width={92} height={92} style={{ width: 92, height: 92 }} />
     </div>
   );
 }
