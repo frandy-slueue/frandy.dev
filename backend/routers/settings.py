@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,9 +9,8 @@ from core.database import get_db
 from core.dependencies import get_current_admin
 from models.admin_user import AdminUser
 from models.site_settings import SiteSettings, THEMES
-from schemas.settings import ResumeResponse, ThemeResponse, ThemeUpdate
-from services.resume import save_resume, save_resume_docx
 from schemas.settings import ContactInfo, ContactInfoUpdate, ResumeResponse, SocialLinks, SocialLinksUpdate, ThemeResponse, ThemeUpdate
+from services.resume import save_resume, save_resume_docx
 
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
