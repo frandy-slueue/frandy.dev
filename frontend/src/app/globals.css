@@ -134,7 +134,7 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 19px;
   line-height: 1.75;
   min-height: 100vh;
   overflow-x: hidden;
@@ -518,7 +518,7 @@ select option {
 
 /* ── Mobile ─────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  body { font-size: 19px; }
+  body { font-size: 18px; }
 
   h1 { font-size: 2.75rem; }
   h2 { font-size: 2.25rem; }
