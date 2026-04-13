@@ -57,6 +57,10 @@ export default function AdminLayout({
   // Not authed yet — show nothing (redirect is in flight)
   if (!authed) return null;
 
+  if (checking) return null;
+  if (pathname === "/admin/login") return <>{children}</>;
+  if (!authed) return null;
+
   return (
     <div className="admin">
       <aside className={`admin__sidebar ${sidebarOpen ? "open" : "closed"}`}>
