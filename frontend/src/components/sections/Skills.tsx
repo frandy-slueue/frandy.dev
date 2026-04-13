@@ -6,8 +6,8 @@ import {
   FaCode, FaPalette, FaServer, FaDatabase, FaTools, FaShieldAlt,
 } from "react-icons/fa";
 import {
-  SiPython, SiJavascript, SiReact, SiNextdotjs, SiHtml5, SiCss,
-  SiTailwindcss, SiDjango, SiFastapi, SiGraphql, SiPostgresql,
+  SiPython, SiJavascript, SiTypescript, SiReact, SiNextdotjs, SiHtml5, SiCss,
+  SiTailwindcss, SiDjango, SiFastapi, SiGraphql, SiPostgresql, SiExpo,
   SiMongodb, SiRedis, SiDocker, SiGit, SiGithubactions, SiLinux,
   SiFigma, SiNodedotjs,
 } from "react-icons/si";
@@ -30,12 +30,15 @@ const SKILL_META: Record<string, { icon: React.ReactNode; color: string }> = {
   // Languages
   "Python":           { icon: <SiPython size={28} />,        color: "#3776AB" },
   "JavaScript":       { icon: <SiJavascript size={28} />,    color: "#F7DF1E" },
+  "TypeScript":       { icon: <SiTypescript size={28} />,    color: "#3178C6" },
   "C":                { icon: <span style={{ fontFamily:"var(--font-mono)", fontSize:22, fontWeight:700 }}>C</span>, color: "var(--accent)" },
   "Bash":             { icon: <span style={{ fontFamily:"var(--font-mono)", fontSize:16, fontWeight:700 }}>#!</span>, color: "#4EAA25" },
 
   // Frontend
   "React":            { icon: <SiReact size={28} />,          color: "#61DAFB" },
   "Next.js":          { icon: <SiNextdotjs size={28} />,      color: "#ffffff" },
+  "React Native":     { icon: <SiReact size={28} />,          color: "#61DAFB" },
+  "Expo":             { icon: <SiExpo size={28} />,           color: "#ffffff" },
   "HTML":             { icon: <SiHtml5 size={28} />,          color: "#E34F26" },
   "CSS":              { icon: <SiCss size={28} />,            color: "#1572B6" },
   "Tailwind CSS":     { icon: <SiTailwindcss size={28} />,    color: "#06B6D4" },
@@ -76,8 +79,8 @@ const SKILL_META: Record<string, { icon: React.ReactNode; color: string }> = {
 };
 
 const SKILLS: Record<string, string[]> = {
-  "Languages":      ["Python", "JavaScript", "Bash", "C"],
-  "Frontend":       ["React", "Next.js", "HTML", "CSS", "Tailwind CSS", "Figma"],
+  "Languages":      ["Python", "JavaScript", "TypeScript", "Bash", "C"],
+  "Frontend":       ["React", "Next.js", "React Native", "Expo", "HTML", "CSS", "Tailwind CSS", "Figma"],
   "Backend":        ["Node.js", "Django", "FastAPI", "GraphQL", "RESTful APIs"],
   "Databases":      ["PostgreSQL", "MongoDB", "Redis", "SQLAlchemy"],
   "DevOps & Tools": ["Docker", "Git", "GitHub Actions", "Linux", "ServiceNow", "Microsoft Intune"],
@@ -89,27 +92,127 @@ const SKILLS: Record<string, string[]> = {
 };
 
 const SKILL_PROJECTS: Record<string, { title: string; description: string }[]> = {
-  "Python":               [{ title: "frandy.dev API",      description: "FastAPI backend powering this portfolio — auth, projects, contacts, analytics" }],
-  "FastAPI":              [{ title: "frandy.dev API",      description: "Async REST API with PostgreSQL, Docker, and JWT authentication" }],
-  "Next.js":              [{ title: "frandy.dev",          description: "This portfolio — Next.js 16+ App Router, Tailwind v4, Framer Motion" }],
-  "React":                [{ title: "File Renamer",        description: "Batch file renaming utility — React/Vite with live diff preview" },
-                           { title: "frandy.dev",          description: "Frontend for this portfolio with four animated themes" }],
-  "PostgreSQL":           [{ title: "frandy.dev API",      description: "Primary database for projects, contacts, analytics, and admin" }],
-  "Docker":               [{ title: "frandy.dev",          description: "Five-service Docker Compose orchestration on DigitalOcean" }],
-  "GitHub Actions":       [{ title: "frandy.dev",          description: "CI/CD pipeline — auto-deploy to DigitalOcean on every push to main" }],
-  "Tailwind CSS":         [{ title: "frandy.dev",          description: "Tailwind v4 with @theme directive and four-theme CSS variable system" }],
-  "MongoDB":              [{ title: "File Renamer",        description: "NoSQL storage for file renaming rule sets and session data" }],
-  "GraphQL":              [{ title: "File Renamer",        description: "GraphQL API layer for querying and mutating renaming rules" }],
-  "Figma":                [{ title: "frandy.dev",          description: "Full site wireframes and design system before first line of code" }],
-  "ServiceNow":           [{ title: "VA IT Operations",    description: "Tier 2/3 ticket management, BioMed activations, escalation routing for 400+ staff" }],
-  "Vulnerability Analysis": [{ title: "VA DevSecOps",     description: "Risk assessments and AIS security plans across VA information systems" }],
-  "Active Directory":     [{ title: "VA IT Operations",    description: "User account setup, permissions management, and PIV card access for 400+ staff" }],
-  "VLAN Architecture":    [{ title: "VA IT Operations",    description: "Multi-site VLAN management with Cisco switches across the VA Muskogee network" }],
-  "VPN Management":       [{ title: "VA IT Operations",    description: "Cisco AnyConnect VPN configuration and remote access security enforcement" }],
-  "Compliance Auditing":  [{ title: "VA DevSecOps",        description: "System security evaluations and disaster recovery procedures for VA federal compliance" }],
-  "Microsoft Intune":     [{ title: "VA IT Operations",    description: "MDM deployment — 300+ laptop and 600+ monitor refresh across VISN16" }],
-  "Linux":                [{ title: "frandy.dev",          description: "DigitalOcean Ubuntu droplet — server management, Docker, Nginx, SSL" }],
-  "Bash":                 [{ title: "frandy.dev",          description: "Deployment scripts, server automation, and CI/CD pipeline tasks" }],
+  // Languages
+  "Python":         [
+    { title: "frandy.dev API",       description: "FastAPI backend — async REST API with JWT auth, PostgreSQL, Docker, and admin dashboard" },
+    { title: "HBS Events Studio",    description: "Django 5+ main backend and FastAPI AI microservice — Python throughout" },
+  ],
+  "JavaScript":     [
+    { title: "frandy.dev",           description: "Next.js 16+ frontend — all client-side interactivity and animations" },
+    { title: "HBS Events Studio",    description: "Next.js 15+ frontend with Apollo Client, Framer Motion, and Stripe.js" },
+  ],
+  "TypeScript":     [
+    { title: "Lumigram",             description: "React Native / Expo photo-sharing app — strict TypeScript throughout" },
+    { title: "HBS Events Studio",    description: "Next.js 15+ in strict TypeScript mode with Zod validation" },
+    { title: "frandy.dev",           description: "Full Next.js frontend typed with TypeScript" },
+  ],
+  "Bash":           [
+    { title: "frandy.dev",           description: "Deployment scripts, server automation, Docker management, and CI/CD pipeline tasks on DigitalOcean" },
+  ],
+  "C":              [],
+
+  // Frontend
+  "React":          [
+    { title: "frandy.dev",           description: "Portfolio frontend — four animated themes, section snapping, Framer Motion" },
+    { title: "File Renamer",         description: "Batch file renaming utility — React/Vite with live color-coded diff preview" },
+    { title: "HBS Events Studio",    description: "Next.js 15+ / React — theme gallery, color studio, quote form, admin dashboard" },
+  ],
+  "Next.js":        [
+    { title: "frandy.dev",           description: "Next.js 16+ App Router with SSR, Tailwind v4, Framer Motion, and four themes" },
+    { title: "HBS Events Studio",    description: "Next.js 15+ with App Router, SSR/ISR/CSR per page, Apollo Client, Stripe.js" },
+  ],
+  "React Native":   [
+    { title: "Lumigram",             description: "Expo / React Native photo-sharing app — Firebase backend, React Navigation, Image Picker, TypeScript" },
+    { title: "Atlas Music Player",   description: "Cross-platform music player built with Expo and React Native" },
+  ],
+  "Expo":           [
+    { title: "Lumigram",             description: "Expo SDK 54 — routing via Expo Router, Expo Image, Expo Haptics, Expo Blur" },
+    { title: "Atlas Music Player",   description: "Expo-based cross-platform audio player built during Atlas curriculum" },
+  ],
+  "HTML":           [
+    { title: "frandy.dev",           description: "Semantic HTML structure across all portfolio sections and admin views" },
+  ],
+  "CSS":            [
+    { title: "frandy.dev",           description: "Custom CSS with four-theme variable system, animations, and responsive layouts" },
+  ],
+  "Tailwind CSS":   [
+    { title: "frandy.dev",           description: "Tailwind v4 with @theme directive — custom CSS variables for four animated themes" },
+    { title: "HBS Events Studio",    description: "Tailwind CSS v3 with CSS Modules for component-specific styles" },
+  ],
+  "Figma":          [
+    { title: "frandy.dev",           description: "Full site wireframes and design system before writing a single line of code" },
+    { title: "HBS Events Studio",    description: "Brand identity, color system, page wireframes, and component design in Figma" },
+  ],
+
+  // Backend
+  "Node.js":        [
+    { title: "HBS Events Studio",    description: "Next.js 15+ runs on Node.js 20 LTS — pnpm, API routes, middleware, server components" },
+  ],
+  "Django":         [
+    { title: "HBS Events Studio",    description: "Django 5+ main backend — ORM, DRF, Graphene-Django GraphQL, Celery, admin, JWT auth" },
+  ],
+  "FastAPI":        [
+    { title: "frandy.dev API",       description: "Async REST API — JWT auth, PostgreSQL via SQLAlchemy, Docker, resume endpoints" },
+    { title: "HBS Events Studio",    description: "FastAPI AI microservice — Claude API + OpenAI fallback, structured JSON quote generation" },
+  ],
+  "GraphQL":        [
+    { title: "HBS Events Studio",    description: "Graphene-Django server + Apollo Client — all data queries, mutations, and admin ops" },
+  ],
+  "RESTful APIs":   [
+    { title: "frandy.dev API",       description: "Full REST API for portfolio — projects, contacts, settings, resume, timeline, admin" },
+    { title: "HBS Events Studio",    description: "REST webhook endpoints for Stripe, Square, Cloudinary, and DocuSign integrations" },
+  ],
+
+  // Databases
+  "PostgreSQL":     [
+    { title: "frandy.dev API",       description: "Primary database — projects, contacts, site settings, admin users, resume, timeline" },
+    { title: "HBS Events Studio",    description: "Full business database — leads, bookings, payments, themes, portfolio, community designs" },
+  ],
+  "MongoDB":        [
+    { title: "Atlas Curriculum",     description: "Used in Atlas backend projects for document-based data storage and NoSQL patterns" },
+  ],
+  "Redis":          [
+    { title: "HBS Events Studio",    description: "Session management, pop-up timing logic, AI quote caching, and rate limiting" },
+  ],
+  "SQLAlchemy":     [
+    { title: "frandy.dev API",       description: "Async SQLAlchemy 2.x with asyncpg — all database models and migrations" },
+    { title: "HBS Events Studio",    description: "SQLAlchemy 2.x async in FastAPI microservice for reading pricing config from PostgreSQL" },
+  ],
+
+  // DevOps & Tools
+  "Docker":         [
+    { title: "frandy.dev",           description: "Five-service Docker Compose on DigitalOcean — FastAPI, Next.js, PostgreSQL, Redis, Nginx" },
+    { title: "HBS Events Studio",    description: "Six-container Docker Compose — Django, FastAPI, Next.js, PostgreSQL, Redis, Celery worker" },
+  ],
+  "Git":            [
+    { title: "frandy.dev",           description: "Git version control — feature branches, pull requests, and protected main branch" },
+    { title: "HBS Events Studio",    description: "Monorepo Git strategy — feature/*, develop, and main branches with PR-gated deployments" },
+  ],
+  "GitHub Actions": [
+    { title: "frandy.dev",           description: "CI/CD pipeline — auto-deploy to DigitalOcean on push to main, Docker build and restart" },
+    { title: "HBS Events Studio",    description: "CI/CD pipeline — pytest + Jest on every PR, auto-deploy to Vercel and Railway on merge" },
+  ],
+  "Linux":          [
+    { title: "frandy.dev",           description: "DigitalOcean Ubuntu droplet — server management, Docker, Nginx reverse proxy, SSL/TLS" },
+  ],
+  "ServiceNow":     [
+    { title: "VA IT Operations",     description: "Tier 2/3 ticket management, BioMed activations, and escalation routing for 400+ staff" },
+  ],
+  "Microsoft Intune": [
+    { title: "VA IT Operations",     description: "MDM deployment — 300+ laptop and 600+ monitor refresh across VISN16 for COVID-19 and Cerner EHR" },
+  ],
+
+  // Security & IT
+  "Vulnerability Analysis":   [{ title: "VA DevSecOps",      description: "Risk assessments and AIS security plans across VA information systems per NIST standards" }],
+  "Active Directory":         [{ title: "VA IT Operations",   description: "User account setup, permissions management, and PIV card access for 400+ staff" }],
+  "VLAN Architecture":        [{ title: "VA IT Operations",   description: "Multi-site VLAN management with Cisco switches across the VA Muskogee network" }],
+  "VPN Management":           [{ title: "VA IT Operations",   description: "Cisco AnyConnect VPN configuration and remote access security enforcement" }],
+  "Compliance Auditing":      [{ title: "VA DevSecOps",       description: "AIS security contingency plans and disaster recovery procedures for VA federal compliance" }],
+  "AIS Security Planning":    [{ title: "VA DevSecOps",       description: "Developed AIS security plans ensuring compliance with VA federal statutes and NIST-aligned standards" }],
+  "Cisco SecureCRT":          [{ title: "VA IT Operations",   description: "Cisco switch administration via SecureCRT, PUTTY, and TelNet across multi-site VA network" }],
+  "Cisco AnyConnect VPN":     [{ title: "VA IT Operations",   description: "VPN configuration, enforcement, and two-factor authentication policy management" }],
+  "DHCP / DNS / TCP-IP":      [{ title: "VA IT Operations",   description: "Network protocol management across VA multi-site infrastructure — DNS, DHCP, RDP, SSL/TLS" }],
+  "Two-Factor Auth":          [{ title: "VA IT Operations",   description: "Enforced 2FA and PIV card policies for all remote access and privileged accounts" }],
 };
 
 // Shapes

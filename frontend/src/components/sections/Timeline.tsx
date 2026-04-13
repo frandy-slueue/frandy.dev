@@ -16,15 +16,16 @@ interface TNode {
 }
 
 const FALLBACK: TNode[] = [
-  { id:"foundation",   sort_order:0, period:"Before", date_label:"",           title:"The Foundation",              category:"Background",     description:"Life before code. A persistent drive to understand how things work and an instinct to build. That mindset was already there — software gave it a direction.", image_url:null },
-  { id:"spartan",      sort_order:1, period:"2007",   date_label:"January",    title:"Spartan College",             category:"Education",      description:"Enrolled at Spartan College of Aeronautics and Technology in Tulsa. Earned certifications in Avionics and Airframe & Powerplant with a 3.6 GPA. Also pursued a B.S. in Technology Management — completed 2 of 3 years before pivoting careers.", image_url:null },
-  { id:"dish",         sort_order:2, period:"2012",   date_label:"December",   title:"IT Customer Service",         category:"Work",           description:"First professional IT role at DishNetwork (Future Vision). Resolved network and system issues, led system upgrade projects, and served as technical specialist for all automated systems.", image_url:null },
-  { id:"uscellular",   sort_order:3, period:"2014",   date_label:"September",  title:"U.S. Cellular",               category:"Work",           description:"IT Support at U.S. Cellular. Managed Help Desk tracking, configured telecom systems, developed problem-tracking databases, and communicated SLAs across support tiers.", image_url:null },
-  { id:"lagosu",       sort_order:4, period:"2015",   date_label:"January",    title:"Lagos State University",      category:"Education",      description:"Bachelor of Science in Computer Science at Lagos State University, Lagos, Nigeria. Graduated 2019. Formalized the technical foundation that had been building for years.", image_url:null },
-  { id:"va",           sort_order:5, period:"2019",   date_label:"September",  title:"US Dept. of Veterans Affairs",category:"Work",           description:"IT Specialist GS-11 within the VA DevSecOps division. Four years supporting 400+ staff across the VA Health Care System — vulnerability analysis, network security, ServiceNow, Cisco switch management, and leading enterprise-scale projects. Earned four Certificates of Appreciation.", image_url:null },
-  { id:"atlas",        sort_order:6, period:"2023",   date_label:"January",    title:"Atlas School of Tulsa",       category:"Education",      description:"Enrolled in an intensive, project-based full-stack software engineering program. No lectures — just building, breaking, and figuring it out. Completed all coursework and projects. Certification pending final capstone submission.", image_url:null },
-  { id:"portfolio",    sort_order:7, period:"2025",   date_label:"February",   title:"Portfolio Launch",            category:"Milestone",      description:"frandy.dev — this portfolio. FastAPI backend, Next.js frontend, five Docker services, four animated themes, a CodeBreeder identity baked into the work layer. Shipped to production on DigitalOcean.", image_url:null },
-  { id:"first-role",   sort_order:8, period:"2025",   date_label:"Present",    title:"Seeking First Role",          category:"Work",           description:"Open to full-stack engineering roles and freelance projects. 10+ years of enterprise IT behind me. A full-stack engineering practice in front. If you have something worth building — I want to hear about it.", image_url:null },
+  { id:"foundation",   sort_order:0,  period:"Before", date_label:"",           title:"The Foundation",              category:"Background",     description:"Life before code. A persistent drive to understand how things work and an instinct to build. That mindset was already there — software gave it a direction.", image_url:null },
+  { id:"spartan",      sort_order:1,  period:"2007",   date_label:"January",    title:"Spartan College",             category:"Education",      description:"Enrolled at Spartan College of Aeronautics and Technology in Tulsa. Earned Avionics and Airframe & Powerplant certifications with a 3.6 GPA. Also pursued a B.S. in Technology Management — completed 2 of 3 years before pivoting careers.", image_url:null },
+  { id:"lagosu",       sort_order:2,  period:"2009",   date_label:"January",    title:"Lagos State University",      category:"Education",      description:"Bachelor of Science in Computer Science — Lagos State University, Lagos, Nigeria. Accelerated program, completed 2012. Formalized the computer science foundation that had been building for years alongside aviation training.", image_url:null },
+  { id:"dish",         sort_order:3,  period:"2012",   date_label:"December",   title:"DishNetwork — IT Specialist", category:"Work",           description:"First professional IT role at DishNetwork (Future Vision). Primary technical specialist for all automated systems — resolving network and system issues, leading system upgrade projects, training staff on hardware and software.", image_url:null },
+  { id:"uscellular",   sort_order:4,  period:"2014",   date_label:"September",  title:"U.S. Cellular — IT Support",  category:"Work",           description:"IT Support at U.S. Cellular. Managed Help Desk tracking, configured telecom systems for multi-site moves and changes, developed problem-tracking databases, and communicated SLAs across support tiers.", image_url:null },
+  { id:"va",           sort_order:5,  period:"2019",   date_label:"September",  title:"US Dept. of Veterans Affairs", category:"Work",          description:"IT Specialist GS-11 within the VA DevSecOps division — 4 years supporting 400+ staff across the VA Health Care System. Led vulnerability assessments, AIS security planning, ServiceNow workflows, Cisco infrastructure, Intune MDM deployments, and two major clinic projects. Earned four Certificates of Appreciation.", image_url:null },
+  { id:"atlas",        sort_order:6,  period:"2023",   date_label:"January",    title:"Atlas School of Tulsa",       category:"Education",      description:"Intensive, project-based full-stack software engineering program. No lectures — just building, breaking, and figuring it out. Stack: Python, JavaScript, React, Node.js, C, PostgreSQL, MongoDB, GraphQL, Docker, REST APIs. All coursework completed. Certification pending final capstone submission.", image_url:null },
+  { id:"codebreeder",  sort_order:7,  period:"2024",   date_label:"January",    title:"CodeBreeder — Freelance SE",  category:"Work",           description:"Launched CodeBreeder, an independent software engineering practice. Building HBS Events Studio — a full-stack luxury event platform on Next.js 15+, Django, FastAPI, GraphQL, PostgreSQL, Redis, Docker, Stripe, and Claude AI. Also delivered SEO work for James' Donut and built React Native mobile apps during Atlas.", image_url:null },
+  { id:"portfolio",    sort_order:8,  period:"2025",   date_label:"February",   title:"Portfolio Launch — frandy.dev", category:"Milestone",    description:"frandy.dev — production portfolio and engineering showcase. FastAPI backend, Next.js 16+ frontend, five Docker services, four animated themes, CI/CD via GitHub Actions on DigitalOcean. The CodeBreeder identity baked into every layer.", image_url:null },
+  { id:"first-role",   sort_order:9,  period:"2025",   date_label:"Present",    title:"Seeking First SE Role",       category:"Work",           description:"Full-stack engineer with a decade of enterprise IT behind me and a freelance engineering practice in front. Open to software engineering and IT operations roles where security awareness, systems thinking, and the ability to ship real software are all valued. If you have something worth building — let's talk.", image_url:null },
 ];
 
 const FUTURE       = ["First Full-Time Role","Open Source Contribution"];
@@ -88,10 +89,11 @@ const ESCORT_OFFSET  = 28;  // px behind center light
 const COMET_LEN      = 48;  // px length of comet tail
 
 function SpinePulse({
-  isMobile, onFlash, measureKey, filterKey,
+  isMobile, onFlash, measureKey, filterKey, interactingRef,
 }:{
   isMobile:boolean; onFlash:(n:number)=>void;
   measureKey:number; filterKey:string;
+  interactingRef: React.MutableRefObject<boolean>;
 }) {
   const SPEED_FRAC = 0.11; // overlay widths per second — cross visible area in ~9s
 
@@ -107,13 +109,13 @@ function SpinePulse({
   const lastRef         = useRef(performance.now());
   const xRef            = useRef(0);
   const flashSet        = useRef(new Set<number>());
-  const dirtyRef        = useRef(true);  // soft remeasure flag
+  const dirtyRef        = useRef(true);
+  const currentColorRef = useRef("var(--accent)");
   const overlayWidthRef = useRef(800);
-  const spineTopRef     = useRef(100);   // measured spine row y offset
+  const spineTopRef     = useRef(100);
   const nodesRef        = useRef<{x:number; idx:number; color:string}[]>([]);
   const cardBoundsRef   = useRef<{x:number; color:string}[]>([]);
 
-  // ── DOM measurement — reads actual positions in viewport space ──────
   function measure() {
     const overlay = overlayRef.current;
     if (!overlay) return;
@@ -121,20 +123,34 @@ function SpinePulse({
     const W     = oRect.width;
     overlayWidthRef.current = W;
 
-    // Measure spine row top position for overlay placement
+    // Spine row top position
     const spineRow = overlay.parentElement?.querySelector("[data-tl-spine='row']") as HTMLElement|null;
     if (spineRow) {
       const pRect = overlay.parentElement!.getBoundingClientRect();
       spineTopRef.current = Math.round(spineRow.getBoundingClientRect().top - pRect.top);
     }
 
-    // Node dots — [data-tl-node] with [data-tl-node-color]
+    // ── Card left borders — color snapping reference ──────────────────────
+    // The moment the comet crosses a card's left edge it adopts that card's color.
+    // Measured from [data-tl-color] elements — always reflects current card width.
+    const cards = Array.from(document.querySelectorAll("[data-tl-color]"));
+    const bounds: {x:number; color:string}[] = [];
+    for (const card of cards) {
+      const r = card.getBoundingClientRect();
+      const x = r.left - oRect.left;
+      bounds.push({ x, color: card.getAttribute("data-tl-color") ?? "var(--accent)" });
+    }
+    cardBoundsRef.current = bounds.sort((a, b) => a.x - b.x);
+
+    // ── Node dot centers — flash timing reference ─────────────────────────
+    // The flash fires exactly when the comet reaches a node dot's center.
+    // Measured from [data-tl-node] elements — always reflects current card width.
     const dots = Array.from(document.querySelectorAll("[data-tl-node]"));
     const nodes: {x:number; idx:number; color:string}[] = [];
     for (const dot of dots) {
-      const r   = dot.getBoundingClientRect();
-      const x   = r.left + r.width / 2 - oRect.left;
-      if (x < -10 || x > W + 10) continue; // off-screen — skip
+      const r = dot.getBoundingClientRect();
+      const x = r.left + r.width / 2 - oRect.left;
+      if (x < -10 || x > W + 10) continue;
       nodes.push({
         x,
         idx:   parseInt(dot.getAttribute("data-tl-node") ?? "0"),
@@ -142,16 +158,6 @@ function SpinePulse({
       });
     }
     nodesRef.current = nodes.sort((a, b) => a.x - b.x);
-
-    // Card left boundaries — [data-tl-color] for color snapping
-    const cards = Array.from(document.querySelectorAll("[data-tl-color]"));
-    const bounds: {x:number; color:string}[] = [];
-    for (const card of cards) {
-      const r   = card.getBoundingClientRect();
-      const x   = r.left - oRect.left;
-      bounds.push({ x, color: card.getAttribute("data-tl-color") ?? "var(--accent)" });
-    }
-    cardBoundsRef.current = bounds.sort((a, b) => a.x - b.x);
     setSpineTop(spineTopRef.current);
   }
 
@@ -162,6 +168,7 @@ function SpinePulse({
   useEffect(() => {
     xRef.current = 0;
     flashSet.current.clear();
+    currentColorRef.current = "var(--accent)";
     dirtyRef.current = true;
   }, [filterKey]);
 
@@ -187,8 +194,9 @@ function SpinePulse({
       const dt = Math.min((now - lastRef.current) / 1000, 0.05); // cap at 50ms
       lastRef.current = now;
 
-      // Soft remeasure — positions update, xRef continues
-      if (dirtyRef.current) {
+      // Soft remeasure — during interaction measure every frame so card
+      // drag/peek/open never causes stale left-border or node positions
+      if (dirtyRef.current || interactingRef.current) {
         measure();
         dirtyRef.current = false;
       }
@@ -203,11 +211,23 @@ function SpinePulse({
       if (xRef.current >= WRAP_AT) {
         xRef.current = 0;
         flashSet.current.clear();
+        currentColorRef.current = "var(--accent)";
       }
 
-      // Node flash — measured viewport positions, fixed 8px window
+      // ── Color snap — card LEFT BORDER ────────────────────────────────────
+      // The moment the comet crosses a card's left edge it takes that card's color.
+      // Walk boundaries in order — last one the comet has passed wins.
+      let color = "var(--accent)";
+      for (const bound of cardBoundsRef.current) {
+        if (xRef.current >= bound.x) color = bound.color;
+        else break;
+      }
+      currentColorRef.current = color;
+
+      // ── Flash — NODE DOT CENTER ───────────────────────────────────────────
+      // Fires exactly once per pass when comet head is within 6px of the node dot.
       for (const node of nodesRef.current) {
-        if (!flashSet.current.has(node.idx) && Math.abs(xRef.current - node.x) < 8) {
+        if (!flashSet.current.has(node.idx) && Math.abs(xRef.current - node.x) < 6) {
           flashSet.current.add(node.idx);
           onFlash(node.idx);
           setPause(true);
@@ -217,16 +237,9 @@ function SpinePulse({
         }
       }
 
-      // Center color — last card boundary the comet has crossed
-      let color = "var(--accent)";
-      for (const bound of cardBoundsRef.current) {
-        if (xRef.current >= bound.x) color = bound.color;
-        else break;
-      }
-
       setCx(xRef.current);
       setEscortX(Math.max(0, xRef.current - ESCORT_OFFSET));
-      setCenterColor(color);
+      setCenterColor(currentColorRef.current);
 
       rafRef.current = requestAnimationFrame(tick);
     }
@@ -735,6 +748,8 @@ export default function Timeline() {
   const [interacting, setInteracting]  = useState(false);
   const [flashingNode, setFlashingNode]= useState(-1);
   const [measureKey, setMeasureKey]     = useState(0);
+  // Ref mirror of interacting — readable by RAF loop without causing re-renders
+  const interactingRef = useRef(false);
 
   const trackRef      = useRef<HTMLDivElement>(null);
   const mobilTrackRef = useRef<HTMLDivElement>(null);
@@ -763,11 +778,12 @@ export default function Timeline() {
 
   function startInteract() {
     setInteracting(true);
+    interactingRef.current = true;
     if (interactTimer.current) clearTimeout(interactTimer.current);
   }
   function endInteract() {
     if (interactTimer.current) clearTimeout(interactTimer.current);
-    interactTimer.current = setTimeout(()=>setInteracting(false), 800);
+    interactTimer.current = setTimeout(()=>{ setInteracting(false); interactingRef.current = false; }, 800);
   }
 
   const filtered    = filter==="All"?nodes:nodes.filter(n=>n.category===filter);
@@ -868,6 +884,7 @@ export default function Timeline() {
                   onFlash={setFlashingNode}
                   measureKey={measureKey}
                   filterKey={filter}
+                  interactingRef={interactingRef}
                 />
               )}
 
@@ -928,7 +945,8 @@ export default function Timeline() {
         <div style={{ position:"relative" }}>
           {filtered.length > 0 && (
             <SpinePulse isMobile onFlash={setFlashingNode}
-              measureKey={measureKey} filterKey={filter} />
+              measureKey={measureKey} filterKey={filter}
+              interactingRef={interactingRef} />
           )}
           <div ref={mobilTrackRef} onPointerDown={onMobileDown} onPointerMove={onMobileMove}
             onPointerUp={onMobileUp} onPointerCancel={onMobileUp} onScroll={checkMobileScroll}
