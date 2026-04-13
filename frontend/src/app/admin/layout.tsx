@@ -126,7 +126,7 @@ export default function AdminLayout({
         .admin__nav-label { font-size:0.9rem; }
         .admin__sidebar-footer { display:flex; align-items:center; justify-content:space-between; padding:1rem; border-top:1px solid var(--color-border); min-height:60px; }
         .admin__username { font-size:0.8rem; color:var(--color-text-muted); font-family:var(--font-mono); white-space:nowrap; overflow:hidden; }
-        .admin__logout { background:none; border:1px solid var(--color-border); color:var(--color-text-muted); cursor:pointer; font-size:1.1rem; padding:0.5rem 0.75rem; flex-shrink:0; transition:all 150ms; }
+        .admin__logout { background:none; border:1px solid var(--color-border); color:var(--color-text-muted); cursor:pointer; font-size:1.25rem; padding:0.65rem 1rem; flex-shrink:0; transition:all 150ms; min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center; }
         .admin__logout:hover { color:#ff5050; border-color:#ff5050; background:rgba(255,80,80,0.08); }
         .admin__main { flex:1; margin-left:220px; transition:margin-left 0.25s ease; min-height:100vh; }
         .admin__content { padding:2rem; max-width:1200px; }
