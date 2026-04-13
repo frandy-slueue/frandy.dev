@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink, FileDown, FileText, Share2 } from "lucide-react";
 import { fadeUp, fadeLeft, fadeRight, VIEWPORT } from "@/lib/animations";
@@ -396,10 +396,10 @@ export default function ResumePage() {
                 ["Python · JavaScript · TypeScript · C",        "Active Directory & Identity Management"],
                 ["Figma · REST APIs · Stripe · Claude AI",      "Endpoint Security (Intune / Azure MDM)"],
               ].map(([left, right]) => (
-                <>
-                  <CompChip key={left} label={left} accent="software" />
-                  <CompChip key={right} label={right} accent="it" />
-                </>
+                <React.Fragment key={left}>
+                  <CompChip label={left} accent="software" />
+                  <CompChip label={right} accent="it" />
+                </React.Fragment>
               ))}
             </div>
           </div>
