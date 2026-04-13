@@ -114,7 +114,7 @@ export default function Footer() {
               </div>
             </div>
             <div className="site-footer__brand-text">
-              <span className="site-footer__name">FRANDY</span>
+              <span className="site-footer__name">FRANDYCODE</span>
               <span className="site-footer__sub">· dev</span>
             </div>
           </Link>

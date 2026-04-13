@@ -86,7 +86,7 @@ export default function Nav() {
               <span className="nav-logo__fs">FS</span>
             </div>
             <div className="nav-logo__wordmark">
-              <span className="nav-logo__name">FRANDY</span>
+              <span className="nav-logo__name">FRANDYCODE</span>
               <span className="nav-logo__sub">· dev</span>
             </div>
           </Link>
@@ -212,7 +212,7 @@ export default function Nav() {
           position: relative; z-index: 1;
         }
         .nav-logo__wordmark { display: flex; flex-direction: column; gap: 1px; }
-        .nav-logo__name { font-family: var(--font-display); font-size: 26px; color: var(--text-primary); letter-spacing: 3px; line-height: 1; }
+        .nav-logo__name { font-family: var(--font-display); font-size: 22px; color: var(--text-primary); letter-spacing: 3px; line-height: 1; }
         .nav-logo__sub  { font-family: var(--font-body); font-size: 9px; letter-spacing: 3px; color: var(--accent-muted); text-transform: uppercase; line-height: 1; }
 
         /* Desktop nav links — Option B, sharp edges */
