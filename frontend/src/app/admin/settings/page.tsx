@@ -80,13 +80,21 @@ function Toggle({ id, checked, onChange }: { id: string; checked: boolean; onCha
 }
 
 // ── Collapsible ───────────────────────────────────────────────────────
-function Collapsible({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+function Collapsible({ title, icon, defaultOpen = false, children }: {
+  title: string; icon?: string; defaultOpen?: boolean; children: React.ReactNode
+}) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="s-panel s-collapsible">
-      <button type="button" className="s-collapsible__trigger" onClick={() => setOpen(p => !p)} aria-expanded={open}>
-        <h2 className="s-collapsible__title">{title}</h2>
-        <span className={`collapsible__chevron ${open ? "open" : ""}`}>▼</span>
+    <div className="s-collapsible">
+      <button type="button" className="s-collapsible__bar" onClick={() => setOpen(p => !p)} aria-expanded={open}>
+        <div className="s-collapsible__bar-left">
+          {icon && <span className="s-collapsible__icon">{icon}</span>}
+          <span className="s-collapsible__title">{title}</span>
+        </div>
+        <div className="s-collapsible__bar-right">
+          <span className="s-collapsible__status">{open ? "Collapse" : "Expand"}</span>
+          <span className={`s-collapsible__chevron ${open ? "open" : ""}`}>▼</span>
+        </div>
       </button>
       {open && <div className="s-collapsible__body">{children}</div>}
     </div>
@@ -117,6 +125,12 @@ export default function AdminSettings() {
   const [savingPw,     setSavingPw]     = useState(false);
   const [pwError,      setPwError]      = useState("");
   const [pwSuccess,    setPwSuccess]    = useState("");
+
+  const [unCurrent,    setUnCurrent]    = useState("");
+  const [unNew,        setUnNew]        = useState("");
+  const [savingUn,     setSavingUn]     = useState(false);
+  const [unError,      setUnError]      = useState("");
+  const [unSuccess,    setUnSuccess]    = useState("");
 
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
@@ -159,6 +173,26 @@ export default function AdminSettings() {
       notify(msg);
     } catch { notifyError(`Failed to save`); }
     finally  { setFn(false); }
+  }
+
+  async function handleChangeUsername() {
+    setUnError(""); setUnSuccess("");
+    if (!unCurrent || !unNew) { setUnError("All fields are required"); return; }
+    if (unNew.length < 3) { setUnError("Username must be at least 3 characters"); return; }
+    setSavingUn(true);
+    try {
+      const res = await fetch("/api/auth/change-username", {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ current_password: unCurrent, new_username: unNew }),
+      });
+      if (res.status === 400) { const d = await res.json(); setUnError(d.detail || "Incorrect password"); return; }
+      if (!res.ok) throw new Error();
+      setUnSuccess("Username changed successfully");
+      setUnCurrent(""); setUnNew("");
+      setTimeout(() => setUnSuccess(""), 4000);
+    } catch { setUnError("Failed to change username. Try again."); }
+    finally { setSavingUn(false); }
   }
 
   async function handleChangePassword() {
@@ -224,9 +258,9 @@ export default function AdminSettings() {
       </div>
 
       {/* ── Section Visibility ── */}
-      <Collapsible title="Section Visibility" defaultOpen={true}>
+      <Collapsible title="Section Visibility" icon="◧" defaultOpen={true}>
         <p className="s-hint">Hero is always shown. Toggle sections on or off.</p>
-        <div className="sections-grid">
+        <div className="sections-grid two-col">
           {SECTION_FIELDS.map(({ key, label, description }) => (
             <div key={key} className="section-row">
               <div className="section-row__info">
@@ -241,9 +275,9 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Background Pattern ── */}
-      <Collapsible title="Background Pattern">
+      <Collapsible title="Background Pattern" icon="◫">
         <p className="s-hint">Hero section background pattern.</p>
-        <div className="pattern-grid">
+        <div className="pattern-grid two-col">
           {PATTERNS.map((p) => (
             <button key={p.value} className={`pattern-card ${pattern === p.value ? "active" : ""}`} onClick={() => setPattern(p.value)}>
               <div className="pattern-card__preview" style={{ backgroundImage: p.preview, backgroundSize: p.size }} />
@@ -255,8 +289,8 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Social Links ── */}
-      <Collapsible title="Social Links">
-        <div className="s-field-group">
+      <Collapsible title="Social Links" icon="◈">
+        <div className="s-field-group two-col">
           {SOCIAL_FIELDS.map(({ key, label, placeholder }) => (
             <div className="s-field" key={key}>
               <label className="s-field__label">{label}</label>
@@ -268,8 +302,8 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Contact Info ── */}
-      <Collapsible title="Contact Info">
-        <div className="s-field-group">
+      <Collapsible title="Contact Info" icon="◉">
+        <div className="s-field-group two-col">
           {CONTACT_FIELDS.map(({ key, label, placeholder }) => (
             <div className="s-field" key={key}>
               <label className="s-field__label">{label}</label>
@@ -281,25 +315,52 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Security ── */}
-      <Collapsible title="Security">
-        <p className="s-hint">Change your admin password. You will need your current password to confirm.</p>
-        {pwError   && <div className="s-banner s-banner--error" style={{ marginBottom:"1rem" }}>{pwError}</div>}
-        {pwSuccess && <div className="s-banner s-banner--ok"   style={{ marginBottom:"1rem" }}>{pwSuccess}</div>}
-        <div className="s-field-group">
-          <div className="s-field">
-            <label className="s-field__label">Current Password</label>
-            <input type="password" className="s-field__input" value={pwCurrent} onChange={e => setPwCurrent(e.target.value)} placeholder="Enter current password" autoComplete="current-password" />
+      <Collapsible title="Security" icon="◑">
+        <div className="s-security-grid">
+
+          {/* Change Password */}
+          <div className="s-security-card">
+            <h3 className="s-security-card__title">Change Password</h3>
+            <p className="s-hint">You will need your current password to confirm.</p>
+            {pwError   && <div className="s-banner s-banner--error" style={{ marginBottom:"1rem" }}>{pwError}</div>}
+            {pwSuccess && <div className="s-banner s-banner--ok"   style={{ marginBottom:"1rem" }}>{pwSuccess}</div>}
+            <div className="s-field-group">
+              <div className="s-field">
+                <label className="s-field__label">Current Password</label>
+                <input type="password" className="s-field__input" value={pwCurrent} onChange={e => setPwCurrent(e.target.value)} placeholder="Enter current password" autoComplete="current-password" />
+              </div>
+              <div className="s-field">
+                <label className="s-field__label">New Password</label>
+                <input type="password" className="s-field__input" value={pwNew} onChange={e => setPwNew(e.target.value)} placeholder="At least 8 characters" autoComplete="new-password" />
+              </div>
+              <div className="s-field">
+                <label className="s-field__label">Confirm New Password</label>
+                <input type="password" className="s-field__input" value={pwConfirm} onChange={e => setPwConfirm(e.target.value)} placeholder="Repeat new password" autoComplete="new-password" />
+              </div>
+            </div>
+            <SaveBtn onClick={handleChangePassword} disabled={savingPw} label="Change Password" saving={savingPw} />
           </div>
-          <div className="s-field">
-            <label className="s-field__label">New Password</label>
-            <input type="password" className="s-field__input" value={pwNew} onChange={e => setPwNew(e.target.value)} placeholder="At least 8 characters" autoComplete="new-password" />
+
+          {/* Change Username */}
+          <div className="s-security-card">
+            <h3 className="s-security-card__title">Change Username</h3>
+            <p className="s-hint">Enter your current password to confirm the username change.</p>
+            {unError   && <div className="s-banner s-banner--error" style={{ marginBottom:"1rem" }}>{unError}</div>}
+            {unSuccess && <div className="s-banner s-banner--ok"   style={{ marginBottom:"1rem" }}>{unSuccess}</div>}
+            <div className="s-field-group">
+              <div className="s-field">
+                <label className="s-field__label">Current Password</label>
+                <input type="password" className="s-field__input" value={unCurrent} onChange={e => setUnCurrent(e.target.value)} placeholder="Enter current password" autoComplete="current-password" />
+              </div>
+              <div className="s-field">
+                <label className="s-field__label">New Username</label>
+                <input type="text" className="s-field__input" value={unNew} onChange={e => setUnNew(e.target.value)} placeholder="At least 3 characters" autoComplete="username" />
+              </div>
+            </div>
+            <SaveBtn onClick={handleChangeUsername} disabled={savingUn} label="Change Username" saving={savingUn} />
           </div>
-          <div className="s-field">
-            <label className="s-field__label">Confirm New Password</label>
-            <input type="password" className="s-field__input" value={pwConfirm} onChange={e => setPwConfirm(e.target.value)} placeholder="Repeat new password" autoComplete="new-password" />
-          </div>
+
         </div>
-        <SaveBtn onClick={handleChangePassword} disabled={savingPw} label="Change Password" saving={savingPw} />
       </Collapsible>
 
       <style jsx>{`
@@ -349,20 +410,68 @@ export default function AdminSettings() {
 
         .s-panel__title { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 1.25rem; color: var(--color-accent); }
 
-        /* ── Collapsible ── */
-        .s-collapsible { padding: 0; }
-        .s-collapsible__trigger {
-          width: 100%; display: flex; align-items: center; justify-content: space-between;
-          padding: 1.1rem 1.5rem; background: none; border: none; cursor: pointer; text-align: left;
-          position: relative; z-index: 1;
-          transition: background 150ms ease;
+        /* ── Collapsible bar — elegant accent design ── */
+        .s-collapsible {
+          border: 1px solid var(--color-border);
+          background: var(--color-surface);
+          margin-bottom: 1rem;
+          position: relative;
         }
-        .s-collapsible__trigger:hover { background: rgba(255,255,255,0.02); }
-        .s-collapsible__title { font-family: var(--font-display); font-size: 1.1rem; color: var(--color-accent); margin: 0; }
-        .s-collapsible__body { padding: 0 1.5rem 1.5rem; border-top: 1px solid var(--color-border); position: relative; z-index: 1; }
+        .s-collapsible::after {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          background:
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 14px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) top left / 1.5px 14px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 14px 1.5px no-repeat,
+            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 1.5px 14px no-repeat;
+          pointer-events: none;
+          z-index: 2;
+        }
+        .s-collapsible__bar {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1.25rem;
+          background: none;
+          border: none;
+          cursor: pointer;
+          text-align: left;
+          position: relative;
+          z-index: 1;
+          transition: background 150ms ease;
+          border-left: 3px solid var(--color-accent);
+        }
+        .s-collapsible__bar:hover { background: rgba(255,255,255,0.02); }
+        .s-collapsible__bar-left { display: flex; align-items: center; gap: 0.75rem; }
+        .s-collapsible__bar-right { display: flex; align-items: center; gap: 0.75rem; }
+        .s-collapsible__icon { font-size: 1rem; color: var(--color-accent); }
+        .s-collapsible__title { font-family: var(--font-display); font-size: 1rem; color: var(--color-text); margin: 0; letter-spacing: 1px; }
+        .s-collapsible__status { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--color-text-muted); }
+        .s-collapsible__chevron { font-size: 0.7rem; color: var(--color-accent); transition: transform 250ms ease; display: inline-block; }
+        .s-collapsible__chevron.open { transform: rotate(180deg); }
+        .s-collapsible__body { padding: 1.25rem 1.5rem; border-top: 1px solid var(--color-border); position: relative; z-index: 1; }
 
-        /* ── Save button — full width on small screens ── */
-        .s-save-btn { margin-top: 1.25rem; }
+        /* ── 2-column grids ── */
+        .sections-grid.two-col { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--color-border); overflow: hidden; margin-bottom: 0; }
+        .sections-grid.two-col .section-row { border-right: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+        .sections-grid.two-col .section-row:nth-child(2n) { border-right: none; }
+        .s-field-group.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .pattern-grid.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+        /* ── Security 2-col ── */
+        .s-security-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .s-security-card { background: var(--color-bg); border: 1px solid var(--color-border); padding: 1.25rem; }
+        .s-security-card__title { font-family: var(--font-display); font-size: 0.95rem; color: var(--color-accent); margin: 0 0 0.5rem; letter-spacing: 1px; }
+
+        @media (max-width: 768px) {
+          .sections-grid.two-col { grid-template-columns: 1fr; }
+          .s-field-group.two-col { grid-template-columns: 1fr; }
+          .pattern-grid.two-col { grid-template-columns: 1fr 1fr; }
+          .s-security-grid { grid-template-columns: 1fr; }
+        }
 
         /* ── Hint text ── */
         .s-hint { font-size: 0.825rem; color: var(--color-text-muted); margin: 0 0 1.25rem; line-height: 1.6; }
@@ -400,47 +509,28 @@ export default function AdminSettings() {
         .theme-card__label  { font-family: var(--font-body); font-size: 0.8rem; }
 
         /* ── Section visibility rows ── */
-        .sections-grid { display: flex; flex-direction: column; border: 1px solid var(--color-border); overflow: hidden; margin-bottom: 0; }
-        .section-row { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; border-bottom: 1px solid var(--color-border); transition: background 0.15s; }
-        .section-row:last-child { border-bottom: none; }
+        .section-row { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; transition: background 0.15s; }
         .section-row:hover { background: var(--color-bg); }
         .section-row__info { display: flex; flex-direction: column; gap: 2px; }
         .section-row__label { font-size: 0.9rem; color: var(--color-text); font-weight: 600; }
         .section-row__desc  { font-size: 0.78rem; color: var(--color-text-muted); font-family: var(--font-mono); }
 
-        /* ── Pattern cards — dframe style ── */
-        .pattern-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+        /* ── Pattern cards ── */
         .pattern-card {
           position: relative;
           display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
           padding: 0.75rem; background: var(--color-bg); border: 1px solid var(--color-border);
           cursor: pointer; transition: border-color 0.2s;
         }
-        .pattern-card::before {
-          content: ''; position: absolute; inset: 3px;
-          border: 1px solid rgba(255,255,255,0.04); border-radius: 4px; pointer-events: none;
-        }
-        .pattern-card::after {
-          content: ''; position: absolute; inset: -1px;
-          background:
-            linear-gradient(var(--color-accent), var(--color-accent)) top left / 8px 1px no-repeat,
-            linear-gradient(var(--color-accent), var(--color-accent)) top left / 1px 8px no-repeat,
-            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 8px 1px no-repeat,
-            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 1px 8px no-repeat;
-          pointer-events: none; transition: opacity 250ms ease;
-        }
-        .pattern-card:hover::after  { opacity: 0; }
-        .pattern-card.active::after { opacity: 0; }
         .pattern-card:hover  { border-color: var(--color-text-muted); }
         .pattern-card.active { border-color: var(--color-accent); }
         .pattern-card > * { position: relative; z-index: 1; }
         .pattern-card__preview { width: 100%; height: 52px; opacity: 0.6; }
         .pattern-card__label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); letter-spacing: 1px; text-transform: uppercase; }
         .pattern-card.active .pattern-card__label { color: var(--color-accent); }
-        @media (max-width: 600px) { .pattern-grid { grid-template-columns: repeat(2, 1fr); } }
 
-        /* ── Fields ── */
-        .s-field-group { display: flex; flex-direction: column; gap: 1rem; }
+        /* ── Save button ── */
+        .s-save-btn { margin-top: 1.25rem; }
         .s-field { display: flex; flex-direction: column; gap: 0.4rem; }
         .s-field__label { font-size: 0.8rem; color: var(--color-text-muted); font-family: var(--font-mono); }
         .s-field__input {

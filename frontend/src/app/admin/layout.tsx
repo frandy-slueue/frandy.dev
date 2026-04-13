@@ -5,13 +5,13 @@ import { useRouter, usePathname } from "next/navigation";
 import { getMe, logout } from "@/lib/auth";
 
 const navItems = [
-  { label: "Dashboard", href: "/admin",           icon: "⬡" },
-  { label: "Projects",  href: "/admin/projects",   icon: "◈" },
-  { label: "Timeline",  href: "/admin/timeline",   icon: "◎" },
-  { label: "Contact",   href: "/admin/contact",    icon: "◉" },
-  { label: "Resume",    href: "/admin/resume",     icon: "◰" },
-  { label: "Settings",  href: "/admin/settings",   icon: "◑" },
-  { label: "Analytics", href: "/admin/analytics",  icon: "◐" },
+  { label: "Dashboard", href: "/admin",          icon: "⬡" },
+  { label: "Projects",  href: "/admin/projects",  icon: "◈" },
+  { label: "Timeline",  href: "/admin/timeline",  icon: "◎" },
+  { label: "Contact",   href: "/admin/contact",   icon: "◉" },
+  { label: "Resume",    href: "/admin/resume",    icon: "◰" },
+  { label: "Settings",  href: "/admin/settings",  icon: "◑" },
+  { label: "Analytics", href: "/admin/analytics", icon: "◐" },
 ];
 
 export default function AdminLayout({
@@ -24,27 +24,44 @@ export default function AdminLayout({
   const [username, setUsername] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    // Don't gate the login page itself
+    if (pathname === "/admin/login") {
+      setChecking(false);
+      return;
+    }
     getMe().then((user) => {
       if (!user) {
         router.push("/admin/login");
       } else {
         setUsername(user.username);
+        setAuthed(true);
       }
-    });
-  }, [router]);
+    }).finally(() => setChecking(false));
+  }, [router, pathname]);
 
   async function handleLogout() {
     await logout();
     router.push("/admin/login");
   }
 
+  // Show nothing while checking auth — prevents layout flash
+  if (checking) return null;
+
+  // On login page, just render children with no admin chrome
+  if (pathname === "/admin/login") return <>{children}</>;
+
+  // Not authed yet — show nothing (redirect is in flight)
+  if (!authed) return null;
+
   return (
     <div className="admin">
       <aside className={`admin__sidebar ${sidebarOpen ? "open" : "closed"}`}>
         <div className="admin__sidebar-header">
-          <span className="admin__logo">frandy.dev</span>
+          <span className="admin__logo">frandycode.dev</span>
           <button className="admin__toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? "◀" : "▶"}
           </button>
@@ -59,8 +76,8 @@ export default function AdminLayout({
           ))}
         </nav>
         <div className="admin__sidebar-footer">
-          {sidebarOpen && <span className="admin__username">@{username}</span>}
-          <button className="admin__logout" onClick={handleLogout}>⏻</button>
+          {sidebarOpen && <span className="admin__username">@CodeBreeder</span>}
+          <button className="admin__logout" onClick={handleLogout} title="Logout">⏻</button>
         </div>
       </aside>
 
@@ -72,7 +89,7 @@ export default function AdminLayout({
         {menuOpen && <div className="admin__fab-backdrop" onClick={() => setMenuOpen(false)} />}
         <div className={`admin__fab-menu ${menuOpen ? "open" : ""}`}>
           <div className="admin__fab-menu-header">
-            <span className="admin__fab-username">@{username}</span>
+            <span className="admin__fab-username">@CodeBreeder</span>
             <button className="admin__fab-logout" onClick={handleLogout}>⏻ Logout</button>
           </div>
           {navItems.map((item) => (
@@ -109,8 +126,8 @@ export default function AdminLayout({
         .admin__nav-label { font-size:0.9rem; }
         .admin__sidebar-footer { display:flex; align-items:center; justify-content:space-between; padding:1rem; border-top:1px solid var(--color-border); min-height:60px; }
         .admin__username { font-size:0.8rem; color:var(--color-text-muted); font-family:var(--font-mono); white-space:nowrap; overflow:hidden; }
-        .admin__logout { background:none; border:none; color:var(--color-text-muted); cursor:pointer; font-size:1rem; padding:0.25rem; flex-shrink:0; }
-        .admin__logout:hover { color:#ff5050; }
+        .admin__logout { background:none; border:1px solid var(--color-border); color:var(--color-text-muted); cursor:pointer; font-size:1.1rem; padding:0.5rem 0.75rem; flex-shrink:0; transition:all 150ms; }
+        .admin__logout:hover { color:#ff5050; border-color:#ff5050; background:rgba(255,80,80,0.08); }
         .admin__main { flex:1; margin-left:220px; transition:margin-left 0.25s ease; min-height:100vh; }
         .admin__content { padding:2rem; max-width:1200px; }
         .admin__fab-wrap { display:none; }
