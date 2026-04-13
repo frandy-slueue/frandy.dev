@@ -651,25 +651,27 @@ export default function ResumePage() {
           <div className="site-container res-cta-strip__inner">
             <p className="res-cta-strip__label">Save a copy for your records</p>
             <div className="res-cta-strip__btns">
-              <BtnSecondary onClick={() => setModalOpen(true)}>
-                <ExternalLink size={14} /> Preview
+              <div className="res-cta-strip__downloads">
+                {resumeUrl && (
+                  <BtnPrimary onClick={() => {
+                    const a = document.createElement("a");
+                    a.href = resumeUrl; a.download = "Frandy_Slueue_Resume.pdf"; a.click();
+                  }}>
+                    <FileDown size={14} /> PDF
+                  </BtnPrimary>
+                )}
+                {docxUrl && (
+                  <BtnSecondary onClick={() => {
+                    const a = document.createElement("a");
+                    a.href = docxUrl; a.download = "Frandy_Slueue_Resume.docx"; a.click();
+                  }}>
+                    <FileDown size={14} /> DOCX
+                  </BtnSecondary>
+                )}
+              </div>
+              <BtnSecondary className="res-cta-strip__preview" onClick={() => setModalOpen(true)}>
+                <ExternalLink size={14} /> Preview Resume
               </BtnSecondary>
-              {resumeUrl && (
-                <BtnPrimary onClick={() => {
-                  const a = document.createElement("a");
-                  a.href = resumeUrl; a.download = "Frandy_Slueue_Resume.pdf"; a.click();
-                }}>
-                  <FileDown size={14} /> Download PDF
-                </BtnPrimary>
-              )}
-              {docxUrl && (
-                <BtnSecondary onClick={() => {
-                  const a = document.createElement("a");
-                  a.href = docxUrl; a.download = "Frandy_Slueue_Resume.docx"; a.click();
-                }}>
-                  <FileDown size={14} /> Download DOCX
-                </BtnSecondary>
-              )}
             </div>
           </div>
         </motion.div>
@@ -1231,8 +1233,37 @@ export default function ResumePage() {
         }
         .res-cta-strip__btns {
           display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
+          flex-direction: column;
+          gap: 10px;
+          width: 100%;
+        }
+        .res-cta-strip__downloads {
+          display: flex;
+          gap: 10px;
+          width: 100%;
+        }
+        .res-cta-strip__downloads > * {
+          flex: 1;
+        }
+        .res-cta-strip__preview {
+          width: 100%;
+          justify-content: center;
+        }
+        @media (min-width: 640px) {
+          .res-cta-strip__btns {
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: auto;
+          }
+          .res-cta-strip__downloads {
+            width: auto;
+          }
+          .res-cta-strip__downloads > * {
+            flex: none;
+          }
+          .res-cta-strip__preview {
+            width: auto;
+          }
         }
 
         /* ── Back to top ────────────────────────────────────────────────────── */
