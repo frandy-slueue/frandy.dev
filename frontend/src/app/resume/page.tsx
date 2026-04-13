@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ExternalLink, FileDown, FileText, Share2, ChevronUp } from "lucide-react";
+import { ExternalLink, FileDown, FileText, Share2 } from "lucide-react";
 import { fadeUp, fadeLeft, fadeRight, VIEWPORT } from "@/lib/animations";
 import SectionLabel from "@/components/ui/SectionLabel";
 import { BtnPrimary, BtnSecondary } from "@/components/ui/Button";
@@ -219,24 +219,30 @@ export default function ResumePage() {
       {/* ── Sticky top bar ──────────────────────────────────────────────── */}
       <div className="res-topbar">
         <div className="res-topbar__inner site-container">
+
+          {/* Left — back link */}
+          <a href="/" className="res-topbar__home" aria-label="Back to frandy.dev">
+            ← frandy.dev
+          </a>
+
+          {/* Center — title + preview */}
           <span className="res-topbar__title">
-            <a href="/" className="res-topbar__home">
-              ← frandy.dev
-            </a>
-            <span className="res-topbar__sep" aria-hidden>·</span>
             <span className="res-topbar__dot" aria-hidden />
             Frandy Slueue — Resume
-          </span>
-          <div className="res-topbar__actions">
             <button
-              className="res-action-btn"
+              className="res-action-btn res-action-btn--preview"
+              style={{ marginLeft: "20px" }}
               onClick={() => setModalOpen(true)}
-              title="View resume"
-              aria-label="View resume"
+              title="Preview resume"
+              aria-label="Preview resume"
             >
-              <ExternalLink size={14} />
-              <span>View</span>
+              <ExternalLink size={13} />
+              <span>Preview</span>
             </button>
+          </span>
+
+          {/* Right — PDF, DOCX, Share */}
+          <div className="res-topbar__actions">
             <button
               className="res-action-btn"
               onClick={() => {
@@ -603,11 +609,6 @@ export default function ResumePage() {
         </div>
       </div>
 
-      {/* ── Back to top ─────────────────────────────────────────────────── */}
-      <button className="res-back-top" onClick={scrollTop} aria-label="Back to top">
-        <ChevronUp size={18} />
-      </button>
-
       {/* ── Download CTA strip ──────────────────────────────────────────── */}
       {(resumeUrl || docxUrl) && (
         <motion.div
@@ -619,6 +620,9 @@ export default function ResumePage() {
           <div className="site-container res-cta-strip__inner">
             <p className="res-cta-strip__label">Save a copy for your records</p>
             <div className="res-cta-strip__btns">
+              <BtnSecondary onClick={() => setModalOpen(true)}>
+                <ExternalLink size={14} /> Preview
+              </BtnSecondary>
               {resumeUrl && (
                 <BtnPrimary onClick={() => {
                   const a = document.createElement("a");
@@ -640,7 +644,7 @@ export default function ResumePage() {
         </motion.div>
       )}
 
-      {/* Resume modal — triggered by View button */}
+      {/* Resume modal */}
       <ResumeModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -665,7 +669,7 @@ export default function ResumePage() {
         /* ── Top bar ─────────────────────────────────────────────────────── */
         .res-topbar {
           position: sticky;
-          top: 92px;
+          top: 0;
           z-index: 40;
           background: rgba(8,8,8,0.95);
           border-bottom: 1px solid var(--border);
@@ -676,8 +680,8 @@ export default function ResumePage() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 16px;
-          height: 48px;
+          gap: 12px;
+          height: 52px;
         }
         .res-topbar__title {
           font-family: var(--font-mono);
@@ -687,8 +691,10 @@ export default function ResumePage() {
           text-transform: uppercase;
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
           white-space: nowrap;
+          flex: 1;
+          justify-content: center;
         }
         .res-topbar__home {
           font-family: var(--font-mono);
@@ -698,13 +704,12 @@ export default function ResumePage() {
           text-decoration: none;
           text-transform: uppercase;
           white-space: nowrap;
+          flex-shrink: 0;
           transition: opacity 200ms ease;
         }
         .res-topbar__home:hover { opacity: 0.7; }
-        .res-topbar__sep {
-          color: var(--border);
-          margin: 0 4px;
-        }
+        .res-topbar__dot {
+          width: 6px; height: 6px;
           border-radius: 50%;
           background: var(--accent);
           box-shadow: 0 0 6px var(--accent);
@@ -714,6 +719,7 @@ export default function ResumePage() {
           display: flex;
           align-items: center;
           gap: 4px;
+          flex-shrink: 0;
         }
         .res-action-btn {
           display: flex;
@@ -739,14 +745,31 @@ export default function ResumePage() {
           background: var(--bg-elevated);
         }
         .res-action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .res-action-btn--preview {
+          border: 1px solid var(--border);
+          color: var(--accent);
+          margin-left: 6px;
+        }
+        .res-action-btn--preview:hover {
+          background: var(--bg-elevated);
+        }
         .res-action-btn__copied { display: none; }
         .res-action-btn--share.copied .res-action-btn__normal { display: none; }
         .res-action-btn--share.copied .res-action-btn__copied {
           display: inline;
           color: var(--accent);
         }
+        @media (max-width: 768px) {
+          .res-topbar__title { display: none; }
+          .res-topbar__home { font-size: 10px; }
+        }
 
-        /* ── Hero ─────────────────────────────────────────────────────────── */
+        /* ── Resume page base font bump (+0.2rem) ────────────────────────── */
+        .res-body, .res-section, .res-hero {
+          font-size: 1.2rem;
+        }
+
+        /* ── Hero ────────────────────────────────────────────────────────── */
         .res-hero {
           background: var(--bg-primary);
           padding: 80px 0 64px;

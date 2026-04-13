@@ -11,6 +11,7 @@ import ThemeProvider from "@/components/ThemeProvider";
 export default function NavWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin  = pathname?.startsWith("/admin");
+  const isResume = pathname === "/resume";
 
   // Lifted scroll state — shared between BackToTop and ThemeToggleMobile
   const [bttVisible, setBttVisible]         = useState(false);
@@ -41,11 +42,11 @@ export default function NavWrapper({ children }: { children: React.ReactNode }) 
 
   return (
     <ThemeProvider>
-      {!isAdmin && <Nav />}
-      <main style={{ paddingTop: isAdmin ? "0" : "92px" }}>{children}</main>
-      {!isAdmin && <Footer />}
+      {!isAdmin && !isResume && <Nav />}
+      <main style={{ paddingTop: isAdmin || isResume ? "0" : "92px" }}>{children}</main>
+      {!isAdmin && !isResume && <Footer />}
       {!isAdmin && <BackToTop visible={bttVisible} />}
-      {!isAdmin && <ThemeToggleMobile visible={themeBtnVisible} />}
+      {!isAdmin && !isResume && <ThemeToggleMobile visible={themeBtnVisible} />}
     </ThemeProvider>
   );
 }
