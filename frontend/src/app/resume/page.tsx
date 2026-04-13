@@ -187,6 +187,9 @@ export default function ResumePage() {
   const [docxUrl, setDocxUrl]     = useState<string | null>(null);
   const [shareUrl, setShareUrl]   = useState<string | null>(null);
   const [shareToast, setShareToast] = useState(false);
+  const [toastPos, setToastPos] = useState({ top: 0, left: 0 });
+  const shareTopRef = useRef<HTMLButtonElement>(null);
+  const shareBotRef = useRef<HTMLButtonElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -198,18 +201,26 @@ export default function ResumePage() {
     }).catch(() => {});
   }, []);
 
-  function handleShare() {
+  function handleShare(btnRef?: React.RefObject<HTMLButtonElement | null>) {
     const url = shareUrl || window.location.href;
-    // Native share sheet — works on mobile and modern desktop
+
+    // Position toast near the button that was clicked
+    if (btnRef?.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setToastPos({
+        top: rect.top - 44,
+        left: rect.left + rect.width / 2,
+      });
+    }
+
     if (navigator.share) {
       navigator.share({
         title: "Frandy Slueue — Resume",
         text: "Full-stack software engineer and IT security professional",
         url,
-      }).catch(() => {}); // user cancelled — ignore
+      }).catch(() => {});
       return;
     }
-    // Fallback — copy to clipboard (works on HTTPS)
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(url).then(() => {
         setShareToast(true);
@@ -217,7 +228,6 @@ export default function ResumePage() {
       });
       return;
     }
-    // HTTP fallback — textarea trick
     const ta = document.createElement("textarea");
     ta.value = url;
     ta.style.cssText = "position:fixed;left:-9999px;top:-9999px;opacity:0";
@@ -246,20 +256,17 @@ export default function ResumePage() {
             ← frandy.dev
           </a>
 
-          {/* Center — title + preview */}
+          {/* Center — logo + stacked name */}
           <span className="res-topbar__title">
-            <span className="res-topbar__dot" aria-hidden />
-            Frandy Slueue — Resume
-            <button
-              className="res-action-btn res-action-btn--preview"
-              style={{ marginLeft: "20px" }}
-              onClick={() => setModalOpen(true)}
-              title="Preview resume"
-              aria-label="Preview resume"
-            >
-              <ExternalLink size={13} />
-              <span>Preview</span>
-            </button>
+            <svg width="18" height="18" viewBox="0 0 36 36" aria-hidden="true" style={{ flexShrink: 0 }}>
+              <polygon points="18,2 34,18 18,34 2,18" fill="none" stroke="var(--accent)" strokeWidth="1.5"/>
+              <polygon points="18,7 29,18 18,29 7,18" fill="none" stroke="var(--accent)" strokeWidth="0.5" opacity="0.4"/>
+              <text x="18" y="22" textAnchor="middle" fontFamily="var(--font-display)" fontSize="10" fontWeight="700" fill="white">FS</text>
+            </svg>
+            <span className="res-topbar__name-stack">
+              <span className="res-topbar__name-first">FRANDY</span>
+              <span className="res-topbar__name-last">SLUEUE</span>
+            </span>
           </span>
 
           {/* Right — PDF, DOCX, Share */}
@@ -296,8 +303,9 @@ export default function ResumePage() {
               <FileDown size={11} style={{ opacity: 0.6 }} />
             </button>
             <button
+              ref={shareTopRef}
               className={`res-action-btn res-action-btn--share ${shareToast ? "copied" : ""}`}
-              onClick={handleShare}
+              onClick={() => handleShare(shareTopRef)}
               title="Share resume"
               aria-label="Share resume"
             >
@@ -676,15 +684,16 @@ export default function ResumePage() {
         shareUrl={shareUrl}
       />
 
-      {/* Share toast */}
+      {/* Share toast — appears near share button */}
       {shareToast && (
         <motion.div
           className="res-toast"
-          initial={{ opacity: 0, y: 12 }}
+          style={{ top: toastPos.top, left: toastPos.left }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 12 }}
+          exit={{ opacity: 0, y: 6 }}
         >
-          Link copied to clipboard
+          Link copied!
         </motion.div>
       )}
 
@@ -718,6 +727,25 @@ export default function ResumePage() {
           white-space: nowrap;
           flex: 1;
           justify-content: center;
+        }
+        .res-topbar__name-stack {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.15;
+        }
+        .res-topbar__name-first {
+          font-family: var(--font-display);
+          font-size: 13px;
+          letter-spacing: 3px;
+          color: #fff;
+          line-height: 1;
+        }
+        .res-topbar__name-last {
+          font-family: var(--font-display);
+          font-size: 11px;
+          letter-spacing: 3px;
+          color: var(--accent);
+          line-height: 1;
         }
         .res-topbar__home {
           font-family: var(--font-mono);
@@ -768,14 +796,6 @@ export default function ResumePage() {
           background: var(--bg-elevated);
         }
         .res-action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .res-action-btn--preview {
-          border: 1px solid var(--border);
-          color: var(--accent);
-          margin-left: 6px;
-        }
-        .res-action-btn--preview:hover {
-          background: var(--bg-elevated);
-        }
         .res-action-btn__copied { display: none; }
         .res-action-btn--share.copied .res-action-btn__normal { display: none; }
         .res-action-btn--share.copied .res-action-btn__copied {
@@ -783,8 +803,9 @@ export default function ResumePage() {
           color: var(--accent);
         }
         @media (max-width: 768px) {
-          .res-topbar__title { display: none; }
           .res-topbar__home { font-size: 10px; }
+          .res-topbar__name-first { font-size: 11px; }
+          .res-topbar__name-last { font-size: 9px; }
         }
 
         /* ── Resume page base font bump (+0.2rem) ────────────────────────── */
@@ -1239,8 +1260,6 @@ export default function ResumePage() {
         /* ── Toast ──────────────────────────────────────────────────────────── */
         .res-toast {
           position: fixed;
-          bottom: 80px;
-          left: 50%;
           transform: translateX(-50%);
           background: var(--bg-elevated);
           border: 1px solid var(--accent);
@@ -1249,9 +1268,10 @@ export default function ResumePage() {
           font-size: 11px;
           letter-spacing: 2px;
           text-transform: uppercase;
-          padding: 10px 20px;
+          padding: 8px 16px;
           z-index: 200;
           white-space: nowrap;
+          pointer-events: none;
         }
 
         /* ── Responsive ─────────────────────────────────────────────────────── */
