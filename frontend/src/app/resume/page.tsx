@@ -325,7 +325,7 @@ export default function ResumePage() {
               animate="visible"
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              IT Operations&nbsp;&nbsp;·&nbsp;&nbsp;Security&nbsp;&nbsp;·&nbsp;&nbsp;Software Engineering
+              Software Engineering&nbsp;&nbsp;·&nbsp;&nbsp;Security&nbsp;&nbsp;·&nbsp;&nbsp;IT Operations
             </motion.p>
 
             <motion.div

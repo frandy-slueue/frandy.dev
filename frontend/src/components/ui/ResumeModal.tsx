@@ -355,7 +355,7 @@ function ResumeDocument() {
               <span style={{ fontFamily: "'Bebas Neue', 'Space Grotesk', sans-serif", fontSize: 42, fontWeight: 700, letterSpacing: 4, color: "#10b981", textTransform: "uppercase" }}>SLUEUE</span>
             </div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 3, color: "rgba(255,255,255,0.38)", textTransform: "uppercase", marginBottom: 10 }}>
-              IT Operations&nbsp;&nbsp;·&nbsp;&nbsp;Security&nbsp;&nbsp;·&nbsp;&nbsp;Software Engineering
+              Software Engineering&nbsp;&nbsp;·&nbsp;&nbsp;Security&nbsp;&nbsp;·&nbsp;&nbsp;IT Operations
             </div>
             <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginBottom: 12 }}>
               {["(918) 800-4855", "frandyslueue@gmail.com", "Broken Arrow, OK", "English · French"].map(c => (
