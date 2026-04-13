@@ -256,17 +256,17 @@ export default function ResumePage() {
             ← frandy.dev
           </a>
 
-          {/* Center — logo + stacked name */}
+          {/* Center — Preview button */}
           <span className="res-topbar__title">
-            <svg width="18" height="18" viewBox="0 0 36 36" aria-hidden="true" style={{ flexShrink: 0 }}>
-              <polygon points="18,2 34,18 18,34 2,18" fill="none" stroke="var(--accent)" strokeWidth="1.5"/>
-              <polygon points="18,7 29,18 18,29 7,18" fill="none" stroke="var(--accent)" strokeWidth="0.5" opacity="0.4"/>
-              <text x="18" y="22" textAnchor="middle" fontFamily="var(--font-display)" fontSize="10" fontWeight="700" fill="white">FS</text>
-            </svg>
-            <span className="res-topbar__name-stack">
-              <span className="res-topbar__name-first">FRANDY</span>
-              <span className="res-topbar__name-last">SLUEUE</span>
-            </span>
+            <button
+              className="res-action-btn res-topbar__preview-btn"
+              onClick={() => setModalOpen(true)}
+              title="Preview resume"
+              aria-label="Preview resume"
+            >
+              <ExternalLink size={15} />
+              <span>Preview Resume</span>
+            </button>
           </span>
 
           {/* Right — PDF, DOCX, Share */}
@@ -715,7 +715,7 @@ export default function ResumePage() {
           align-items: center;
           justify-content: space-between;
           gap: 12px;
-          height: 52px;
+          height: 64px;
         }
         .res-topbar__title {
           font-family: var(--font-mono);
@@ -749,9 +749,20 @@ export default function ResumePage() {
           color: var(--accent);
           line-height: 1;
         }
+        .res-topbar__preview-btn {
+          border: 1px solid var(--accent) !important;
+          color: var(--accent) !important;
+          padding: 8px 18px !important;
+          font-size: 11px !important;
+          letter-spacing: 2px !important;
+        }
+        .res-topbar__preview-btn:hover {
+          background: var(--accent) !important;
+          color: var(--bg-primary) !important;
+        }
         .res-topbar__home {
           font-family: var(--font-mono);
-          font-size: 11px;
+          font-size: 12.1px;
           letter-spacing: 2px;
           color: var(--accent);
           text-decoration: none;
@@ -771,20 +782,20 @@ export default function ResumePage() {
         .res-topbar__actions {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
           flex-shrink: 0;
         }
         .res-action-btn {
           display: flex;
           align-items: center;
           gap: 5px;
-          padding: 5px 10px;
+          padding: 8px 14px;
           background: transparent;
           border: 1px solid transparent;
           color: rgba(255,255,255,0.45);
           font-family: var(--font-mono);
-          font-size: 10px;
-          letter-spacing: 1px;
+          font-size: 11.1px;
+          letter-spacing: 1.5px;
           text-transform: uppercase;
           text-decoration: none;
           cursor: pointer;
@@ -805,14 +816,14 @@ export default function ResumePage() {
           color: var(--accent);
         }
         @media (max-width: 768px) {
-          .res-topbar__home { font-size: 10px; }
+          .res-topbar__home { font-size: 11.1px; }
           .res-topbar__name-first { font-size: 11px; }
           .res-topbar__name-last { font-size: 9px; }
         }
 
         /* ── Resume page base font bump (+0.2rem) ────────────────────────── */
         .res-body, .res-section, .res-hero {
-          font-size: 1.2rem;
+          font-size: 1.3rem;
         }
 
         /* ── Hero ────────────────────────────────────────────────────────── */
@@ -908,7 +919,7 @@ export default function ResumePage() {
         }
         .res-hero-url {
           font-family: var(--font-mono);
-          font-size: 10px;
+          font-size: 11.1px;
           letter-spacing: 4px;
           color: var(--accent);
           text-transform: uppercase;
@@ -1000,7 +1011,7 @@ export default function ResumePage() {
           border-color: var(--accent);
           color: var(--accent);
         }
-        .res-comp-gem { color: var(--accent); font-size: 10px; flex-shrink: 0; }
+        .res-comp-gem { color: var(--accent); font-size: 11.1px; flex-shrink: 0; }
 
         /* Job blocks */
         .res-job { margin-bottom: 36px; }
@@ -1065,7 +1076,7 @@ export default function ResumePage() {
         }
         .res-devops__title {
           font-family: var(--font-mono);
-          font-size: 10px;
+          font-size: 11.1px;
           letter-spacing: 3px;
           color: var(--accent);
           font-weight: 700;
@@ -1107,7 +1118,7 @@ export default function ResumePage() {
         /* Tools */
         .res-tools-label {
           font-family: var(--font-mono);
-          font-size: 10px;
+          font-size: 11.1px;
           letter-spacing: 2px;
           color: var(--text-muted);
           text-transform: uppercase;
@@ -1119,7 +1130,7 @@ export default function ResumePage() {
           font-size: 11px;
           background: var(--bg-elevated);
           border: 1px solid var(--border);
-          padding: 5px 10px;
+          padding: 8px 14px;
           color: var(--text-muted);
           transition: border-color 200ms ease, color 200ms ease;
         }
@@ -1194,7 +1205,7 @@ export default function ResumePage() {
         .res-footer-link {
           display: block;
           font-family: var(--font-mono);
-          font-size: 10px;
+          font-size: 11.1px;
           color: var(--text-muted);
           text-decoration: none;
           letter-spacing: 0.5px;
