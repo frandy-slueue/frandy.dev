@@ -326,7 +326,7 @@ function ResumeDocument() {
       {/* Hero header */}
       <div style={{
         background: "#0a0a0a",
-        padding: "36px 48px 28px",
+        padding: "clamp(20px, 4vw, 36px) clamp(20px, 5vw, 48px) 28px",
         position: "relative",
         overflow: "hidden",
       }}>
@@ -345,16 +345,16 @@ function ResumeDocument() {
           background: "radial-gradient(ellipse, rgba(16,185,129,0.1) 0%, transparent 68%)",
           pointerEvents: "none",
         }} />
-        <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 28 }}>
+        <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
           {/* FS Diamond */}
           <FSDiamond />
           {/* Name block */}
-          <div style={{ flex: 1 }}>
-            <div style={{ lineHeight: 1, marginBottom: 6 }}>
-              <span style={{ fontFamily: "'Bebas Neue', 'Space Grotesk', sans-serif", fontSize: 42, fontWeight: 700, letterSpacing: 4, color: "#ffffff", textTransform: "uppercase" }}>FRANDY </span>
-              <span style={{ fontFamily: "'Bebas Neue', 'Space Grotesk', sans-serif", fontSize: 42, fontWeight: 700, letterSpacing: 4, color: "#10b981", textTransform: "uppercase" }}>SLUEUE</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ lineHeight: 1, marginBottom: 6, whiteSpace: "nowrap" }}>
+              <span style={{ fontFamily: "'Bebas Neue', 'Space Grotesk', sans-serif", fontSize: "clamp(24px, 6vw, 42px)", fontWeight: 700, letterSpacing: 4, color: "#ffffff", textTransform: "uppercase" }}>FRANDY </span>
+              <span style={{ fontFamily: "'Bebas Neue', 'Space Grotesk', sans-serif", fontSize: "clamp(24px, 6vw, 42px)", fontWeight: 700, letterSpacing: 4, color: "#10b981", textTransform: "uppercase" }}>SLUEUE</span>
             </div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 3, color: "rgba(255,255,255,0.38)", textTransform: "uppercase", marginBottom: 10 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "clamp(8px, 1.8vw, 10px)", letterSpacing: 3, color: "rgba(255,255,255,0.38)", textTransform: "uppercase", marginBottom: 10 }}>
               Software Engineering&nbsp;&nbsp;·&nbsp;&nbsp;Security&nbsp;&nbsp;·&nbsp;&nbsp;IT Operations
             </div>
             <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginBottom: 12 }}>
