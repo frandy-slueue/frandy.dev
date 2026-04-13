@@ -102,6 +102,8 @@ export default function AdminResume() {
   const [uploading, setUploading]     = useState(false);
   const [uploadingDocx, setUpDocx]    = useState(false);
   const [deletingDocx, setDelDocx]    = useState(false);
+  const [isDraggingPdf, setDraggingPdf]   = useState(false);
+  const [isDraggingDocx, setDraggingDocx] = useState(false);
   const [shareInput, setShareInput]   = useState("");
   const [savingShare, setSavingShare] = useState(false);
   const [error, setError]             = useState("");
@@ -127,17 +129,33 @@ export default function AdminResume() {
 
   // ── PDF ────────────────────────────────────────────────────────────────────
 
+  async function handleUploadFile(file: File, type: "pdf" | "docx") {
+    if (type === "pdf") {
+      if (!file.type.includes("pdf")) { setError("Please upload a PDF file"); return; }
+      setUploading(true); setError(""); setSuccess("");
+      try {
+        const fd = new FormData(); fd.append("file", file);
+        const res = await fetch("/api/resume", { method:"POST", credentials:"include", body:fd });
+        if (!res.ok) throw new Error();
+        setSuccess("PDF uploaded successfully"); await fetchResumes();
+      } catch { setError("Failed to upload PDF"); }
+      finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
+    } else {
+      const validTypes = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/msword"];
+      if (!validTypes.includes(file.type) && !file.name.endsWith(".docx")) { setError("Please upload a DOCX file"); return; }
+      setUpDocx(true); setError(""); setSuccess("");
+      try {
+        const fd = new FormData(); fd.append("file", file);
+        const res = await fetch("/api/settings/resume/docx", { method:"POST", credentials:"include", body:fd });
+        if (!res.ok) throw new Error();
+        setSuccess("DOCX uploaded successfully"); await fetchResumes();
+      } catch { setError("Failed to upload DOCX"); }
+      finally { setUpDocx(false); if (docxInputRef.current) docxInputRef.current.value = ""; }
+    }
+  }
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true); setError(""); setSuccess("");
-    try {
-      const fd = new FormData(); fd.append("file", file);
-      const res = await fetch("/api/resume", { method:"POST", credentials:"include", body:fd });
-      if (!res.ok) throw new Error();
-      setSuccess("PDF uploaded successfully"); await fetchResumes();
-    } catch { setError("Failed to upload PDF"); }
-    finally  { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
+    const file = e.target.files?.[0]; if (file) handleUploadFile(file, "pdf");
   }
 
   async function handleActivate(id: string) {
@@ -164,16 +182,7 @@ export default function AdminResume() {
   // ── DOCX ───────────────────────────────────────────────────────────────────
 
   async function handleUploadDocx(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUpDocx(true); setError(""); setSuccess("");
-    try {
-      const fd = new FormData(); fd.append("file", file);
-      const res = await fetch("/api/settings/resume/docx", { method:"POST", credentials:"include", body:fd });
-      if (!res.ok) throw new Error();
-      setSuccess("DOCX uploaded successfully"); await fetchResumes();
-    } catch { setError("Failed to upload DOCX"); }
-    finally  { setUpDocx(false); if (docxInputRef.current) docxInputRef.current.value = ""; }
+    const file = e.target.files?.[0]; if (file) handleUploadFile(file, "docx");
   }
 
   async function handleDeleteDocx() {
@@ -230,7 +239,16 @@ export default function AdminResume() {
         <span>PDF Version</span>
       </div>
 
-      <div className={`rv-item ${activePdf ? "active" : ""}`}>
+      <div
+        className={`rv-item ${activePdf ? "active" : ""} ${isDraggingPdf ? "dragging" : ""}`}
+        onDragOver={e => { e.preventDefault(); setDraggingPdf(true); }}
+        onDragLeave={() => setDraggingPdf(false)}
+        onDrop={e => {
+          e.preventDefault(); setDraggingPdf(false);
+          const file = e.dataTransfer.files?.[0];
+          if (file) handleUploadFile(file, "pdf");
+        }}
+      >
         <div className="rv-item__icon">📄</div>
         <div className="rv-item__info">
           <div className="fn-display">
@@ -277,7 +295,16 @@ export default function AdminResume() {
         <span>DOCX Version</span>
       </div>
 
-      <div className={`rv-item ${settings?.resume_url_docx ? "active" : ""}`}>
+      <div
+        className={`rv-item ${settings?.resume_url_docx ? "active" : ""} ${isDraggingDocx ? "dragging" : ""}`}
+        onDragOver={e => { e.preventDefault(); setDraggingDocx(true); }}
+        onDragLeave={() => setDraggingDocx(false)}
+        onDrop={e => {
+          e.preventDefault(); setDraggingDocx(false);
+          const file = e.dataTransfer.files?.[0];
+          if (file) handleUploadFile(file, "docx");
+        }}
+      >
         <div className="rv-item__icon">📝</div>
         <div className="rv-item__info">
           <div className="fn-display">
@@ -400,7 +427,12 @@ export default function AdminResume() {
           pointer-events:none; z-index:2; transition:opacity 250ms ease;
         }
         .rv-item:hover::after { opacity:0; }
-        .rv-item.active { border-color:var(--color-accent); }
+        .rv-item.dragging {
+          border-color: var(--color-accent);
+          background: rgba(var(--color-accent-rgb, 61,153,112), 0.06);
+          box-shadow: inset 0 0 0 2px var(--color-accent);
+        }
+        .rv-item.dragging::after { opacity: 1; }
         .rv-item.active::after { opacity:0; }
         .rv-item > * { position:relative; z-index:1; }
 

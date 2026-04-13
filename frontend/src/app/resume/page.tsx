@@ -200,27 +200,35 @@ export default function ResumePage() {
 
   function handleShare() {
     const url = shareUrl || window.location.href;
+    // Native share sheet — works on mobile and modern desktop
     if (navigator.share) {
-      navigator.share({ title: "Frandy Slueue — Resume", url });
-    } else if (navigator.clipboard && window.isSecureContext) {
+      navigator.share({
+        title: "Frandy Slueue — Resume",
+        text: "Full-stack software engineer and IT security professional",
+        url,
+      }).catch(() => {}); // user cancelled — ignore
+      return;
+    }
+    // Fallback — copy to clipboard (works on HTTPS)
+    if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(url).then(() => {
         setShareToast(true);
         setTimeout(() => setShareToast(false), 2500);
       });
-    } else {
-      // HTTP fallback — works without HTTPS
-      const ta = document.createElement("textarea");
-      ta.value = url;
-      ta.style.cssText = "position:fixed;left:-9999px;top:-9999px;opacity:0";
-      document.body.appendChild(ta);
-      ta.focus(); ta.select();
-      try {
-        document.execCommand("copy");
-        setShareToast(true);
-        setTimeout(() => setShareToast(false), 2500);
-      } catch {}
-      document.body.removeChild(ta);
+      return;
     }
+    // HTTP fallback — textarea trick
+    const ta = document.createElement("textarea");
+    ta.value = url;
+    ta.style.cssText = "position:fixed;left:-9999px;top:-9999px;opacity:0";
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try {
+      document.execCommand("copy");
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2500);
+    } catch {}
+    document.body.removeChild(ta);
   }
 
   function scrollTop() {
