@@ -25,9 +25,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Frandy Slueue — Full Stack Software Engineer",
+  title: "Frandy Slueue — Software Engineer & IT Security Professional",
   description:
-    "Portfolio of Frandy Slueue, a full stack software engineer based in Tulsa, Oklahoma.",
+    "Full-stack software engineer and IT security professional based in Tulsa, Oklahoma. Building production-grade web and mobile applications using React, Next.js, FastAPI, React Native, and Docker.",
 };
 
 export const viewport: Viewport = {
