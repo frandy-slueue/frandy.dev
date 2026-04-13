@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { User, Code2, FolderOpen, Clock, Mail } from "lucide-react";
 import { ThemeToggleDesktop } from "@/components/ui/ThemeToggle";
 
@@ -42,6 +43,7 @@ export default function Nav() {
 
   useEffect(() => {
     const onScroll = () => {
+      hasScrolledRef.current = true;
       setScrolled(window.scrollY > 20);
       if (window.scrollY < 80) setActive("");
     };
@@ -49,12 +51,17 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const hasScrolledRef = useRef(false);
+
   useEffect(() => {
     const ids      = ALL_NAV_LINKS.map((l) => l.href.slice(1));
     const elements = ids.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
     if (!elements.length) return;
     const observer = new IntersectionObserver(
-      (entries) => { entries.forEach((e) => { if (e.isIntersecting) setActive(`#${e.target.id}`); }); },
+      (entries) => {
+        if (!hasScrolledRef.current) return; // don't set active on initial load
+        entries.forEach((e) => { if (e.isIntersecting) setActive(`#${e.target.id}`); });
+      },
       { rootMargin: `-${NAV_HEIGHT}px 0px -85% 0px`, threshold: 0 }
     );
     elements.forEach((el) => observer.observe(el));
@@ -72,16 +79,7 @@ export default function Nav() {
       <header className={`top-nav ${scrolled ? "scrolled" : ""}`}>
         <div className="site-container top-nav__inner">
 
-          <a
-            href="/"
-            className="nav-logo"
-            onClick={(e) => {
-              if (window.location.pathname === "/") {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }
-            }}
-          >
+          <Link href="/" className="nav-logo">
             <div className="nav-logo__diamond">
               <div className="nav-logo__diamond-border" />
               <span className="nav-logo__fs">FS</span>
@@ -90,7 +88,7 @@ export default function Nav() {
               <span className="nav-logo__name">FRANDY</span>
               <span className="nav-logo__sub">· dev</span>
             </div>
-          </a>
+          </Link>
 
           {/* Desktop links — Option B active state, sharp */}
           <nav className="nav-desktop" aria-label="Main navigation">
@@ -246,6 +244,7 @@ export default function Nav() {
         /* ── Landscape / tablet ───────────────────────────── */
         @media (max-width: 1024px) {
           .nav-desktop { display: none !important; }
+          .nav-theme-desktop { display: none !important; }
           .nav-hamburger {
             display: flex;
             flex-direction: column;

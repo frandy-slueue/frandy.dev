@@ -1,471 +1,1291 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Skel } from "@/components/ui/Skeleton";
+import React, { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { ExternalLink, FileDown, FileText, Share2 } from "lucide-react";
+import { fadeUp, fadeLeft, fadeRight, VIEWPORT } from "@/lib/animations";
+import SectionLabel from "@/components/ui/SectionLabel";
+import { BtnPrimary, BtnSecondary } from "@/components/ui/Button";
+import { settingsApi } from "@/lib/api";
+import ResumeModal from "@/components/ui/ResumeModal";
 
-interface Resume {
-  id: string; filename: string; file_url: string;
-  is_active: boolean; uploaded_at: string;
-}
+// ── Animated FS Diamond (canvas) ────────────────────────────────────────────
+function FSDiamond({ size = 92 }: { size?: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-interface ResumeSettings {
-  resume_url: string | null;
-  resume_url_docx: string | null;
-  resume_url_share: string | null;
-  resume_uploaded_at: string | null;
-}
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+    if (!ctx) return;
 
-function ResumeSkeleton() {
-  return (
-    <div className="resume">
-      <div className="rv-header">
-        <div className="skel-group" style={{ gap:8 }}>
-          <Skel.Title width="quarter" /><Skel.Text width="third" size="sm" />
-        </div>
-        <Skel.Box height={36} style={{ width:120 }} />
-      </div>
-      <div className="rv-list">
-        {[0,1].map(i => (
-          <div key={i} className="rv-item">
-            <Skel.Circle size={40} />
-            <div style={{ flex:1 }} className="skel-group">
-              <Skel.Text width="half" /><Skel.Text width="third" size="sm" />
-            </div>
-            <Skel.Row>
-              <Skel.Box height={30} style={{ width:52 }} />
-              <Skel.Box height={30} style={{ width:72 }} />
-            </Skel.Row>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+    const W = size, H = size, CX = W / 2, CY = H / 2, R = W * 0.435;
+    const F_SIZE = Math.max(11, Math.round(size * 0.115)); // legible character size
+    const NUM_COLS = Math.floor((W * 0.88) / (F_SIZE * 0.95));
+    const COL_W = (W * 0.88) / NUM_COLS;
+    const TOTAL = Math.ceil(H / F_SIZE) + 2;
 
-function FilenameEditor({ resume, onSaved }: { resume: Resume; onSaved: (id:string, name:string) => void }) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue]     = useState(resume.filename);
-  const [saving, setSaving]   = useState(false);
-  const [error, setError]     = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+    const cols = Array.from({ length: NUM_COLS }, () => ({
+      offset: Math.random() * TOTAL,
+      speed: 0.28 + Math.random() * 0.38,
+    }));
 
-  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(CX, CY - R); ctx.lineTo(CX + R, CY);
+      ctx.lineTo(CX, CY + R); ctx.lineTo(CX - R, CY);
+      ctx.closePath();
+      ctx.clip();
 
-  function handleEdit()   { setValue(resume.filename); setError(""); setEditing(true); }
-  function handleCancel() { setValue(resume.filename); setError(""); setEditing(false); }
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(0, 0, W, H);
 
-  async function handleSave() {
-    const trimmed = value.trim();
-    if (!trimmed) { setError("Filename cannot be empty"); return; }
-    if (trimmed === resume.filename) { setEditing(false); return; }
-    setSaving(true); setError("");
-    try {
-      const res = await fetch(`/api/resume/${resume.id}/rename`, { method:"PATCH", credentials:"include", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ filename: trimmed }) });
-      if (!res.ok) throw new Error();
-      onSaved(resume.id, trimmed); setEditing(false);
-    } catch { setError("Failed to rename. Try again."); }
-    finally  { setSaving(false); }
-  }
+      ctx.font = `700 ${F_SIZE}px monospace`;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      for (let c = 0; c < NUM_COLS; c++) {
+        const col = cols[c];
+        const x = W * 0.06 + c * COL_W;
+        for (let r = 0; r < TOTAL; r++) {
+          const y = ((r - col.offset % TOTAL) * F_SIZE) % (H + F_SIZE) - F_SIZE;
+          const dx = x + COL_W / 2 - CX, dy = y + F_SIZE / 2 - CY;
+          const alpha = Math.max(0, 1 - (Math.sqrt(dx * dx + dy * dy) / R) * 1.35);
+          if (alpha < 0.05) continue;
+          ctx.fillStyle = (c + r) % 3 !== 0
+            ? `rgba(16,185,129,${alpha})`
+            : `rgba(6,182,212,${alpha})`;
+          ctx.fillText(["0", "1"][(c + r) % 2], x, y);
+        }
+      }
+      ctx.restore();
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter")  handleSave();
-    if (e.key === "Escape") handleCancel();
-  }
+      const i2 = size * 0.054;
+      ctx.beginPath();
+      ctx.moveTo(CX, CY - R); ctx.lineTo(CX + R, CY);
+      ctx.lineTo(CX, CY + R); ctx.lineTo(CX - R, CY);
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(210,210,210,0.88)";
+      ctx.lineWidth = size > 60 ? 1.5 : 1;
+      ctx.stroke();
 
-  if (editing) {
-    return (
-      <div className="fn-editor">
-        <input ref={inputRef} className={`fn-editor__input ${error?"is-error":""}`} value={value} onChange={e=>setValue(e.target.value)} onKeyDown={handleKeyDown} disabled={saving} aria-label="Edit filename" />
-        {error && <p className="fn-editor__error">{error}</p>}
-        <div className="fn-editor__actions">
-          <button className="admin-btn-primary" onClick={handleSave} disabled={saving||!value.trim()}>
-            <span>{saving ? "Saving..." : "Save"}</span>
-          </button>
-          <button className="admin-btn-secondary" onClick={handleCancel} disabled={saving}><span>Cancel</span></button>
-        </div>
-      </div>
-    );
-  }
+      ctx.beginPath();
+      ctx.moveTo(CX, CY - R + i2); ctx.lineTo(CX + R - i2, CY);
+      ctx.lineTo(CX, CY + R - i2); ctx.lineTo(CX - R + i2, CY);
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(16,185,129,0.45)";
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
 
-  return (
-    <div className="fn-display">
-      <span className="rv-filename">{resume.filename}</span>
-      <button className="fn-edit-btn" onClick={handleEdit} title="Edit filename" aria-label="Edit filename">✎</button>
-    </div>
-  );
-}
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(CX, CY - R + i2 + 2); ctx.lineTo(CX + R - i2 - 2, CY);
+      ctx.lineTo(CX, CY + R - i2 - 2); ctx.lineTo(CX - R + i2 + 2, CY);
+      ctx.closePath();
+      ctx.clip();
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.font = `900 ${size * 0.3}px 'Bebas Neue', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(0,0,0,0.92)";
+      ctx.fillText("FS", CX, CY + 1);
+      ctx.restore();
 
-export default function AdminResume() {
-  const [resumes, setResumes]         = useState<Resume[]>([]);
-  const [settings, setSettings]       = useState<ResumeSettings | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [uploading, setUploading]     = useState(false);
-  const [uploadingDocx, setUpDocx]    = useState(false);
-  const [deletingDocx, setDelDocx]    = useState(false);
-  const [isDraggingPdf, setDraggingPdf]   = useState(false);
-  const [isDraggingDocx, setDraggingDocx] = useState(false);
-  const [shareInput, setShareInput]   = useState("");
-  const [savingShare, setSavingShare] = useState(false);
-  const [error, setError]             = useState("");
-  const [success, setSuccess]         = useState("");
-  const fileInputRef     = useRef<HTMLInputElement>(null);
-  const docxInputRef     = useRef<HTMLInputElement>(null);
-
-  async function fetchResumes() {
-    try {
-      const [resumeRes, settingsRes] = await Promise.all([
-        fetch("/api/resume", { credentials:"include" }),
-        fetch("/api/settings/resume"),
-      ]);
-      setResumes(await resumeRes.json());
-      const s: ResumeSettings = await settingsRes.json();
-      setSettings(s);
-      setShareInput(s.resume_url_share || "");
-    } catch { setError("Failed to load resumes"); }
-    finally  { setLoading(false); }
-  }
-
-  useEffect(() => { fetchResumes(); }, []);
-
-  // ── PDF ────────────────────────────────────────────────────────────────────
-
-  async function handleUploadFile(file: File, type: "pdf" | "docx") {
-    if (type === "pdf") {
-      if (!file.type.includes("pdf")) { setError("Please upload a PDF file"); return; }
-      setUploading(true); setError(""); setSuccess("");
-      try {
-        const fd = new FormData(); fd.append("file", file);
-        const res = await fetch("/api/resume", { method:"POST", credentials:"include", body:fd });
-        if (!res.ok) throw new Error();
-        setSuccess("PDF uploaded successfully"); await fetchResumes();
-      } catch { setError("Failed to upload PDF"); }
-      finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
-    } else {
-      const validTypes = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/msword"];
-      if (!validTypes.includes(file.type) && !file.name.endsWith(".docx")) { setError("Please upload a DOCX file"); return; }
-      setUpDocx(true); setError(""); setSuccess("");
-      try {
-        const fd = new FormData(); fd.append("file", file);
-        const res = await fetch("/api/settings/resume/docx", { method:"POST", credentials:"include", body:fd });
-        if (!res.ok) throw new Error();
-        setSuccess("DOCX uploaded successfully"); await fetchResumes();
-      } catch { setError("Failed to upload DOCX"); }
-      finally { setUpDocx(false); if (docxInputRef.current) docxInputRef.current.value = ""; }
+      ctx.globalCompositeOperation = "source-over";
+      ctx.font = `900 ${size * 0.3}px 'Bebas Neue', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.fillText("FS", CX, CY + 1);
     }
-  }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (file) handleUploadFile(file, "pdf");
-  }
-
-  async function handleActivate(id: string) {
-    try {
-      const res = await fetch(`/api/resume/${id}/activate`, { method:"PATCH", credentials:"include" });
-      if (!res.ok) throw new Error();
-      setSuccess("Resume set as active"); await fetchResumes();
-    } catch { setError("Failed to activate resume"); }
-  }
-
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this resume?")) return;
-    try {
-      await fetch(`/api/resume/${id}`, { method:"DELETE", credentials:"include" });
-      setResumes(p => p.filter(r => r.id!==id)); setSuccess("Resume deleted");
-    } catch { setError("Failed to delete resume"); }
-  }
-
-  function handleRenamed(id: string, newName: string) {
-    setResumes(p => p.map(r => r.id===id ? { ...r, filename:newName } : r));
-    setSuccess("Filename updated");
-  }
-
-  // ── DOCX ───────────────────────────────────────────────────────────────────
-
-  async function handleUploadDocx(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (file) handleUploadFile(file, "docx");
-  }
-
-  async function handleDeleteDocx() {
-    if (!confirm("Remove the DOCX resume?")) return;
-    setDelDocx(true); setError(""); setSuccess("");
-    try {
-      await fetch("/api/settings/resume/docx", { method:"DELETE", credentials:"include" });
-      setSuccess("DOCX removed"); await fetchResumes();
-    } catch { setError("Failed to remove DOCX"); }
-    finally  { setDelDocx(false); }
-  }
-
-  // ── Share link ─────────────────────────────────────────────────────────────
-
-  async function handleSaveShare() {
-    setSavingShare(true); setError(""); setSuccess("");
-    try {
-      const res = await fetch("/api/settings/resume/share", {
-        method:"PUT", credentials:"include",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ resume_url_share: shareInput.trim() || null }),
-      });
-      if (!res.ok) throw new Error();
-      setSuccess("Share link saved"); await fetchResumes();
-    } catch { setError("Failed to save share link"); }
-    finally  { setSavingShare(false); }
-  }
-
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
-  }
-
-  if (loading) return <ResumeSkeleton />;
-
-  // The active PDF resume
-  const activePdf = resumes.find(r => r.is_active) || resumes[0] || null;
+    let rafId: number;
+    function loop() {
+      cols.forEach(col => { col.offset += col.speed * 0.016; });
+      draw();
+      rafId = requestAnimationFrame(loop);
+    }
+    rafId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafId);
+  }, [size]);
 
   return (
-    <div className="resume">
+    <canvas
+      ref={canvasRef}
+      width={size}
+      height={size}
+      style={{ width: size, height: size, display: "block" }}
+    />
+  );
+}
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="rv-header">
-        <div>
-          <h1>Resume Manager</h1>
-          <p>Manage your PDF, DOCX, and share link</p>
+// ── Section header ───────────────────────────────────────────────────────────
+function ResHead({ label }: { label: string }) {
+  return (
+    <div className="res-sec-head">
+      <span className="res-sec-gem" aria-hidden />
+      <span className="res-sec-label">{label}</span>
+      <div className="res-sec-rule" />
+    </div>
+  );
+}
+
+// ── Job block ────────────────────────────────────────────────────────────────
+function JobBlock({
+  title, org, dates, bullets, children,
+}: {
+  title: string; org: string; dates: string;
+  bullets?: string[]; children?: React.ReactNode;
+}) {
+  return (
+    <div className="res-job">
+      <div className="res-job-header">
+        <span className="res-job-title">{title}</span>
+        <span className="res-job-dates">{dates}</span>
+      </div>
+      <p className="res-job-org">{org}</p>
+      {bullets?.map((b, i) => (
+        <div key={i} className="res-bullet">
+          <span className="res-bullet-gem" aria-hidden />
+          <span>{b}</span>
         </div>
-      </div>
+      ))}
+      {children}
+    </div>
+  );
+}
 
-      {error   && <div className="rv-banner rv-banner--error">{error}</div>}
-      {success && <div className="rv-banner rv-banner--ok">{success}</div>}
+// ── Competency chip ──────────────────────────────────────────────────────────
+function CompChip({ label, accent }: { label: string; accent?: string }) {
+  return (
+    <div className="res-comp-chip">
+      <span className="res-comp-gem" aria-hidden>▪</span>
+      {label}
+    </div>
+  );
+}
 
-      {/* ── PDF card ───────────────────────────────────────────────────── */}
-      <div className="rv-section-divider">
-        <span>PDF Version</span>
-      </div>
+// ── Tool tag ─────────────────────────────────────────────────────────────────
+function Tag({ label }: { label: string }) {
+  return <span className="res-tag">{label}</span>;
+}
 
-      <div
-        className={`rv-item ${activePdf ? "active" : ""} ${isDraggingPdf ? "dragging" : ""}`}
-        onDragOver={e => { e.preventDefault(); setDraggingPdf(true); }}
-        onDragLeave={() => setDraggingPdf(false)}
-        onDrop={e => {
-          e.preventDefault(); setDraggingPdf(false);
-          const file = e.dataTransfer.files?.[0];
-          if (file) handleUploadFile(file, "pdf");
-        }}
-      >
-        <div className="rv-item__icon">📄</div>
-        <div className="rv-item__info">
-          <div className="fn-display">
-            <span className="rv-filename">
-              {activePdf ? activePdf.filename : "No PDF uploaded"}
+// ── Award item ───────────────────────────────────────────────────────────────
+function AwardItem({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="res-award">
+      <span className="res-award-gem" aria-hidden />
+      <p><strong>{title}</strong>{" — "}{detail}</p>
+    </div>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
+export default function ResumePage() {
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [docxUrl, setDocxUrl]     = useState<string | null>(null);
+  const [shareUrl, setShareUrl]   = useState<string | null>(null);
+  const [shareToast, setShareToast] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const topRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    settingsApi.getResume().then(d => {
+      setResumeUrl(d.resume_url);
+      setDocxUrl(d.resume_url_docx);
+      setShareUrl(d.resume_url_share);
+    }).catch(() => {});
+  }, []);
+
+  function handleShare() {
+    const url = shareUrl || window.location.href;
+    // Native share sheet — works on mobile and modern desktop
+    if (navigator.share) {
+      navigator.share({
+        title: "Frandy Slueue — Resume",
+        text: "Full-stack software engineer and IT security professional",
+        url,
+      }).catch(() => {}); // user cancelled — ignore
+      return;
+    }
+    // Fallback — copy to clipboard (works on HTTPS)
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(url).then(() => {
+        setShareToast(true);
+        setTimeout(() => setShareToast(false), 2500);
+      });
+      return;
+    }
+    // HTTP fallback — textarea trick
+    const ta = document.createElement("textarea");
+    ta.value = url;
+    ta.style.cssText = "position:fixed;left:-9999px;top:-9999px;opacity:0";
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try {
+      document.execCommand("copy");
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2500);
+    } catch {}
+    document.body.removeChild(ta);
+  }
+
+  function scrollTop() {
+    topRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  return (
+    <>
+      {/* ── Sticky top bar ──────────────────────────────────────────────── */}
+      <div className="res-topbar">
+        <div className="res-topbar__inner site-container">
+
+          {/* Left — back link */}
+          <a href="/" className="res-topbar__home" aria-label="Back to frandy.dev">
+            ← frandy.dev
+          </a>
+
+          {/* Center — logo + stacked name */}
+          <span className="res-topbar__title">
+            <svg width="18" height="18" viewBox="0 0 36 36" aria-hidden="true" style={{ flexShrink: 0 }}>
+              <polygon points="18,2 34,18 18,34 2,18" fill="none" stroke="var(--accent)" strokeWidth="1.5"/>
+              <polygon points="18,7 29,18 18,29 7,18" fill="none" stroke="var(--accent)" strokeWidth="0.5" opacity="0.4"/>
+              <text x="18" y="22" textAnchor="middle" fontFamily="var(--font-display)" fontSize="10" fontWeight="700" fill="white">FS</text>
+            </svg>
+            <span className="res-topbar__name-stack">
+              <span className="res-topbar__name-first">FRANDY</span>
+              <span className="res-topbar__name-last">SLUEUE</span>
             </span>
-          </div>
-          <div className="rv-item__meta">
-            {activePdf ? (
-              <>
-                <span>Uploaded {formatDate(activePdf.uploaded_at)}</span>
-                <span className="rv-badge">Active</span>
-                {resumes.length > 1 && (
-                  <span style={{ color:"var(--color-text-muted)" }}>
-                    +{resumes.length - 1} other version{resumes.length - 1 !== 1 ? "s" : ""}
-                  </span>
-                )}
-              </>
-            ) : (
-              <span style={{ color:"var(--color-text-muted)" }}>Upload a .pdf file to enable PDF downloads</span>
-            )}
-          </div>
-        </div>
-        <div className="rv-item__actions">
-          {activePdf && (
-            <>
-              <a href={activePdf.file_url} target="_blank" rel="noopener noreferrer" className="admin-btn-secondary">
-                <span>View</span>
-              </a>
-              <button className="admin-btn-primary" onClick={() => handleDelete(activePdf.id)}>
-                <span>Remove</span>
-              </button>
-            </>
-          )}
-          <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} style={{ display:"none" }} id="resume-upload" />
-          <label htmlFor="resume-upload" className="admin-btn-secondary">
-            <span>{uploading ? "Uploading..." : activePdf ? "Replace" : "+ Upload PDF"}</span>
-          </label>
-        </div>
-      </div>
+          </span>
 
-      {/* ── DOCX card ──────────────────────────────────────────────────── */}
-      <div className="rv-section-divider">
-        <span>DOCX Version</span>
-      </div>
-
-      <div
-        className={`rv-item ${settings?.resume_url_docx ? "active" : ""} ${isDraggingDocx ? "dragging" : ""}`}
-        onDragOver={e => { e.preventDefault(); setDraggingDocx(true); }}
-        onDragLeave={() => setDraggingDocx(false)}
-        onDrop={e => {
-          e.preventDefault(); setDraggingDocx(false);
-          const file = e.dataTransfer.files?.[0];
-          if (file) handleUploadFile(file, "docx");
-        }}
-      >
-        <div className="rv-item__icon">📝</div>
-        <div className="rv-item__info">
-          <div className="fn-display">
-            <span className="rv-filename">
-              {settings?.resume_url_docx
-                ? "frandy-slueue-resume.docx"
-                : "No DOCX uploaded"}
-            </span>
-          </div>
-          <div className="rv-item__meta">
-            {settings?.resume_url_docx
-              ? <span className="rv-badge">Uploaded</span>
-              : <span style={{ color:"var(--color-text-muted)" }}>Upload a .docx file to enable DOCX downloads</span>
-            }
-          </div>
-        </div>
-        <div className="rv-item__actions">
-          {settings?.resume_url_docx && (
-            <>
-              <a href={settings.resume_url_docx} target="_blank" rel="noopener noreferrer" className="admin-btn-secondary">
-                <span>View</span>
-              </a>
-              <button className="admin-btn-primary" onClick={handleDeleteDocx} disabled={deletingDocx}>
-                <span>{deletingDocx ? "Removing..." : "Remove"}</span>
-              </button>
-            </>
-          )}
-          <input ref={docxInputRef} type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleUploadDocx} style={{ display:"none" }} id="docx-upload" />
-          <label htmlFor="docx-upload" className="admin-btn-secondary">
-            <span>{uploadingDocx ? "Uploading..." : settings?.resume_url_docx ? "Replace" : "+ Upload DOCX"}</span>
-          </label>
-        </div>
-      </div>
-
-      {/* ── Share link card ────────────────────────────────────────────── */}
-      <div className="rv-section-divider">
-        <span>Share Link</span>
-      </div>
-
-      <div className="rv-item">
-        <div className="rv-item__icon">🔗</div>
-        <div className="rv-item__info" style={{ flex:1 }}>
-          <p className="rv-filename" style={{ marginBottom:8 }}>Custom share URL</p>
-          <p style={{ fontSize:"0.8rem", color:"var(--color-text-muted)", marginBottom:12 }}>
-            Optionally set a custom URL for the Share button (e.g. a Google Drive link or LinkedIn profile). Defaults to <code style={{ fontFamily:"var(--font-mono)", fontSize:"0.78rem" }}>frandy.dev/resume</code> if left empty.
-          </p>
-          <div className="share-input-row">
-            <input
-              className="fn-editor__input"
-              style={{ flex:1, maxWidth:"100%" }}
-              value={shareInput}
-              onChange={e => setShareInput(e.target.value)}
-              placeholder="https://..."
-              aria-label="Custom share URL"
-            />
+          {/* Right — PDF, DOCX, Share */}
+          <div className="res-topbar__actions">
             <button
-              className="admin-btn-primary"
-              onClick={handleSaveShare}
-              disabled={savingShare}
+              className="res-action-btn"
+              onClick={() => {
+                if (!resumeUrl) return;
+                const a = document.createElement("a");
+                a.href = resumeUrl; a.download = "Frandy_Slueue_Resume.pdf"; a.click();
+              }}
+              disabled={!resumeUrl}
+              title="Download PDF"
+              aria-label="Download PDF"
             >
-              <span>{savingShare ? "Saving..." : "Save"}</span>
+              <FileText size={14} />
+              <span>PDF</span>
+              <FileDown size={11} style={{ opacity: 0.6 }} />
             </button>
-            {shareInput && (
-              <button
-                className="admin-btn-secondary"
-                onClick={() => { setShareInput(""); }}
-              >
-                <span>Clear</span>
-              </button>
-            )}
+            <button
+              className="res-action-btn"
+              onClick={() => {
+                const url = docxUrl || resumeUrl;
+                if (!url) return;
+                const a = document.createElement("a");
+                a.href = url; a.download = "Frandy_Slueue_Resume.docx"; a.click();
+              }}
+              disabled={!docxUrl && !resumeUrl}
+              title="Download DOCX"
+              aria-label="Download DOCX"
+            >
+              <FileText size={14} />
+              <span>DOCX</span>
+              <FileDown size={11} style={{ opacity: 0.6 }} />
+            </button>
+            <button
+              className={`res-action-btn res-action-btn--share ${shareToast ? "copied" : ""}`}
+              onClick={handleShare}
+              title="Share resume"
+              aria-label="Share resume"
+            >
+              <Share2 size={14} />
+              <span className="res-action-btn__normal">Share</span>
+              <span className="res-action-btn__copied">Copied!</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <style jsx>{`
-        .rv-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:2rem; }
-        .rv-header h1 { font-family:var(--font-display); font-size:2rem; margin:0; }
-        .rv-header p  { color:var(--color-text-muted); margin:0.25rem 0 0; font-size:0.875rem; }
-        .rv-banner { padding:0.75rem 1rem; margin-bottom:1rem; font-size:0.875rem; }
-        .rv-banner--error { background:rgba(255,80,80,0.08); border:1px solid rgba(255,80,80,0.3); color:#ff5050; }
-        .rv-banner--ok    { background:rgba(0,255,128,0.08); border:1px solid rgba(0,255,128,0.3); color:#00ff80; }
+      <div ref={topRef} />
 
-        .rv-section-divider {
-          display:flex; align-items:center; gap:12px;
-          margin:2rem 0 1rem;
-          color:var(--color-text-muted);
-          font-family:var(--font-mono);
-          font-size:0.75rem;
-          letter-spacing:2px;
-          text-transform:uppercase;
+      {/* ── Hero header ─────────────────────────────────────────────────── */}
+      <section className="res-hero">
+        <div className="res-hero-grid" aria-hidden />
+        <div className="res-hero-bloom" aria-hidden />
+
+        <div className="site-container res-hero-inner">
+          <motion.div
+            className="res-hero-logo"
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <FSDiamond size={108} />
+          </motion.div>
+
+          <div className="res-hero-text">
+            <motion.div
+              className="res-hero-name"
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <span className="res-hero-name__first">FRANDY</span>
+              <span className="res-hero-name__last">SLUEUE</span>
+            </motion.div>
+
+            <motion.p
+              className="res-hero-title"
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              Software Engineering&nbsp;&nbsp;·&nbsp;&nbsp;Security&nbsp;&nbsp;·&nbsp;&nbsp;IT Operations
+            </motion.p>
+
+            <motion.div
+              className="res-hero-contact"
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              {["(918) 800-4855", "frandyslueue@gmail.com", "Broken Arrow, OK", "English · French"].map(c => (
+                <span key={c} className="res-hero-chip">
+                  <span className="res-hero-chip__dot" aria-hidden />
+                  {c}
+                </span>
+              ))}
+            </motion.div>
+
+            <motion.div
+              className="res-hero-site"
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <div className="res-hero-rule" />
+              <span className="res-hero-url">· frandy.dev ·</span>
+              <div className="res-hero-rule" />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <div className="res-jade-rule" />
+
+      {/* ── Body ────────────────────────────────────────────────────────── */}
+      <div className="res-body">
+
+        {/* Summary */}
+        <motion.section
+          className="res-section res-section--white"
+          variants={fadeUp} initial="hidden" whileInView="visible" viewport={VIEWPORT}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="site-container">
+            <ResHead label="Professional Summary" />
+            <p className="res-prose">
+              Full-stack software engineer and security-conscious IT professional with 10+ years of combined experience. Builds production-grade web and mobile applications using React, Next.js, FastAPI, React Native, and Docker — and brings rare operational depth from 4 years as a GS-11 IT Specialist within the VA DevSecOps division. Proven in vulnerability analysis, network security, and ServiceNow operations at enterprise scale. Open to software engineering and IT operations roles where technical breadth and security awareness are valued equally.
+            </p>
+          </div>
+        </motion.section>
+
+        <div className="res-fade-rule" />
+
+        {/* Competencies */}
+        <motion.section
+          className="res-section res-section--tinted"
+          variants={fadeUp} initial="hidden" whileInView="visible" viewport={VIEWPORT}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="site-container">
+            <ResHead label="Core Competencies" />
+            <div className="res-comp-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+              {[
+                ["React · Next.js · React Native · Expo",      "Vulnerability Analysis & Risk Assessment"],
+                ["FastAPI · Django · Node.js · GraphQL",        "ServiceNow Ticketing & Workflows"],
+                ["PostgreSQL · MongoDB · Redis · Docker",       "Network Security (TCP/IP, VPN, VLAN)"],
+                ["CI/CD · GitHub Actions · Linux · Bash",       "AIS Security Planning & Compliance"],
+                ["Python · JavaScript · TypeScript · C",        "Active Directory & Identity Management"],
+                ["Figma · REST APIs · Stripe · Claude AI",      "Endpoint Security (Intune / Azure MDM)"],
+              ].map(([left, right]) => (
+                <React.Fragment key={left}>
+                  <CompChip label={left} accent="software" />
+                  <CompChip label={right} accent="it" />
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+
+        <div className="res-fade-rule" />
+
+        {/* Experience */}
+        <motion.section
+          className="res-section res-section--white"
+          variants={fadeLeft} initial="hidden" whileInView="visible" viewport={VIEWPORT}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="site-container">
+            <ResHead label="Professional Experience" />
+            <JobBlock
+              title="Freelance Software Engineer — CodeBreeder"
+              org="Tulsa, OK · Independent Engineering Practice"
+              dates="2024 – Present"
+              bullets={[
+                "Architecting and leading full-stack development of HBS Events Studio — a luxury event platform serving Oklahoma and Dallas markets. Stack: Next.js 15+, Django 5+, FastAPI AI microservice, GraphQL (Graphene-Django + Apollo), PostgreSQL, Redis, Docker Compose, Stripe, Square, Cloudinary, Claude AI API with OpenAI fallback, DocuSign, Resend, PostHog. Deployed across Vercel (frontend) and Railway (backend).",
+                "Engineered a FastAPI AI microservice integrating Anthropic Claude API (Haiku/Sonnet) with automatic OpenAI GPT-4o mini fallback — generates structured JSON event decoration quotes with server-side math validation, market-based pricing adjustments, and admin-configurable pricing controls.",
+                "Designed full system architecture including Docker container orchestration (6 services), CI/CD pipeline via GitHub Actions, GraphQL schema, PostgreSQL data models, Redis caching strategy, and Stripe + Square payment flows with webhook verification.",
+                "Built React Native / Expo mobile applications during Atlas curriculum including Lumigram — a photo-sharing platform with Firebase backend, TypeScript, React Navigation, and Expo Image Picker — and a cross-platform music player.",
+                "Implemented local SEO strategy for James' Donut (Tulsa, OK, 2024) — keyword targeting, Google Business Profile optimization, and on-page technical improvements for competitive local food service search.",
+                "Designed and deployed personal portfolio (frandy.dev) — FastAPI backend, Next.js 16+ frontend, five Docker services, four animated CSS themes, JWT auth, PostgreSQL, CI/CD via GitHub Actions on DigitalOcean.",
+              ]}
+            />
+            <JobBlock
+              title="IT Specialist GS-11 — US Dept. of Veterans Affairs (DevSecOps)"
+              org="Office of Information & Technology · Muskogee, OK · Full-time"
+              dates="Sep 2019 – Aug 2023"
+              bullets={[
+                "Led security engineering operations within the VA DevSecOps division — conducting vulnerability assessments, architecting AIS security plans, and managing ITSM workflows at enterprise scale across a 400+ staff multi-site network.",
+                "Developed Automated Information Systems (AIS) security contingency plans and disaster recovery procedures as part of the focal business continuity team; ensured compliance with VA federal statutes and NIST-aligned standards.",
+                "Managed ServiceNow (SNOW) workflows for Tier 2/3 resolution, BioMed activations, and escalation routing across the VA enterprise network.",
+                "Administered Cisco switch infrastructure via SecureCRT, PUTTY, TelNet; maintained VLAN architecture, RDP, DNS, DHCP, VPN, and TCP/IP across multi-site VA network.",
+                "Configured Cisco AnyConnect VPN and enforced two-factor authentication policies — applying SSH, RDP, DNS, and SSL/TLS protocol expertise across all remote access endpoints.",
+                "Deployed and managed endpoints via Microsoft Intune/Azure MDM; led 300+ laptop and 600+ monitor refresh across VISN16 for COVID-19 and Cerner EHR initiatives.",
+                "Served as project lead for VA 91st St Clinic activation and Ernest Childers OPC decommission — managing 1,800+ pieces of sensitive equipment under federal compliance requirements.",
+                "Created cybersecurity threat management training materials; selected within 90 days of hire to train fellow technicians on security protocols and procedures.",
+              ]}
+            />
+            <JobBlock
+              title="IT Support — U.S. Cellular"
+              org="Tulsa, OK · Full-time"
+              dates="Sep 2014 – Apr 2018"
+              bullets={[
+                "Managed Help Desk tracking, IT asset accuracy, and telecom system configurations for moves, adds, and changes (MAC) in a multi-site environment.",
+                "Developed problem tracking and resolution databases; determined internal service measures and communicated SLAs across support tiers.",
+                "Installed and configured workstations on network operating systems; managed device drivers, hardware configurations, and communication networking.",
+                "Investigated and recommended tools and technologies to improve responsiveness to customer and security requirements.",
+              ]}
+            />
+            <JobBlock
+              title="IT Customer Service — DishNetwork (Future Vision)"
+              org="Tulsa, OK · Full-time"
+              dates="Dec 2012 – Aug 2014"
+              bullets={[
+                "Served as primary technical specialist for all automated systems; resolved network and system issues via phone, email, and in-person channels.",
+                "Provided training on desktops, laptops, and mobile devices; led system upgrade projects involving new software features and structural component changes.",
+                "Performed data backups, system upgrades, and documented technical procedures to ensure operational continuity across all automated systems.",
+              ]}
+            />
+          </div>
+        </motion.section>
+
+        <div className="res-fade-rule" />
+
+        {/* Education */}
+        <motion.section
+          className="res-section res-section--tinted"
+          variants={fadeRight} initial="hidden" whileInView="visible" viewport={VIEWPORT}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="site-container">
+            <ResHead label="Education" />
+            <JobBlock
+              title="Full-Stack Software Engineering — Atlas School of Tulsa"
+              org="Tulsa, OK · Hands-on, project-based curriculum"
+              dates="2023 – 2025"
+              bullets={[
+                "Coursework and projects fully completed. Certification pending final capstone submission.",
+                "Core stack: Python, JavaScript, React, Node.js, C, PostgreSQL, MongoDB, GraphQL, Docker, REST APIs, Git, Figma, system design.",
+                "Production-deployed portfolio: FastAPI + Next.js + Docker on DigitalOcean with CI/CD via GitHub Actions.",
+              ]}
+            >
+              {/* DevOps sub-block */}
+              <div className="res-devops">
+                <p className="res-devops__title">DevOps &amp; Systems Engineering</p>
+                <div className="res-devops__grid">
+                  {[
+                    "Infrastructure as Code (IaC) fundamentals",
+                    "CI/CD pipeline design & integration",
+                    "Containerization with Docker",
+                    "Linux & OS internals",
+                    "Scripting: Python & Bash",
+                    "System health monitoring (metrics, logs, traces)",
+                    "Security scans & secret management in pipelines",
+                    "SRE principles & root-cause analysis (RCA)",
+                  ].map(item => (
+                    <div key={item} className="res-devops__item">
+                      <span className="res-devops__gem" aria-hidden />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+                <p className="res-devops__note">
+                  Emphasis on cross-functional collaboration — fluent in both developer and sysadmin
+                  contexts. Rapid learner actively tracking AIOps and Platform Engineering paradigms.
+                  No cloud certifications yet; strong hands-on foundation with continuous
+                  self-directed learning.
+                </p>
+              </div>
+            </JobBlock>
+            <JobBlock
+              title="Bachelor of Science, Computer Science — Lagos State University"
+              org="Lagos, Nigeria · Accelerated program"
+              dates="2009 – 2012"
+            />
+            <JobBlock
+              title="Bachelor of Science, Technology Management (incomplete) — Spartan College"
+              org="Tulsa, OK · 2 of 3 years completed"
+              dates="2007 – 2009"
+            />
+            <JobBlock
+              title="Certification — Avionics, Airframe & Powerplant — Spartan College"
+              org="Tulsa, OK · GPA 3.6 / 4.0 · Certified in Aviation Maintenance, Management & Operation"
+              dates="2007 – 2009"
+            />
+          </div>
+        </motion.section>
+
+        <div className="res-fade-rule" />
+
+        {/* Tools */}
+        <motion.section
+          className="res-section res-section--white"
+          variants={fadeUp} initial="hidden" whileInView="visible" viewport={VIEWPORT}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="site-container">
+            <ResHead label="Tools & Technologies" />
+            <p className="res-tools-label">Security &amp; Network</p>
+            <div className="res-tags">
+              {["ServiceNow","Active Directory","Cisco SecureCRT","Cisco AnyConnect VPN","Intune / Azure MDM","DHCP · DNS · TCP/IP","VLANs · RDP · SSL/TLS","ACL · DICOM · PACS"].map(t => <Tag key={t} label={t} />)}
+            </div>
+            <p className="res-tools-label" style={{ marginTop: 20 }}>Development &amp; DevOps</p>
+            <div className="res-tags">
+              {["React","Next.js","React Native","Expo","TypeScript","JavaScript","Python","Bash","C","Node.js","FastAPI","Django","GraphQL","PostgreSQL","MongoDB","Redis","Docker","Git","GitHub Actions","Linux","Stripe","Cloudinary","Claude AI API","Figma","& more"].map(t => <Tag key={t} label={t} />)}
+            </div>
+          </div>
+        </motion.section>
+
+        <div className="res-fade-rule" />
+
+        {/* Awards */}
+        <motion.section
+          className="res-section res-section--tinted"
+          variants={fadeUp} initial="hidden" whileInView="visible" viewport={VIEWPORT}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="site-container">
+            <ResHead label="Awards & Recognition" />
+            <AwardItem
+              title="Certificate of Appreciation"
+              detail="COVID-19 Pandemic IT Support (Jan 2022) · VA Area Manager, DevSecOps EUO · Recognized for clinic activation, decommissioning & area-wide inventory."
+            />
+            <AwardItem
+              title="Certificate of Appreciation"
+              detail="THCC Clinic Activation (Dec 2021) · State-of-the-art technical systems delivery enabling day-one readiness for VHA staff."
+            />
+            <AwardItem
+              title="Certificate of Appreciation"
+              detail='Ernest Childers OPC Decommission (Dec 2021) · Managed 1,800+ pieces of sensitive equipment; recovered tens of thousands in IT asset value.'
+            />
+            <AwardItem
+              title='Certificate of Achievement — "Fully Successful"'
+              detail="Nov 2021 · VA IT Supervisor annual performance rating for world-class IT customer support."
+            />
+          </div>
+        </motion.section>
+
+      </div>
+
+      <div className="res-jade-rule" />
+
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <div className="res-footer">
+        <div className="res-footer-grid" aria-hidden />
+        <div className="site-container res-footer-inner">
+          <div className="res-footer-left">
+            <p className="res-footer-name">Frandy G. Slueue</p>
+            <p className="res-footer-brand">@CodeBreeder</p>
+          </div>
+          <div className="res-footer-center">
+            <a href="https://github.com/frandy-slueue" target="_blank" rel="noopener noreferrer" className="res-footer-link">
+              github.com/frandy-slueue
+            </a>
+            <a href="https://www.linkedin.com/in/frandyslueuewebdevitpro/" target="_blank" rel="noopener noreferrer" className="res-footer-link">
+              linkedin.com/in/frandyslueuewebdevitpro
+            </a>
+          </div>
+          <div className="res-footer-right">
+            <a href="/" className="res-topbar__home" aria-label="Back to frandy.dev">
+              ← frandy.dev
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Download CTA strip ──────────────────────────────────────────── */}
+      {(resumeUrl || docxUrl) && (
+        <motion.div
+          className="res-cta-strip"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.5 }}
+        >
+          <div className="site-container res-cta-strip__inner">
+            <p className="res-cta-strip__label">Save a copy for your records</p>
+            <div className="res-cta-strip__btns">
+              <BtnSecondary onClick={() => setModalOpen(true)}>
+                <ExternalLink size={14} /> Preview
+              </BtnSecondary>
+              {resumeUrl && (
+                <BtnPrimary onClick={() => {
+                  const a = document.createElement("a");
+                  a.href = resumeUrl; a.download = "Frandy_Slueue_Resume.pdf"; a.click();
+                }}>
+                  <FileDown size={14} /> Download PDF
+                </BtnPrimary>
+              )}
+              {docxUrl && (
+                <BtnSecondary onClick={() => {
+                  const a = document.createElement("a");
+                  a.href = docxUrl; a.download = "Frandy_Slueue_Resume.docx"; a.click();
+                }}>
+                  <FileDown size={14} /> Download DOCX
+                </BtnSecondary>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Resume modal */}
+      <ResumeModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        resumeUrl={resumeUrl}
+        docxUrl={docxUrl}
+        shareUrl={shareUrl}
+      />
+
+      {/* Share toast */}
+      {shareToast && (
+        <motion.div
+          className="res-toast"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 12 }}
+        >
+          Link copied to clipboard
+        </motion.div>
+      )}
+
+      <style>{`
+        /* ── Top bar ─────────────────────────────────────────────────────── */
+        .res-topbar {
+          position: sticky;
+          top: 0;
+          z-index: 40;
+          background: rgba(8,8,8,0.95);
+          border-bottom: 1px solid var(--border);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
         }
-        .rv-section-divider::before,
-        .rv-section-divider::after {
-          content:''; flex:1; height:1px; background:var(--color-border);
+        .res-topbar__inner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          height: 52px;
+        }
+        .res-topbar__title {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 2px;
+          color: rgba(255,255,255,0.45);
+          text-transform: uppercase;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          white-space: nowrap;
+          flex: 1;
+          justify-content: center;
+        }
+        .res-topbar__name-stack {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.15;
+        }
+        .res-topbar__name-first {
+          font-family: var(--font-display);
+          font-size: 13px;
+          letter-spacing: 3px;
+          color: #fff;
+          line-height: 1;
+        }
+        .res-topbar__name-last {
+          font-family: var(--font-display);
+          font-size: 11px;
+          letter-spacing: 3px;
+          color: var(--accent);
+          line-height: 1;
+        }
+        .res-topbar__home {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 2px;
+          color: var(--accent);
+          text-decoration: none;
+          text-transform: uppercase;
+          white-space: nowrap;
+          flex-shrink: 0;
+          transition: opacity 200ms ease;
+        }
+        .res-topbar__home:hover { opacity: 0.7; }
+        .res-topbar__dot {
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: var(--accent);
+          box-shadow: 0 0 6px var(--accent);
+          flex-shrink: 0;
+        }
+        .res-topbar__actions {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          flex-shrink: 0;
+        }
+        .res-action-btn {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 10px;
+          background: transparent;
+          border: 1px solid transparent;
+          color: rgba(255,255,255,0.45);
+          font-family: var(--font-mono);
+          font-size: 10px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          text-decoration: none;
+          cursor: pointer;
+          transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
+          position: relative;
+          white-space: nowrap;
+        }
+        .res-action-btn:hover:not(:disabled) {
+          color: var(--accent);
+          border-color: var(--border);
+          background: var(--bg-elevated);
+        }
+        .res-action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .res-action-btn__copied { display: none; }
+        .res-action-btn--share.copied .res-action-btn__normal { display: none; }
+        .res-action-btn--share.copied .res-action-btn__copied {
+          display: inline;
+          color: var(--accent);
+        }
+        @media (max-width: 768px) {
+          .res-topbar__home { font-size: 10px; }
+          .res-topbar__name-first { font-size: 11px; }
+          .res-topbar__name-last { font-size: 9px; }
         }
 
-        .rv-list { display:flex; flex-direction:column; gap:0.75rem; }
-
-        /* document panel — dframe */
-        .rv-item {
-          position:relative;
-          display:flex; align-items:flex-start; flex-wrap:wrap; gap:1rem;
-          background:var(--color-surface);
-          border:1px solid var(--color-border);
-          padding:1.25rem;
-          transition:border-color 250ms ease;
-          margin-bottom:0.75rem;
+        /* ── Resume page base font bump (+0.2rem) ────────────────────────── */
+        .res-body, .res-section, .res-hero {
+          font-size: 1.2rem;
         }
-        .rv-item::before {
-          content:''; position:absolute; inset:4px;
-          border:1px solid rgba(255,255,255,0.04); border-radius:6px; pointer-events:none;
+
+        /* ── Hero ────────────────────────────────────────────────────────── */
+        .res-hero {
+          background: var(--bg-primary);
+          padding: 80px 0 64px;
+          position: relative;
+          overflow: hidden;
         }
-        .rv-item::after {
-          content:''; position:absolute; inset:-1px;
-          background:
-            linear-gradient(var(--color-accent),var(--color-accent)) top left / 14px 1.5px no-repeat,
-            linear-gradient(var(--color-accent),var(--color-accent)) top left / 1.5px 14px no-repeat,
-            linear-gradient(var(--color-accent),var(--color-accent)) bottom right / 14px 1.5px no-repeat,
-            linear-gradient(var(--color-accent),var(--color-accent)) bottom right / 1.5px 14px no-repeat;
-          pointer-events:none; z-index:2; transition:opacity 250ms ease;
+        .res-hero-grid {
+          position: absolute; inset: 0;
+          background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+          background-size: 28px 28px;
+          opacity: 0.35;
+          pointer-events: none;
         }
-        .rv-item:hover::after { opacity:0; }
-        .rv-item.dragging {
-          border-color: var(--color-accent);
-          background: rgba(var(--color-accent-rgb, 61,153,112), 0.06);
-          box-shadow: inset 0 0 0 2px var(--color-accent);
+        .res-hero-bloom {
+          position: absolute;
+          top: -100px; left: -100px;
+          width: 500px; height: 500px;
+          background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 68%);
+          pointer-events: none;
         }
-        .rv-item.dragging::after { opacity: 1; }
-        .rv-item.active::after { opacity:0; }
-        .rv-item > * { position:relative; z-index:1; }
+        .res-hero-inner {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          align-items: center;
+          gap: 40px;
+        }
+        .res-hero-logo { flex-shrink: 0; }
+        .res-hero-text { flex: 1; min-width: 0; }
+        .res-hero-name {
+          display: flex;
+          align-items: baseline;
+          gap: 14px;
+          line-height: 1;
+          margin-bottom: 10px;
+          flex-wrap: wrap;
+        }
+        .res-hero-name__first {
+          font-family: var(--font-display);
+          font-size: clamp(36px, 6vw, 56px);
+          letter-spacing: 4px;
+          color: var(--text-primary);
+          text-transform: uppercase;
+        }
+        .res-hero-name__last {
+          font-family: var(--font-display);
+          font-size: clamp(36px, 6vw, 56px);
+          letter-spacing: 4px;
+          color: var(--accent);
+          text-transform: uppercase;
+        }
+        .res-hero-title {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 3px;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          margin-bottom: 16px;
+        }
+        .res-hero-contact {
+          display: flex;
+          gap: 20px;
+          flex-wrap: wrap;
+          margin-bottom: 16px;
+        }
+        .res-hero-chip {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          color: var(--text-muted);
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .res-hero-chip__dot {
+          width: 4px; height: 4px;
+          border-radius: 50%;
+          background: var(--accent);
+          flex-shrink: 0;
+        }
+        .res-hero-site {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .res-hero-rule {
+          flex: 1;
+          height: 1px;
+          background: rgba(var(--accent), 0.2);
+          background: color-mix(in srgb, var(--accent) 25%, transparent);
+        }
+        .res-hero-url {
+          font-family: var(--font-mono);
+          font-size: 10px;
+          letter-spacing: 4px;
+          color: var(--accent);
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
 
-        .rv-item__icon { font-size:2rem; flex-shrink:0; }
-        .rv-item__info { flex:1; min-width:0; }
-        .rv-filename   { font-size:0.95rem; color:var(--color-text); font-family:var(--font-mono); word-break:break-all; }
-        .rv-item__meta { font-size:0.8rem; color:var(--color-text-muted); margin-top:0.25rem; display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; }
-        .rv-badge { background:rgba(0,255,128,0.1); color:#00ff80; font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:999px; font-family:var(--font-mono); }
-        .rv-item__actions { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
+        /* ── Rules ─────────────────────────────────────────────────────────── */
+        .res-jade-rule {
+          height: 2px;
+          background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, transparent) 50%, transparent);
+        }
+        .res-fade-rule {
+          height: 1px;
+          background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+        }
 
-        /* filename editor */
-        .fn-display { display:flex; align-items:center; gap:8px; }
-        .fn-edit-btn { background:none; border:none; color:var(--color-text-muted); cursor:pointer; font-size:14px; padding:2px 4px; transition:color 0.15s; flex-shrink:0; line-height:1; }
-        .fn-edit-btn:hover { color:var(--color-accent); }
-        .fn-editor { display:flex; flex-direction:column; gap:8px; }
-        .fn-editor__input { background:var(--color-bg); border:1px solid var(--color-accent); padding:6px 10px; color:var(--color-text); font-family:var(--font-mono); font-size:0.9rem; outline:none; width:100%; max-width:360px; }
-        .fn-editor__input:focus { box-shadow:0 0 0 1px var(--color-accent); }
-        .fn-editor__input.is-error { border-color:#ff5050; }
-        .fn-editor__error { font-size:0.78rem; color:#ff5050; font-family:var(--font-mono); margin:0; }
-        .fn-editor__actions { display:flex; gap:6px; }
+        /* ── Sections ──────────────────────────────────────────────────────── */
+        .res-body { background: var(--bg-primary); }
+        .res-section {
+          padding: 64px 0;
+        }
+        .res-section--white {
+          background: var(--bg-primary);
+        }
+        .res-section--tinted {
+          background: var(--bg-secondary);
+        }
 
-        /* share link row */
-        .share-input-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-        .share-input-row .fn-editor__input { max-width:480px; }
+        /* Section header */
+        .res-sec-head {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 28px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid var(--accent);
+        }
+        .res-sec-gem {
+          width: 8px; height: 8px;
+          background: var(--accent);
+          transform: rotate(45deg);
+          flex-shrink: 0;
+          display: inline-block;
+        }
+        .res-sec-label {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          font-weight: 400;
+          letter-spacing: 4px;
+          color: var(--accent);
+          text-transform: uppercase;
+        }
+        .res-sec-rule {
+          flex: 1;
+          height: 1px;
+          background: var(--border);
+        }
 
-        .rv-empty { padding:3rem; text-align:center; color:var(--color-text-muted); display:flex; flex-direction:column; align-items:center; gap:1rem; }
-        @media (max-width:768px) {
-          .rv-header { flex-direction:column; gap:1rem; }
-          .rv-item__actions { width:100%; }
-          .share-input-row { flex-direction:column; align-items:flex-start; }
-          .share-input-row .fn-editor__input { max-width:100%; }
+        /* Prose */
+        .res-prose {
+          font-family: var(--font-body);
+          font-size: 16px;
+          line-height: 1.9;
+          color: var(--text-secondary);
+          max-width: 760px;
+          font-weight: 400;
+        }
+
+        /* Competency grid */
+        .res-comp-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+        }
+        .res-comp-chip {
+          background: var(--bg-elevated);
+          border: 1px solid var(--border);
+          padding: 8px 12px;
+          font-family: var(--font-body);
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--text-secondary);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: border-color 200ms ease, color 200ms ease;
+        }
+        .res-comp-chip:hover {
+          border-color: var(--accent);
+          color: var(--accent);
+        }
+        .res-comp-gem { color: var(--accent); font-size: 10px; flex-shrink: 0; }
+
+        /* Job blocks */
+        .res-job { margin-bottom: 36px; }
+        .res-job:last-child { margin-bottom: 0; }
+        .res-job-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 16px;
+          margin-bottom: 4px;
+          flex-wrap: wrap;
+        }
+        .res-job-title {
+          font-family: var(--font-body);
+          font-size: 17px;
+          font-weight: 600;
+          color: var(--text-primary);
+          letter-spacing: 0.3px;
+        }
+        .res-job-dates {
+          font-family: var(--font-mono);
+          font-size: 12px;
+          color: var(--accent);
+          white-space: nowrap;
+          flex-shrink: 0;
+          font-style: italic;
+        }
+        .res-job-org {
+          font-family: var(--font-body);
+          font-size: 14px;
+          color: var(--text-muted);
+          margin-bottom: 12px;
+          font-style: italic;
+          font-weight: 400;
+        }
+        .res-bullet {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          margin-bottom: 7px;
+          font-family: var(--font-body);
+          font-size: 15px;
+          font-weight: 400;
+          color: var(--text-secondary);
+          line-height: 1.75;
+        }
+        .res-bullet-gem {
+          width: 5px; height: 5px;
+          background: var(--accent);
+          transform: rotate(45deg);
+          flex-shrink: 0;
+          margin-top: 9px;
+          display: inline-block;
+        }
+
+        /* DevOps sub-block */
+        .res-devops {
+          margin-top: 16px;
+          background: var(--bg-elevated);
+          border-left: 2px solid var(--accent);
+          padding: 16px 20px;
+        }
+        .res-devops__title {
+          font-family: var(--font-mono);
+          font-size: 10px;
+          letter-spacing: 3px;
+          color: var(--accent);
+          font-weight: 700;
+          text-transform: uppercase;
+          margin-bottom: 12px;
+        }
+        .res-devops__grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6px 24px;
+          margin-bottom: 12px;
+        }
+        .res-devops__item {
+          font-family: var(--font-body);
+          font-size: 13px;
+          color: var(--text-muted);
+          line-height: 1.6;
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .res-devops__gem {
+          width: 4px; height: 4px;
+          background: var(--accent);
+          transform: rotate(45deg);
+          flex-shrink: 0;
+          margin-top: 7px;
+          display: inline-block;
+        }
+        .res-devops__note {
+          font-family: var(--font-body);
+          font-size: 12px;
+          color: var(--text-muted);
+          font-style: italic;
+          line-height: 1.7;
+          opacity: 0.8;
+        }
+
+        /* Tools */
+        .res-tools-label {
+          font-family: var(--font-mono);
+          font-size: 10px;
+          letter-spacing: 2px;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          margin-bottom: 10px;
+        }
+        .res-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .res-tag {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          background: var(--bg-elevated);
+          border: 1px solid var(--border);
+          padding: 5px 10px;
+          color: var(--text-muted);
+          transition: border-color 200ms ease, color 200ms ease;
+        }
+        .res-tag:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Awards */
+        .res-award {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          margin-bottom: 12px;
+        }
+        .res-award-gem {
+          width: 8px; height: 8px;
+          background: var(--accent);
+          transform: rotate(45deg);
+          flex-shrink: 0;
+          margin-top: 6px;
+          display: inline-block;
+        }
+        .res-award p {
+          font-family: var(--font-body);
+          font-size: 14px;
+          color: var(--text-muted);
+          line-height: 1.65;
+          margin: 0;
+        }
+        .res-award strong {
+          color: var(--text-primary);
+          font-weight: 700;
+        }
+
+        /* ── Footer ─────────────────────────────────────────────────────────── */
+        .res-footer {
+          background: var(--bg-primary);
+          border-top: 1px solid var(--border);
+          padding: 24px 0;
+          position: relative;
+          overflow: hidden;
+        }
+        .res-footer-grid {
+          position: absolute; inset: 0;
+          background-image: radial-gradient(circle, var(--border-subtle) 1px, transparent 1px);
+          background-size: 18px 18px;
+          opacity: 0.6;
+          pointer-events: none;
+        }
+        .res-footer-inner {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          align-items: center;
+          gap: 16px;
+        }
+        .res-footer-name {
+          font-family: var(--font-body);
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 2px;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          margin-bottom: 4px;
+        }
+        .res-footer-brand {
+          font-family: var(--font-mono);
+          font-size: 12px;
+          color: var(--accent);
+          letter-spacing: 2px;
+        }
+        .res-footer-center { text-align: center; }
+        .res-footer-link {
+          display: block;
+          font-family: var(--font-mono);
+          font-size: 10px;
+          color: var(--text-muted);
+          text-decoration: none;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
+          transition: color 200ms ease;
+        }
+        .res-footer-link:hover { color: var(--accent); }
+        .res-footer-right { text-align: right; }
+        .res-footer-site {
+          font-family: var(--font-mono);
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--accent);
+          letter-spacing: 3px;
+        }
+
+        /* ── Download CTA strip ─────────────────────────────────────────────── */
+        .res-cta-strip {
+          background: var(--bg-secondary);
+          border-top: 1px solid var(--border);
+          padding: 32px 0;
+        }
+        .res-cta-strip__inner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          flex-wrap: wrap;
+        }
+        .res-cta-strip__label {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 2px;
+          color: var(--text-muted);
+          text-transform: uppercase;
+        }
+        .res-cta-strip__btns {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        /* ── Back to top ────────────────────────────────────────────────────── */
+        .res-back-top {
+          position: fixed;
+          bottom: 32px;
+          right: 32px;
+          width: 40px; height: 40px;
+          background: var(--bg-elevated);
+          border: 1px solid var(--border);
+          color: var(--text-muted);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 30;
+          transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
+        }
+        .res-back-top:hover {
+          color: var(--accent);
+          border-color: var(--accent);
+          background: var(--bg-primary);
+        }
+
+        /* ── Toast ──────────────────────────────────────────────────────────── */
+        .res-toast {
+          position: fixed;
+          bottom: 80px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: var(--bg-elevated);
+          border: 1px solid var(--accent);
+          color: var(--accent);
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          padding: 10px 20px;
+          z-index: 200;
+          white-space: nowrap;
+        }
+
+        /* ── Responsive ─────────────────────────────────────────────────────── */
+        @media (max-width: 768px) {
+          .res-hero-inner { flex-direction: column; align-items: flex-start; gap: 24px; }
+          .res-hero { padding: 48px 0 40px; }
+          .res-comp-grid { grid-template-columns: 1fr 1fr; }
+          .res-devops__grid { grid-template-columns: 1fr; }
+          .res-footer-inner { grid-template-columns: 1fr; gap: 12px; }
+          .res-footer-center, .res-footer-right { text-align: left; }
+          .res-cta-strip__inner { flex-direction: column; align-items: flex-start; }
+          .res-topbar__title { display: none; }
+          .res-topbar__home { display: inline !important; }
+          .res-topbar__sep { display: none; }
+          .res-topbar__dot { display: none; }
+          .res-action-btn span:not(.res-action-btn__copied) { display: none; }
+          .res-action-btn { padding: 5px 8px; }
+          .res-back-top { bottom: 88px; }
+        }
+        @media (max-width: 480px) {
+          .res-comp-grid { grid-template-columns: 1fr; }
+          .res-hero-name__first,
+          .res-hero-name__last { font-size: 32px; }
         }
       `}</style>
-    </div>
+    </>
   );
 }
