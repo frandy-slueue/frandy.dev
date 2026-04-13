@@ -604,7 +604,9 @@ export default function ResumePage() {
             </a>
           </div>
           <div className="res-footer-right">
-            <span className="res-footer-site">frandy.dev</span>
+            <a href="/" className="res-topbar__home" aria-label="Back to frandy.dev">
+              ← frandy.dev
+            </a>
           </div>
         </div>
       </div>
