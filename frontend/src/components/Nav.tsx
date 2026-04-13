@@ -72,6 +72,7 @@ export default function Nav() {
   const bottomNav = ALL_BOTTOM_NAV.filter((l) => visibility[l.sectionKey]);
   const activeIdx = bottomNav.findIndex((l) => l.href === activeSection);
   const indicatorIdx = activeIdx === -1 ? 0 : activeIdx;
+  const showIndicator = activeIdx !== -1;
 
   return (
     <>
@@ -143,7 +144,10 @@ export default function Nav() {
           {/* Sliding full-height accent fill — boxy indicator */}
           <div
             className="bottom-nav-indicator"
-            style={{ transform: `translateX(${indicatorIdx * 100}%)` }}
+            style={{
+              transform: `translateX(${indicatorIdx * 100}%)`,
+              opacity: showIndicator ? 1 : 0,
+            }}
           />
           {bottomNav.map((item) => {
             const Icon     = item.icon;
