@@ -80,23 +80,25 @@ function Toggle({ id, checked, onChange }: { id: string; checked: boolean; onCha
 }
 
 // ── Collapsible ───────────────────────────────────────────────────────
-function Collapsible({ title, icon, defaultOpen = false, children }: {
-  title: string; icon?: string; defaultOpen?: boolean; children: React.ReactNode
+function Collapsible({ title, icon, description, isOpen, onToggle, children }: {
+  title: string; icon?: string; description?: string;
+  isOpen: boolean; onToggle: () => void; children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="s-collapsible">
-      <button type="button" className="s-collapsible__bar" onClick={() => setOpen(p => !p)} aria-expanded={open}>
+    <div className={`s-collapsible ${isOpen ? "is-open" : ""}`}>
+      <button type="button" className="s-collapsible__bar" onClick={onToggle} aria-expanded={isOpen}>
         <div className="s-collapsible__bar-left">
           {icon && <span className="s-collapsible__icon">{icon}</span>}
-          <span className="s-collapsible__title">{title}</span>
+          <div className="s-collapsible__bar-text">
+            <span className="s-collapsible__title">{title}</span>
+            {!isOpen && description && <span className="s-collapsible__desc">{description}</span>}
+          </div>
         </div>
         <div className="s-collapsible__bar-right">
-          <span className="s-collapsible__status">{open ? "Collapse" : "Expand"}</span>
-          <span className={`s-collapsible__chevron ${open ? "open" : ""}`}>▼</span>
+          <span className={`s-collapsible__chevron ${isOpen ? "open" : ""}`}>▼</span>
         </div>
       </button>
-      {open && <div className="s-collapsible__body">{children}</div>}
+      {isOpen && <div className="s-collapsible__body">{children}</div>}
     </div>
   );
 }
@@ -133,6 +135,8 @@ export default function AdminSettings() {
   const [unSuccess,    setUnSuccess]    = useState("");
 
   const [loading,        setLoading]        = useState(true);
+  const [activePanel,    setActivePanel]    = useState<string>("visibility");
+  function togglePanel(key: string) { setActivePanel(p => p === key ? "" : key); }
   const [activePanel,    setActivePanel]    = useState<string>("visibility");
   function togglePanel(key: string) { setActivePanel(p => p === key ? "" : key); }
   const [saving,         setSaving]         = useState(false);
