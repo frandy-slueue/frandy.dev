@@ -133,6 +133,8 @@ export default function AdminSettings() {
   const [unSuccess,    setUnSuccess]    = useState("");
 
   const [loading,        setLoading]        = useState(true);
+  const [activePanel,    setActivePanel]    = useState<string>("visibility");
+  function togglePanel(key: string) { setActivePanel(p => p === key ? "" : key); }
   const [saving,         setSaving]         = useState(false);
   const [savingSocial,   setSavingSocial]   = useState(false);
   const [savingContact,  setSavingContact]  = useState(false);
@@ -258,7 +260,7 @@ export default function AdminSettings() {
       </div>
 
       {/* ── Section Visibility ── */}
-      <Collapsible title="Section Visibility" icon="◧" defaultOpen={true}>
+      <Collapsible title="Section Visibility" icon="◧" description="Toggle sections on or off" isOpen={activePanel==="visibility"} onToggle={()=>togglePanel("visibility")}>
         <p className="s-hint">Hero is always shown. Toggle sections on or off.</p>
         <div className="sections-grid two-col">
           {SECTION_FIELDS.map(({ key, label, description }) => (
@@ -275,7 +277,7 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Background Pattern ── */}
-      <Collapsible title="Background Pattern" icon="◫">
+      <Collapsible title="Background Pattern" icon="◫" description="Hero section background pattern" isOpen={activePanel==="pattern"} onToggle={()=>togglePanel("pattern")}>
         <p className="s-hint">Hero section background pattern.</p>
         <div className="pattern-grid two-col">
           {PATTERNS.map((p) => (
@@ -289,7 +291,7 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Social Links ── */}
-      <Collapsible title="Social Links" icon="◈">
+      <Collapsible title="Social Links" icon="◈" description="GitHub, LinkedIn, Twitter and more" isOpen={activePanel==="social"} onToggle={()=>togglePanel("social")}>
         <div className="s-field-group two-col">
           {SOCIAL_FIELDS.map(({ key, label, placeholder }) => (
             <div className="s-field" key={key}>
@@ -302,7 +304,7 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Contact Info ── */}
-      <Collapsible title="Contact Info" icon="◉">
+      <Collapsible title="Contact Info" icon="◉" description="Email, phone and WhatsApp" isOpen={activePanel==="contact"} onToggle={()=>togglePanel("contact")}>
         <div className="s-field-group two-col">
           {CONTACT_FIELDS.map(({ key, label, placeholder }) => (
             <div className="s-field" key={key}>
@@ -315,7 +317,7 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Security ── */}
-      <Collapsible title="Security" icon="◑">
+      <Collapsible title="Security" icon="◑" description="Change password and username" isOpen={activePanel==="security"} onToggle={()=>togglePanel("security")}>
         <div className="s-security-grid">
 
           {/* Change Password */}
@@ -410,31 +412,23 @@ export default function AdminSettings() {
 
         .s-panel__title { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 1.25rem; color: var(--color-accent); }
 
-        /* ── Collapsible bar — elegant accent design ── */
+        /* ── Collapsible accordion — elegant bar design ── */
         .s-collapsible {
           border: 1px solid var(--color-border);
           background: var(--color-surface);
-          margin-bottom: 1rem;
+          margin-bottom: 0.5rem;
           position: relative;
+          transition: border-color 200ms ease;
         }
-        .s-collapsible::after {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          background:
-            linear-gradient(var(--color-accent), var(--color-accent)) top left / 14px 1.5px no-repeat,
-            linear-gradient(var(--color-accent), var(--color-accent)) top left / 1.5px 14px no-repeat,
-            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 14px 1.5px no-repeat,
-            linear-gradient(var(--color-accent), var(--color-accent)) bottom right / 1.5px 14px no-repeat;
-          pointer-events: none;
-          z-index: 2;
+        .s-collapsible.is-open {
+          border-color: var(--color-accent);
         }
         .s-collapsible__bar {
           width: 100%;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 1rem 1.25rem;
+          padding: 0.875rem 1.25rem;
           background: none;
           border: none;
           cursor: pointer;
@@ -442,16 +436,18 @@ export default function AdminSettings() {
           position: relative;
           z-index: 1;
           transition: background 150ms ease;
-          border-left: 3px solid var(--color-accent);
+          border-left: 3px solid transparent;
         }
-        .s-collapsible__bar:hover { background: rgba(255,255,255,0.02); }
-        .s-collapsible__bar-left { display: flex; align-items: center; gap: 0.75rem; }
-        .s-collapsible__bar-right { display: flex; align-items: center; gap: 0.75rem; }
-        .s-collapsible__icon { font-size: 1rem; color: var(--color-accent); }
-        .s-collapsible__title { font-family: var(--font-display); font-size: 1rem; color: var(--color-text); margin: 0; letter-spacing: 1px; }
-        .s-collapsible__status { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--color-text-muted); }
-        .s-collapsible__chevron { font-size: 0.7rem; color: var(--color-accent); transition: transform 250ms ease; display: inline-block; }
-        .s-collapsible__chevron.open { transform: rotate(180deg); }
+        .is-open .s-collapsible__bar { border-left-color: var(--color-accent); }
+        .s-collapsible__bar:hover { background: rgba(255,255,255,0.025); border-left-color: var(--color-accent); }
+        .s-collapsible__bar-left { display: flex; align-items: center; gap: 0.875rem; }
+        .s-collapsible__bar-right { display: flex; align-items: center; gap: 0.5rem; }
+        .s-collapsible__bar-text { display: flex; flex-direction: column; gap: 2px; }
+        .s-collapsible__icon { font-size: 1.1rem; color: var(--color-accent); flex-shrink: 0; }
+        .s-collapsible__title { font-family: var(--font-display); font-size: 1rem; color: var(--color-text); margin: 0; letter-spacing: 1px; line-height: 1.2; }
+        .s-collapsible__desc { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 1px; color: var(--color-text-muted); text-transform: uppercase; }
+        .s-collapsible__chevron { font-size: 0.65rem; color: var(--color-text-muted); transition: transform 250ms ease, color 200ms ease; display: inline-block; }
+        .s-collapsible__chevron.open { transform: rotate(180deg); color: var(--color-accent); }
         .s-collapsible__body { padding: 1.25rem 1.5rem; border-top: 1px solid var(--color-border); position: relative; z-index: 1; }
 
         /* ── 2-column grids ── */
