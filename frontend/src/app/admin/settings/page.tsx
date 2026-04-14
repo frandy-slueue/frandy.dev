@@ -258,7 +258,7 @@ export default function AdminSettings() {
       </div>
 
       {/* ── Section Visibility ── */}
-      <Collapsible title="Section Visibility" icon="◧" icon="◧" defaultOpen={true}>
+      <Collapsible title="Section Visibility" icon="◧" defaultOpen={true}>
         <p className="s-hint">Hero is always shown. Toggle sections on or off.</p>
         <div className="sections-grid two-col">
           {SECTION_FIELDS.map(({ key, label, description }) => (
@@ -275,7 +275,7 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Background Pattern ── */}
-      <Collapsible title="Background Pattern" icon="◫" icon="◫">
+      <Collapsible title="Background Pattern" icon="◫">
         <p className="s-hint">Hero section background pattern.</p>
         <div className="pattern-grid two-col">
           {PATTERNS.map((p) => (
@@ -315,7 +315,7 @@ export default function AdminSettings() {
       </Collapsible>
 
       {/* ── Security ── */}
-      <Collapsible title="Security" icon="◑" icon="◑">
+      <Collapsible title="Security" icon="◑">
         <div className="s-security-grid">
 
           {/* Change Password */}
