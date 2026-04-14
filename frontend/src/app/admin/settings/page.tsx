@@ -137,8 +137,6 @@ export default function AdminSettings() {
   const [loading,        setLoading]        = useState(true);
   const [activePanel,    setActivePanel]    = useState<string>("visibility");
   function togglePanel(key: string) { setActivePanel(p => p === key ? "" : key); }
-  const [activePanel,    setActivePanel]    = useState<string>("visibility");
-  function togglePanel(key: string) { setActivePanel(p => p === key ? "" : key); }
   const [saving,         setSaving]         = useState(false);
   const [savingSocial,   setSavingSocial]   = useState(false);
   const [savingContact,  setSavingContact]  = useState(false);
